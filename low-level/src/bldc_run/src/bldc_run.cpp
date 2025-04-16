@@ -1,0 +1,110 @@
+#include <Arduino.h>
+#include <SPI.h>
+#include <SimpleFOC.h>
+
+#define PWM_A 2
+#define PWM_B 3
+#define PWM_C 4
+#define PWM_ENABLE 5
+#define CS_A A1
+#define CS_B A2
+
+#define   _MON_TARGET 0b1000000  // monitor target value
+#define   _MON_VOLT_Q 0b0100000  // monitor voltage q value
+#define   _MON_VOLT_D 0b0010000  // monitor voltage d value
+#define   _MON_CURR_Q 0b0001000  // monitor current q value - if measured
+#define   _MON_CURR_D 0b0000100  // monitor current d value - if measured
+#define   _MON_VEL    0b0000010  // monitor velocity value
+#define   _MON_ANGLE  0b0000001  // monitor angle value
+
+
+float shunt_resistor = 0.01;
+float gain = 50; //39.0
+
+// MagneticSensorSPI(int cs, float bit_resolution, int angle_register)
+MagneticSensorSPI sensor = MagneticSensorSPI(10, 14, 0x3FFF);
+
+//  BLDCDriver3PWM( pin_pwmA, pin_pwmB, pin_pwmC, enable (optional))
+BLDCDriver3PWM driver = BLDCDriver3PWM(PWM_A, PWM_B, PWM_C, PWM_ENABLE);
+
+//  InlineCurrentSense(shunt_resistance, gain, adc_a, adc_b)
+InlineCurrentSense current_sense = InlineCurrentSense(shunt_resistor, gain, CS_A, CS_B);
+
+//  BLDCMotor( pole_pairs , ( phase_resistance, KV_rating  optional) )
+BLDCMotor motor = BLDCMotor(7, 0.15, 2300); // change phase resistance 
+
+// instantiate commander
+Commander command = Commander(Serial);
+void doMotor(char* cmd){command.motor(&motor, cmd);}
+
+void setup() {
+  // init the serial port
+  Serial.begin(115200);
+  while(!Serial); // wait for serial port to connect. Needed for native USB port only
+  Serial.println("Ready");
+
+  // enable debugging output
+  SimpleFOCDebug::enable(&Serial);
+
+  Serial.println("Motor control with SimpleFOC");
+  // sensor init
+  sensor.spi_mode = SPI_MODE0; // SPI mode
+  sensor.clock_speed = 500000; // SPI clock speed
+  sensor.init();
+  motor.linkSensor(&sensor);
+  Serial.println("Sensor init done");
+
+  // driver init
+  driver.pwm_frequency = 20000; // pwm frequency to be used [Hz]
+  driver.voltage_power_supply = 24; // power supply voltage [V]
+  driver.init(); //driver init
+  Serial.println("Driver init done");
+  // current sense init
+  current_sense.linkDriver(&driver); 
+  current_sense.init();
+  Serial.println("Current sense init done");
+
+  // motor init
+  motor.linkCurrentSense(&current_sense);
+  motor.linkDriver(&driver);
+  motor.controller = MotionControlType::torque; // setting the controller type
+  motor.torque_controller = TorqueControlType::foc_current; // setting the controller type
+  motor.foc_modulation = FOCModulationType::SpaceVectorPWM; // setting the modulation type
+  motor.voltage_limit = 12;
+  motor.PID_current_q.P = 5.0;
+  motor.PID_current_q.I = 300.0;
+  motor.PID_current_d.P = 5.0;
+  motor.PID_current_d.I = 300.0;
+  motor.LPF_current_q.Tf = 0.01f; // 10ms
+  motor.LPF_current_d.Tf = 0.01f; // 10ms
+  motor.current_limit = 2.0;
+  // some more stuff on Ivor's FOC repo to add here
+  Serial.println("Motor init done");
+
+  // monitoring part
+  motor.useMonitoring(Serial);
+  motor.monitor_variables = _MON_CURR_D | _MON_CURR_Q | _MON_VOLT_D | _MON_VOLT_Q | _MON_ANGLE | _MON_VEL | _MON_TARGET;
+  motor.monitor_downsample = 100;
+  Serial.println("Monitoring init done");
+  // subscribe motor to the commands
+  motor.init();
+  motor.initFOC();
+  motor.enable();
+  Serial.println("Motor enabled");
+  // motor.
+  command.add('M', doMotor, "motor");
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  motor.loopFOC();
+
+  // velocity control loop function
+  // setting the target velocity to 2 rad/s
+  motor.move(0.5);
+
+  // monitoring function outputting motor variables to the serial terminal 
+  //motor.monitor();
+  //Serial.println(sensor.getAngle());
+}
