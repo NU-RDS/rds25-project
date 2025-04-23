@@ -54,7 +54,7 @@ uint16_t Encoder::readEncoderRaw()
 }
 
 
-void Encoder::readEncoderDeg()
+float Encoder::readEncoderDeg()
 {
     this->beginSPI();
     uint16_t raw = this->readEncoderRaw();
