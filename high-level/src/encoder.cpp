@@ -1,0 +1,63 @@
+#include "encoder.hpp"
+
+Encoder::Encoder(int cs, int id) : 
+    _cs(cs), _id(id), settings(500000, MSBFIRST, ENC_SPI_MODE){}
+
+void Encoder::beginSPI()
+{
+    pinMode(_cs, OUTPUT);
+    digitalWrite(_cs, HIGH);
+    SPI.beginTransaction(settings);
+}
+
+
+float Encoder::rawToDegree(uint16_t raw)
+{
+    float angle = (raw * 360.0) / 16383.0;
+    return angle;
+}
+
+uint16_t Encoder::readEncoderRaw()
+{
+    uint16_t pos_temp;
+    uint16_t cmd;
+  
+    // Read angle command
+    cmd = (0b11<<14) | ANGLECOM;
+    digitalWrite(this->_cs, LOW);
+    SPI.transfer16(cmd);
+    digitalWrite(this->_cs, HIGH);
+    delayNanoseconds(400);
+
+    // Read error flags
+    cmd = (0b01<<14) | ERRFL;
+    digitalWrite(this->_cs, LOW);
+    pos_temp = SPI.transfer16(cmd);
+    digitalWrite(this->_cs, HIGH);
+    delayNanoseconds(400);
+
+    // Read diagnostics
+    cmd = (0b11<<14) | DIAAGC;
+    digitalWrite(this->_cs, LOW);
+    error = SPI.transfer16(cmd);
+    digitalWrite(this->_cs, HIGH);
+    delayNanoseconds(400);
+
+    // NOP command
+    cmd = (0b11<<14) | NOP;
+    digitalWrite(this->_cs, LOW);
+    diag = SPI.transfer16(cmd);
+    digitalWrite(this->_cs, HIGH);
+
+    // Extract the 14-bit angle value and return it
+    return pos_temp & 0b11111111111111;
+}
+
+
+void Encoder::readEncoderDeg()
+{
+    this->beginSPI();
+    uint16_t raw = this->readEncoderRaw();
+    SPI.endTransaction();
+    return this->rawToDegree(raw);
+}
