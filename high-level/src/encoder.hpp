@@ -26,13 +26,12 @@ private:
     int _id;
     SPISettings settings;
 
-    float rawToDegree();
-
 public:
     Encoder(int cs, int id);
 
     void beginSPI();
     uint16_t readEncoderRaw();
+    float rawToDegree(uint16_t raw);
     float readEncoderDeg();
 
 };

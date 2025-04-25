@@ -23,30 +23,30 @@ uint16_t Encoder::readEncoderRaw()
     uint16_t cmd;
   
     // Read angle command
-    cmd = (0b11<<14) | ANGLECOM;
+    cmd = (0b11<<14) | ENC_ANGLECOM;
     digitalWrite(this->_cs, LOW);
     SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // Read error flags
-    cmd = (0b01<<14) | ERRFL;
+    cmd = (0b01<<14) | ENC_ERRFL;
     digitalWrite(this->_cs, LOW);
     pos_temp = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // Read diagnostics
-    cmd = (0b11<<14) | DIAAGC;
+    cmd = (0b11<<14) | ENC_DIAAGC;
     digitalWrite(this->_cs, LOW);
-    error = SPI.transfer16(cmd);
+    uint16_t error = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // NOP command
-    cmd = (0b11<<14) | NOP;
+    cmd = (0b11<<14) | ENC_NOP;
     digitalWrite(this->_cs, LOW);
-    diag = SPI.transfer16(cmd);
+    uint16_t diag = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
 
     // Extract the 14-bit angle value and return it
