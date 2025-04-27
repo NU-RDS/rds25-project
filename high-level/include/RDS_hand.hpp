@@ -8,28 +8,12 @@
 
 using namespace std;
 
-class Tendon {
-private:
-    int ID;
-    float Force;
-
-public:
-    explicit Tendon(int id = -1, float force = 0.)
-    : ID(id), Force(force) {}
-
-    virtual ~Tendon() = default;
-    
-    int GetID();
-    float GetForce();
-};
-
 class Joint {
 private:
     int ID;
     float Angle;
     float Speed;
     float Torque;
-    vector<Tendon> Tendons;
 
     float CalculateSpeed();
 
