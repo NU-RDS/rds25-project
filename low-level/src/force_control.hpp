@@ -3,21 +3,24 @@
 
 #include "encoder.hpp"
 
-#define R_ENCODERPULLEY 1
+#define R_ENCODER_PULLEY 1
 #define _PI 3.1415
+#define MAX_TENDON_FORCE 10
+#define ENCODER1_CS 10
+#define ANTI_WINDUP_F 10
 
 class ForceControl
 {
 private:
-	float Ff;
-	float Kp; 
-	float Ki;
-	float Kd;
+	float Ff; // feedforwad
+	float Kp; // proportional
+	float Ki; // integral
+	float Kd; // derivative
 
 	float Ks; // spring constant
 
-	float expectedForce;
-	float resultantForce;
+	float referenceForce; // input force 
+	float resultantForce; // after PID
 
 	float encoderToForce(Encoder encoder); // read from encoder and calculate tendon force
 	void forceGeneration(ForceType forceType, int t); // t for time in sin force function
@@ -32,9 +35,11 @@ public:
 		TENDON_MAX,
 		TENDON_SIN
 	}
+
 	forceControl(float ff, float kp, float ki, float kd, float ks);
 
-	void forcePID();
+	void forcePID(ForceType forcetType);
+	void forcePrint();
 };
 
 
