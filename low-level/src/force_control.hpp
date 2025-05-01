@@ -28,7 +28,7 @@ private:
     float Ks;  // Spring constant
     
     float referenceForce;  // Desired force
-    float resultantForce;  // Actual force
+    float pidForce;  // Actual force
 
 public:
     // Constructor
@@ -51,7 +51,7 @@ public:
     
     // Getters
     float getReferenceForce() { return referenceForce; }
-    float getResultantForce() { return resultantForce; }
+    float getPidForce() { return pidForce; }
 };
 
 #endif // FORCE_CONTROL_HPP

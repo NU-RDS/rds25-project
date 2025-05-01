@@ -1,100 +1,89 @@
 #include "position_control.hpp"
 
-PositionControl::forceControl(float ff, float kp, float ki, float kd, float ks) :
-	Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks) {}
+PositionControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
+    Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
+    referenceForce(0.0f), resultantForce(0.0f) {}
 
-float PositionControl::encoderToForce(Encoder encoder)
+float PositionControl::getJointAngle(Encoder encoder)
 {
-	float angle = encoder.readEncoderDeg();
-	float distance = R_ENCODER_PULLEY * (angle / 180 * _PI);
-	return distance * this->Ks;
+    return encoder.readEncoderDeg();
 }
 
-void PositionControl::forceGeneration(ForceType forceType, int t) {
-	switch (forceType) {
-		case ForceType::STEP:
-			// Step input
-			this->referenceForce = (t % 2 == 0) ? 1.0f : 3.0f;
-			break;
-			
-		case ForceType::SIN:
-			// Sinusoidal force (2 + 1 sin(2π f t))N
-			{
-				float frequency = 1.0f;
-				this->referenceForce = 2.0f + 1.0f * sin(2.0f * _PI * frequency * t); 
-			}
-			break;
-			
-		case ForceType::MAX:
-			// Maximum continuous force
-			this->referenceForce = MAX_TENDON_FORCE; 
-			break;
-			
-		case ForceType::TENDON_MAX:
-			// 50% of maximum continuous force for tendon stretching test 1
-			this->referenceForce = MAX_TENDON_FORCE/2; 
-			break;
-			
-		case ForceType::TENDON_SIN:
-			// Sinusoidal force between 10% and 50% of maximum continuous force at 1 Hz
-			{
-				this->referenceForce = (0.3f * MAX_TENDON_FORCE) + (0.2f * MAX_TENDON_FORCE * sin(2.0f * _PI * 1.0f * t));
-			}
-			break;
-	}
+// NOT IMPLEMENTED 
+void PositionControl::positionGeneration(PositionType positionType, int t) {
+    switch (positionType) {
+        case PositionType::STEP:
+            break;
+            
+        case PositionType::SIN:
+            break;
+        
+    }
 }
 
-float PositionControl::forcePID(int encoderCS, ForceType forceType)
+float PositionControl::forcePID(int encoderCS, int encoderId, PositionType forceType)
 {
-    static float prevErr = 0.0f;
-    static float intErr = 0.0f;
-    static int timeStep = 0;
-
-    // generate reference force
-    forceGeneration(forceType, timeStep++);
+    // Use static maps to track PID state per encoder
+    static std::map<int, float> prevErrMap;
+    static std::map<int, float> intErrMap;
+    static std::map<int, int> timeStepMap;
     
-    // current force from the encoder
-    Encoder encoder(encoderCS, 1);
-    float currentForce = encoderToForce(encoder);
-    
-    // error
-    float error = this->referenceForce - currentForce;
-    intErr += error;
-    
-    // anti-windup
-    if (intErr > ANTI_WINDUP_F) {
-        intErr = ANTI_WINDUP_F;
-    } else if (intErr < -ANTI_WINDUP_F) {
-        intErr = -ANTI_WINDUP_F;
+    // Initialize if not already present
+    if (prevErrMap.find(encoderId) == prevErrMap.end()) {
+        prevErrMap[encoderId] = 0.0f;
+        intErrMap[encoderId] = 0.0f;
+        timeStepMap[encoderId] = 0;
     }
     
-    // derivative
+    // Get references to the PID state for this encoder
+    float& prevErr = prevErrMap[encoderId];
+    float& intErr = intErrMap[encoderId];
+    int& timeStep = timeStepMap[encoderId];
+
+    // Generate reference force
+    this->positionGeneration(forceType, timeStep++);
+    
+    // Current force from the encoder
+    Encoder encoder(encoderCS, encoderId);
+    float currentPosition = getJointAngle(encoder);
+    
+    // Error
+    float error = this->referencePosition - currentPosition;
+    intErr += error;
+    
+    // Anti-windup
+    if (intErr > ANTI_WINDUP_P) {
+        intErr = ANTI_WINDUP_P;
+    } else if (intErr < -ANTI_WINDUP_P) {
+        intErr = -ANTI_WINDUP_P;
+    }
+    
+    // Derivative
     float dErr = error - prevErr;
     prevErr = error;
     
     // PID
-    resultantForce = Ff * this->referenceForce + 
+    pidPosition = Ff * this->referencePosition + 
                      Kp * error + 
                      Ki * intErr + 
                      Kd * dErr;
     
+    // Saturation limits
+    if (pidPosition > ROM_MAX) {
+        pidPosition = ROM_MAX;
+    } else if (pidPosition < 0.0f) {
+        pidPosition = 0.0f; 
+    }
     
-    // if (resultantForce > MAX_TENDON_FORCE) {
-    //     resultantForce = MAX_TENDON_FORCE;
-    // } else if (resultantForce < 0.0f) {
-    //     resultantForce = 0.0f; 
-    // }
-    
-    // TODO: NULL SPACE
-    
-    float motorTorque = R_ENCODER_PULLEY * resultantForce;
-    return resultantForce;
+    // Apply null space conversion (probabaly not needed)
+    float motorTorque = this->nullSpaceConvertion();
+    return pidPosition;
 }
 
 void PositionControl::positionPrint()
 {
-	Serial.print(reference);
+    Serial.print(referencePosition);
     Serial.print(",");
-    Serial.println(PIDresult);
-	delay(10);
+    Serial.println(pidPosition);
+    delay(10);
 }

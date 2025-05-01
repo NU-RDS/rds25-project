@@ -50,11 +50,11 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
 // SUBJECT TO CHANGE
 float ForceControl::nullSpaceConvertion()
 {
-    if (resultantForce < 0)
+    if (pidForce < 0)
     {
         return 0;
     }
-    return resultantForce;
+    return pidForce;
 }
 
 float ForceControl::forcePID(int encoderCS, int encoderId, ForceType forceType)
@@ -99,27 +99,27 @@ float ForceControl::forcePID(int encoderCS, int encoderId, ForceType forceType)
     prevErr = error;
     
     // PID
-    resultantForce = Ff * this->referenceForce + 
+    pidForce = Ff * this->referenceForce + 
                      Kp * error + 
                      Ki * intErr + 
                      Kd * dErr;
     
     // Saturation limits
-    if (resultantForce > MAX_TENDON_FORCE) {
-        resultantForce = MAX_TENDON_FORCE;
-    } else if (resultantForce < 0.0f) {
-        resultantForce = 0.0f; 
+    if (pidForce > MAX_TENDON_FORCE) {
+        pidForce = MAX_TENDON_FORCE;
+    } else if (pidForce < 0.0f) {
+        pidForce = 0.0f; 
     }
     
     // Apply null space conversion
     float motorTorque = this->nullSpaceConvertion();
-    return resultantForce;
+    return pidForce;
 }
 
 void ForceControl::forcePrint()
 {
     Serial.print(referenceForce);
     Serial.print(",");
-    Serial.println(resultantForce);
+    Serial.println(pidForce);
     delay(10);
 }
