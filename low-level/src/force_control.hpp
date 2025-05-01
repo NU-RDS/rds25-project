@@ -1,46 +1,57 @@
 #ifndef FORCE_CONTROL_HPP
 #define FORCE_CONTROL_HPP
 
+#include <Arduino.h>
 #include "encoder.hpp"
 
-#define R_ENCODER_PULLEY 1
-#define _PI 3.1415
-#define MAX_TENDON_FORCE 10
-#define ENCODER1_CS 10
-#define ANTI_WINDUP_F 10
+// Constants
+#define _PI 3.14159265359f
+#define MAX_TENDON_FORCE 5.0f
+#define ANTI_WINDUP_F 5.0f
+#define R_ENCODER_PULLEY 0.02f  // 20mm radius in meters
 
-class ForceControl
-{
-private:
-	float Ff; // feedforwad
-	float Kp; // proportional
-	float Ki; // integral
-	float Kd; // derivative
-
-	float Ks; // spring constant
-
-	float referenceForce; // input force 
-	float resultantForce; // after PID
-
-	float encoderToForce(Encoder encoder); // read from encoder and calculate tendon force
-	void forceGeneration(ForceType forceType, int t); // t for time in sin force function
-
-public:
-	// type of force given in the instruction
-	enum class ForceType
-	{
-		STEP,
-		SIN,
-		MAX,
-		TENDON_MAX,
-		TENDON_SIN
-	}
-
-	forceControl(float ff, float kp, float ki, float kd, float ks);
-
-	void forcePID(ForceType forcetType);
-	void forcePrint();
+// Force pattern types
+enum class ForceType {
+    STEP,
+    SIN,
+    MAX,
+    TENDON_MAX,
+    TENDON_SIN
 };
 
+class ForceControl {
+private:
+    float Ff;  // Feedforward gain
+    float Kp;  // Proportional gain
+    float Ki;  // Integral gain
+    float Kd;  // Derivative gain
+    float Ks;  // Spring constant
+    
+    float referenceForce;  // Desired force
+    float resultantForce;  // Actual force
+
+public:
+    // Constructor
+    ForceControl(float ff, float kp, float ki, float kd, float ks);
+    
+    // Convert encoder reading to force
+    float encoderToForce(Encoder encoder);
+    
+    // Generate reference force based on type
+    void forceGeneration(ForceType forceType, int t);
+    
+    // Null space conversion for resultant force
+    float nullSpaceConvertion();
+    
+    // PID controller for force
+    float forcePID(int encoderCS, int encoderId, ForceType forceType);
+    
+    // Print force values for debugging
+    void forcePrint();
+    
+    // Getters
+    float getReferenceForce() { return referenceForce; }
+    float getResultantForce() { return resultantForce; }
+};
 
 #endif // FORCE_CONTROL_HPP
