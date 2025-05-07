@@ -1,0 +1,68 @@
+#include <Arduino.h>
+#include <SPI.h>
+
+#define NOP 0x0000
+#define ERRFL 0x0001
+#define PROG 0x0003
+#define DIAAGC 0x3FFC
+#define MAG 0X3FFD
+#define ANGLEUNC 0x3FFE
+#define ANGLECOM 0x3FFF
+#define SPI_MODE SPI_MODE0
+
+const int cs = 10;
+SPISettings settings(500000, MSBFIRST, SPI_MODE);
+uint16_t nop, pos_temp, error, cmd, pos, diag;
+
+void setup() {
+  while(!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+  Serial.println("Ready");
+  pinMode (cs, OUTPUT);
+  // initialize SPI:
+  Serial.println("Initializing SPI");
+  SPI.begin(); 
+  Serial.println("SPI initialized");
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  SPI.beginTransaction(settings);
+  //Serial.println("SPI transaction started");
+  //Serial.println("Reading encoder");
+  cmd = (0b11<<14) | ANGLECOM;
+  //Serial.println(cmd);
+  digitalWrite (cs, LOW);
+  //Serial.println("PS0.1");
+  nop = SPI.transfer16(cmd);
+  //Serial.println("PS1");
+  digitalWrite(cs, HIGH);
+  delayNanoseconds(400);
+  cmd = (0b01<<14) | ERRFL;
+  //Serial.println("PS2");
+  digitalWrite(cs, LOW);
+  pos_temp = SPI.transfer16(cmd);
+  //Serial.println("PS3");
+  digitalWrite(cs, HIGH);
+  delayNanoseconds(400);
+  cmd = (0b11<<14) | DIAAGC;
+  //Serial.println("PS4");
+  digitalWrite(cs, LOW);
+  error = SPI.transfer16(cmd);
+  //Serial.println("PS5");
+  digitalWrite(cs, HIGH);
+  delayNanoseconds(400);
+  cmd = (0b11<<14) | NOP;
+  //Serial.println("PS6");
+  digitalWrite(cs, LOW);
+  diag = SPI.transfer16(cmd);
+  //Serial.println("PS7");
+  digitalWrite(cs, HIGH);
+  //Serial.println("SPI transaction finished");
+  SPI.endTransaction();
+  //Serial.print("Reading: ");
+  Serial.println(pos_temp&0b11111111111111);
+  delay(100);
+}

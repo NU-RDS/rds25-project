@@ -18,6 +18,7 @@
 #define   _MON_ANGLE  0b0000001  // monitor angle value
 
 
+
 float shunt_resistor = 0.01;
 float gain = 50; //39.0
 
@@ -31,7 +32,7 @@ BLDCDriver3PWM driver = BLDCDriver3PWM(PWM_A, PWM_B, PWM_C, PWM_ENABLE);
 InlineCurrentSense current_sense = InlineCurrentSense(shunt_resistor, gain, CS_A, CS_B);
 
 //  BLDCMotor( pole_pairs , ( phase_resistance, KV_rating  optional) )
-BLDCMotor motor = BLDCMotor(7, 0.15, 2300); // change phase resistance 
+BLDCMotor motor = BLDCMotor(7, 0.461); // change phase resistance 
 
 // instantiate commander
 Commander command = Commander(Serial);
@@ -70,7 +71,7 @@ void setup() {
   motor.controller = MotionControlType::torque; // setting the controller type
   motor.torque_controller = TorqueControlType::foc_current; // setting the controller type
   motor.foc_modulation = FOCModulationType::SpaceVectorPWM; // setting the modulation type
-  motor.voltage_limit = 12;
+  motor.voltage_limit = 4;
   motor.PID_current_q.P = 5.0;
   motor.PID_current_q.I = 300.0;
   motor.PID_current_d.P = 5.0;
@@ -100,11 +101,11 @@ void loop() {
   // put your main code here, to run repeatedly:
   motor.loopFOC();
 
-  // velocity control loop function
-  // setting the target velocity to 2 rad/s
+  // torque control loop function
+  // setting the target velocity to 0.5 A
   motor.move(0.5);
 
   // monitoring function outputting motor variables to the serial terminal 
   //motor.monitor();
-  //Serial.println(sensor.getAngle());
+  Serial.println(sensor.getAngle());
 }
