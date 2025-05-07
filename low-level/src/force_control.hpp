@@ -9,6 +9,7 @@
 #define MAX_TENDON_FORCE 5.0f
 #define ANTI_WINDUP_F 5.0f
 #define R_ENCODER_PULLEY 0.02f  // 20mm radius in meters
+#define MAX_CURRENT 10 // A
 
 // Force pattern types
 enum class ForceType {
@@ -28,30 +29,40 @@ private:
     float Ks;  // Spring constant
     
     float referenceForce;  // Desired force
-    float pidForce;  // Actual force
+    float pidCurrent;  // PID output
+
+    ForceType forceType;
+    Encoder* encoder;  // Changed to pointer to avoid default constructor issue
 
 public:
     // Constructor
     ForceControl(float ff, float kp, float ki, float kd, float ks);
     
     // Convert encoder reading to force
-    float encoderToForce(Encoder encoder);
+    float encoderToForce(Encoder& encoder);
     
     // Generate reference force based on type
     void forceGeneration(ForceType forceType, int t);
     
-    // Null space conversion for resultant force
-    float nullSpaceConvertion();
-    
-    // PID controller for force
+    // PID controller for force - updated to match implementation
     float forcePID(int encoderCS, int encoderId, ForceType forceType);
     
-    // Print force values for debugging
-    void forcePrint();
-    
     // Getters
-    float getReferenceForce() { return referenceForce; }
-    float getPidForce() { return pidForce; }
+    float getReferenceForce() { return this->referenceForce; }
+    float getPidCurrent() { return this->pidCurrent; }
+    float getFf() {return this->Ff; }
+    float getKp() {return this->Kp; }
+    float getKi() {return this->Ki; }
+    float getKd() {return this->Kd; }
+    ForceType getForceType() { return this->forceType; }
+
+    // Setters
+    void setFf(float ff) {this->Ff = ff;}
+    void setKp(float kp) {this->Kp = kp;}
+    void setKi(float ki) {this->Ki = ki;}
+    void setKd(float kd) {this->Kd = kd;}
+    void setForceType(int typeIndex);
+    void setEncoder(int encoderCS, int encoderId);
 };
 
 #endif // FORCE_CONTROL_HPP

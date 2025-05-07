@@ -15,6 +15,7 @@
 
 // SPI mode
 #define ENC_SPI_MODE    SPI_MODE1
+#define SPI_SPEED 1000000
 
 class Encoder {
 private:

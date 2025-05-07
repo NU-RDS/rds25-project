@@ -2,9 +2,11 @@
 
 ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
     Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
-    referenceForce(0.0f), resultantForce(0.0f) {}
+    referenceForce(0.0f), pidCurrent(0.0f), 
+    forceType(ForceType::STEP), encoder(nullptr) {  // Initialize encoder pointer to nullptr
+}
 
-float ForceControl::encoderToForce(Encoder encoder)
+float ForceControl::encoderToForce(Encoder& encoder)  // Changed parameter to reference
 {
     float angle = encoder.readEncoderDeg();
     float distance = R_ENCODER_PULLEY * (angle / 180 * _PI);
@@ -47,44 +49,22 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
     }
 }
 
-// SUBJECT TO CHANGE
-float ForceControl::nullSpaceConvertion()
-{
-    if (pidForce < 0)
-    {
-        return 0;
-    }
-    return pidForce;
-}
-
+// Implementation now matches declaration in header
 float ForceControl::forcePID(int encoderCS, int encoderId, ForceType forceType)
 {
-    // Use static maps to track PID state per encoder
-    static std::map<int, float> prevErrMap;
-    static std::map<int, float> intErrMap;
-    static std::map<int, int> timeStepMap;
-    
-    // Initialize if not already present
-    if (prevErrMap.find(encoderId) == prevErrMap.end()) {
-        prevErrMap[encoderId] = 0.0f;
-        intErrMap[encoderId] = 0.0f;
-        timeStepMap[encoderId] = 0;
-    }
-    
-    // Get references to the PID state for this encoder
-    float& prevErr = prevErrMap[encoderId];
-    float& intErr = intErrMap[encoderId];
-    int& timeStep = timeStepMap[encoderId];
+    static float prevErr = 0.0f;
+    static float intErr = 0.0f;
+    static int timeStep = 0;
 
     // Generate reference force
     this->forceGeneration(forceType, timeStep++);
     
     // Current force from the encoder
     Encoder encoder(encoderCS, encoderId);
-    float currentForce = encoderToForce(encoder);
+    float encoderForce = encoderToForce(encoder);
     
     // Error
-    float error = this->referenceForce - currentForce;
+    float error = this->referenceForce - encoderForce;
     intErr += error;
     
     // Anti-windup
@@ -99,27 +79,41 @@ float ForceControl::forcePID(int encoderCS, int encoderId, ForceType forceType)
     prevErr = error;
     
     // PID
-    pidForce = Ff * this->referenceForce + 
+    pidCurrent = Ff * this->referenceForce + 
                      Kp * error + 
                      Ki * intErr + 
                      Kd * dErr;
     
     // Saturation limits
-    if (pidForce > MAX_TENDON_FORCE) {
-        pidForce = MAX_TENDON_FORCE;
-    } else if (pidForce < 0.0f) {
-        pidForce = 0.0f; 
+    if (pidCurrent > MAX_CURRENT) {
+        pidCurrent = MAX_CURRENT;
+    } else if (pidCurrent < -MAX_CURRENT) {
+        pidCurrent = -MAX_CURRENT; 
     }
     
-    // Apply null space conversion
-    float motorTorque = this->nullSpaceConvertion();
-    return pidForce;
+    return pidCurrent;
 }
 
-void ForceControl::forcePrint()
+void ForceControl::setForceType(int typeIndex)
 {
-    Serial.print(referenceForce);
-    Serial.print(",");
-    Serial.println(pidForce);
-    delay(10);
+    if (typeIndex == 0)
+    {
+        this->forceType = ForceType::STEP;
+    }
+    else if (typeIndex == 1)
+    {
+        this->forceType = ForceType::SIN;
+    }
+    else
+    {
+        this->forceType = ForceType::STEP;
+    }
+} 
+
+void ForceControl::setEncoder(int encoderCS, int encoderId)
+{
+    if (encoder != nullptr) {
+        delete encoder;  
+    }
+    encoder = new Encoder(encoderCS, encoderId);
 }
