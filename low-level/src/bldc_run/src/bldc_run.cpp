@@ -17,8 +17,6 @@
 #define   _MON_VEL    0b0000010  // monitor velocity value
 #define   _MON_ANGLE  0b0000001  // monitor angle value
 
-
-
 float shunt_resistor = 0.01;
 float gain = 50; //39.0
 
