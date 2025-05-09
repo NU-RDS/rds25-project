@@ -17,10 +17,11 @@
 #define   _MON_VEL    0b0000010  // monitor velocity value
 #define   _MON_ANGLE  0b0000001  // monitor angle value
 
-
-
 float shunt_resistor = 0.01;
 float gain = 50; //39.0
+
+
+InlineCurrentSenseSPI current_sense_spi = InlineCurrentSenseSPI(shunt_resistor, gain, SPI1, CS_A, CS_B, CS_C);
 
 // MagneticSensorSPI(int cs, float bit_resolution, int angle_register)
 MagneticSensorSPI sensor = MagneticSensorSPI(10, 14, 0x3FFF);
