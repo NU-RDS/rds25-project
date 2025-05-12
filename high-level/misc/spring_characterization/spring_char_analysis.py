@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
@@ -70,6 +71,11 @@ plt.title("Spring Characterization")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig("output/spring_characterization.png", dpi=300)
+
+output_dir = "output"
+os.makedirs(output_dir, exist_ok=True)
+output_path = os.path.join(output_dir, "spring_characterization.png")
+plt.savefig(output_path, dpi=300)
+
 # plt.show()
 
