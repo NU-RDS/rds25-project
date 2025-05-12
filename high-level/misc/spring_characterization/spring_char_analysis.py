@@ -46,8 +46,21 @@ y_pred = model.predict(x)
 slope = model.coef_[0][0]
 intercept = model.intercept_[0]
 r_squared = r2_score(y, y_pred)
+# print(r_squared)
 
 # Plot 
+
+# # Plot raw encoder and wrapped encoder 
+# plt.figure(figsize=(10, 6))
+# plt.plot(df["Encoder2"].values, label="Raw")
+# plt.plot(encoder2, label="Unwrapped", linestyle='--')
+# plt.title("Encoder 2: Raw vs Unwrapped")
+# plt.ylabel("Angle [rad]")
+# plt.legend()
+# plt.grid(True)
+# plt.tight_layout()
+# plt.show()
+
 plt.figure(figsize=(10, 6))
 plt.scatter(x, y, alpha=0.6)
 plt.plot(x, y_pred, color='red', label=f"LR: y = {slope:.8f}x + {intercept:.8f}")
@@ -57,16 +70,6 @@ plt.title("Spring Characterization")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
+plt.savefig("output/spring_characterization.png", dpi=300)
 # plt.show()
 
-
-# Plot
-plt.figure(figsize=(10, 6))
-plt.plot(df["Encoder2"].values, label="Raw")
-plt.plot(encoder2, label="Unwrapped", linestyle='--')
-plt.title("Encoder 2: Raw vs Unwrapped")
-plt.ylabel("Angle [rad]")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
