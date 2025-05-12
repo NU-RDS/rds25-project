@@ -8,7 +8,7 @@ from sklearn.metrics import r2_score
 # Encoder 1 readings correspond to shaft
 # Encoder 2 readings correspond to motor
 # Loadcell values are measured in grams 
-df = pd.read_csv("sensor_log_20250511_171159.csv")
+df = pd.read_csv("data/sensor_log_20250511_171159.csv")
 
 # Motor gear ratio
 GEAR_RATIO = 36
