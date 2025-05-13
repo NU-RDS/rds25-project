@@ -98,7 +98,7 @@ void loop() {
         break;
 
       case 5: // Run PID and plot
-        // runningPID = true;
+        runningPID = true;
         lastTime = millis(); // Reset timer
         break;
       
@@ -140,22 +140,28 @@ void loop() {
   
   // If PID is running, execute control loop at specified interval
   if (runningPID) {
-    unsigned long currentTime = millis();
-    
-    if (currentTime - lastTime >= LOOP_TIME_MS) {
-      lastTime = currentTime;
-      
-      // Call the PID function with all required arguments
-      forceController.forcePID(ENCODER_CS, ENCODER_ID, forceController.getForceType());
-      
-      // Send reference and measured force data back to Python GUI
-      Encoder encoder(ENCODER_CS, ENCODER_ID);
-      float encoderForce = forceController.encoderToForce(encoder);
-      
-      // Send data back through serial
-      Serial.print(forceController.getReferenceForce());
-      Serial.print(" ");
-      Serial.println(encoderForce);
+    for (int i = 0; i < 1000; i ++)
+    {
+        Serial.print(forceController.getFf());
+        Serial.print(" ");
+        Serial.println(i);
     }
+    runningPID = false;
+    
+    // if (currentTime - lastTime >= LOOP_TIME_MS) {
+    //   lastTime = currentTime;
+      
+    //   // Call the PID function with all required arguments
+    //   forceController.forcePID(ENCODER_CS, ENCODER_ID, forceController.getForceType());
+      
+    //   // Send reference and measured force data back to Python GUI
+    //   Encoder encoder(ENCODER_CS, ENCODER_ID);
+    //   float encoderForce = forceController.encoderToForce(encoder);
+      
+    //   // Send data back through serial
+    //   Serial.print(forceController.getReferenceForce());
+    //   Serial.print(" ");
+    //   Serial.println(encoderForce);
+    // }
   }
 }

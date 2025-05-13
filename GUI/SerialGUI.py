@@ -32,10 +32,6 @@ class SerialGUI:
         if len(values) >= 2:
             ref = float(values[0])
             data = float(values[1])
-        else:
-            print("Warning: Received incomplete data")
-            ref = 0.0
-            data = 0.0
         return ref, data
 
     def livePlot(self):
@@ -47,6 +43,11 @@ class SerialGUI:
             ref, data = self.parsingSerial()
             self.ref_ls.append(ref)
             self.data_ls.append(data)
+            
+            print("ref: ", ref)
+            print("data: ", data)
+            
+            print(len(self.data_ls))
             
             if len(self.data_ls) >= self.buffer_len:
                 break
