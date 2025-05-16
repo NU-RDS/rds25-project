@@ -15,7 +15,7 @@ class Wrist {
     
     public:
         Wrist();
-        ~Wrist();
+        ~Wrist() = default;
 
         void kinematics();
         void setWristOrientation(double roll_desired, double pitch_desired, double yaw_desired);

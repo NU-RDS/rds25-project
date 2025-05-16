@@ -19,7 +19,7 @@ class Joint {
     
     public:
         Joint(const std::string& name);
-        ~Joint();
+        ~Joint() = default;
     
         // Getters and setters
         const std::string& getName();

@@ -13,7 +13,7 @@ class PowerFinger {
 
     public:
         PowerFinger();
-        ~PowerFinger();
+        ~PowerFinger() = default;
         
         void kinematics();
         void setJointAngles(double grasp_desired);

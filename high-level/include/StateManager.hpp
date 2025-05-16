@@ -40,7 +40,7 @@ class StateManager {
     
     public:
         StateManager(const std::string& port);
-        ~StateManager();
+        ~StateManager() = default;
         
         // Basic system functions
         bool initialize();
