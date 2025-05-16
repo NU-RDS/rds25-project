@@ -8,12 +8,16 @@
 #include "PowerFinger.hpp"
 #include "DexterousFinger.hpp"
 #include "Wrist.hpp"
+#include "comms.hpp"
 
 class StateManager {
     private:
         std::unique_ptr<Wrist> wrist;
         std::unique_ptr<DexterousFinger> dexFinger;
         std::unique_ptr<PowerFinger> powFinger;
+
+        comms::TeensyCANDriver<2, comms::CANBaudRate::CBR_500KBPS> _canDriver;
+        comms::CommsController _commsController;
         
         // Communication with MCU
         bool connected;
