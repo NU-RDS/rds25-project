@@ -1,3 +1,6 @@
+#ifndef WRIST_HPP
+#define WRIST_HPP
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -21,3 +24,5 @@ class Wrist {
         const std::unordered_map<std::string, double> getDesiredJointAngles();
         const std::unordered_map<std::string, double> getCurrentJointAngles();
 };
+
+#endif // WRIST_HPP

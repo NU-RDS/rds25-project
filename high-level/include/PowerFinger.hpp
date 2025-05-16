@@ -1,3 +1,6 @@
+#ifndef POWER_FINGER_HPP
+#define POWER_FINGER_HPP
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -19,3 +22,5 @@ class PowerFinger {
         const std::unordered_map<std::string, double> getDesiredJointAngles();
         const std::unordered_map<std::string, double> getCurrentJointAngles();
 };
+
+#endif // POWER_FINGER_HPP

@@ -1,3 +1,6 @@
+#ifndef JOINT_HPP
+#define JOINT_HPP
+
 #include <string>
 #include <cmath>
 
@@ -31,4 +34,6 @@ class Joint {
         void setCurrentVelocity(double current_vel);
         void setCurrentTorque(double current_torque);
         void setCommandTorque(double command_torque);
-    };
+};
+
+#endif // JOINT_HPP

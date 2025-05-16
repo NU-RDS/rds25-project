@@ -1,3 +1,6 @@
+#ifndef STATE_MANAGER_HPP
+#define STATE_MANAGER_HPP
+
 #include <memory>
 #include <string>
 #include <chrono>
@@ -32,12 +35,12 @@ class StateManager {
         MovementPhase currentMovementPhase;
     
     public:
-        StateManager();
+        StateManager(const std::string& port);
         ~StateManager();
         
         // Basic system functions
         bool initialize();
-        bool connectToMCU(const std::string& port = "/dev/ttyUSB0");
+        bool connectToMCU();
         void updateState();
         void updateGUI();
 
@@ -63,4 +66,6 @@ class StateManager {
         void sendTorqueCommands();
         MovementPhase getMovementPhase() const { return currentMovementPhase; }
         bool isMovementComplete() const { return currentMovementPhase == COMPLETE; }
-    };
+};
+
+#endif //STATE_MANAGER_HPP

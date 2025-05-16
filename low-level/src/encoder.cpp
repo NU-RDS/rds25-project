@@ -1,15 +1,15 @@
 #include "encoder.hpp"
 
 Encoder::Encoder(int cs, int id) : 
-    _cs(cs), _id(id), settings(500000, MSBFIRST, ENC_SPI_MODE){}
+    _cs(cs), _id(id), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE) {
+    pinMode(_cs, OUTPUT);
+    digitalWrite(_cs, HIGH);
+}
 
 void Encoder::beginSPI()
 {
-    pinMode(_cs, OUTPUT);
-    digitalWrite(_cs, HIGH);
     SPI.beginTransaction(settings);
 }
-
 
 float Encoder::rawToDegree(uint16_t raw)
 {
@@ -52,7 +52,6 @@ uint16_t Encoder::readEncoderRaw()
     // Extract the 14-bit angle value and return it
     return pos_temp & 0b11111111111111;
 }
-
 
 float Encoder::readEncoderDeg()
 {

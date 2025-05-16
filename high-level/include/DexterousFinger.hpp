@@ -1,3 +1,6 @@
+#ifndef DEXTEROUS_FINGER_HPP
+#define DEXTEROUS_FINGER_HPP
+
 #include <memory>
 #include <unordered_map>
 
@@ -21,3 +24,5 @@ class DexterousFinger {
         const std::unordered_map<std::string, double> getDesiredJointAngles();
         const std::unordered_map<std::string, double> getCurrentJointAngles();
 };
+
+#endif // DEXTEROUS_FINGER_HPP
