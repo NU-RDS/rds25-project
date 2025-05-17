@@ -31,7 +31,31 @@ void StateManager::updateGUI() {
 }
 
 void StateManager::controlLoop() {
+    // Update the communication controller to process messages
     _commsController.tick();
+    
+    // Check for received messages
+    comms::RawCommsMessage message;
+    
+    // Use a non-blocking approach to check for messages
+    if (_canDriver.receiveMessage(&message)) {
+        // Get message info
+        comms::Option<comms::MessageInfo> infoOpt = comms::MessageInfo::getInfo(message.id);
+        
+        if (infoOpt.isSome()) {
+            comms::MessageInfo info = infoOpt.value();
+            
+            // Check if this is a heartbeat response
+            if (info.type == comms::MessageContentType::MT_HEARTBEAT && 
+                info.sender != comms::MCUID::MCU_HIGH_LEVEL) {
+                
+                // Call the heartbeat callback if set
+                if (_heartbeatCallback) {
+                    _heartbeatCallback(info.sender);
+                }
+            }
+        }
+    }
 }
 
 void StateManager::setJointPositions(double wristRoll, double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp) {
@@ -68,4 +92,32 @@ void StateManager::pauseMovement() {
 
 void StateManager::resumeMovement() {
 
+}
+
+void StateManager::sendHeartbeatRequest() {
+    // Get the message ID for heartbeat request
+    comms::Option<uint32_t> idOpt = comms::MessageInfo::getMessageID(
+        _commsController.me(),
+        comms::MessageContentType::MT_HEARTBEAT
+    );
+    
+    if (idOpt.isNone()) {
+        Serial.println("Error: Unable to get heartbeat request message ID");
+        return;
+    }
+    
+    comms::RawCommsMessage message;
+    message.id = idOpt.value();
+    message.payload = 0; // Empty payload for request
+    
+    // Send the message via the CAN driver
+    _canDriver.sendMessage(message);
+    
+    Serial.println("Heartbeat request sent from StateManager");
+}
+
+void StateManager::setHeartbeatCallback(std::function<void(comms::MCUID)> callback) {
+    // Store the callback for use when heartbeat responses are received
+    // This requires adding a member variable to StateManager
+    _heartbeatCallback = callback;
 }

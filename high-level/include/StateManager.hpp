@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <chrono>
+#include <functional>
 
 #include "PowerFinger.hpp"
 #include "DexterousFinger.hpp"
@@ -37,6 +38,8 @@ class StateManager {
         };
 
         MovementPhase currentMovementPhase;
+
+        std::function<void(comms::MCUID)> _heartbeatCallback = nullptr;
     
     public:
         StateManager(const std::string& port);
@@ -70,6 +73,10 @@ class StateManager {
         void sendTorqueCommands();
         MovementPhase getMovementPhase() const { return currentMovementPhase; }
         bool isMovementComplete() const { return currentMovementPhase == COMPLETE; }
+
+        void sendHeartbeatRequest();
+        void setHeartbeatCallback(std::function<void(comms::MCUID)> callback);
+        comms::CommsController& getCommsController() { return _commsController; }
 };
 
 #endif //STATE_MANAGER_HPP
