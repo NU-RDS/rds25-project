@@ -1,7 +1,7 @@
 #include "encoder.hpp"
 
 Encoder::Encoder(int cs, int id) : 
-    _cs(cs), _id(id), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE) {
+    _cs(cs), _id(id), settings(SPI_CLOCK_SPEED, MSBFIRST, ENC_SPI_MODE) {
     pinMode(_cs, OUTPUT);
     digitalWrite(_cs, HIGH);
 }
@@ -39,14 +39,14 @@ uint16_t Encoder::readEncoderRaw()
     // Read diagnostics
     cmd = (0b11<<14) | ENC_DIAAGC;
     digitalWrite(this->_cs, LOW);
-    uint16_t error = SPI.transfer16(cmd);
+    // uint16_t error = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // NOP command
     cmd = (0b11<<14) | ENC_NOP;
     digitalWrite(this->_cs, LOW);
-    uint16_t diag = SPI.transfer16(cmd);
+    // uint16_t diag = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
 
     // Extract the 14-bit angle value and return it

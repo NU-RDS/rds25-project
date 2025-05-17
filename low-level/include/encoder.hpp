@@ -18,6 +18,7 @@
 #define ENC_ANGLEUNC 0x3FFE
 #define ENC_ANGLECOM 0x3FFF
 #define ENC_SPI_MODE SPI_MODE1
+#define SPI_CLOCK_SPEED 1000000
 
 class Encoder
 {

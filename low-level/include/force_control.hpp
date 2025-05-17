@@ -6,35 +6,35 @@
 #define R_ENCODERPULLEY 1
 #define _PI 3.1415
 
-class ForceControl
-{
-private:
-	float Ff;
-	float Kp; 
-	float Ki;
-	float Kd;
+class ForceControl {
+	public:
+		// type of force given in the instruction
+		enum class ForceType
+		{
+			STEP,
+			SIN,
+			MAX,
+			TENDON_MAX,
+			TENDON_SIN
+		};
 
-	float Ks; // spring constant
+		ForceControl(float ff, float kp, float ki, float kd, float ks);
 
-	float expectedForce;
-	float resultantForce;
+	void forcePID(int forcetype);
 
-	float encoderToForce(Encoder encoder); // read from encoder and calculate tendon force
-	void forceGeneration(ForceType forceType, int t); // t for time in sin force function
+	private:
+		float Ff;
+		float Kp; 
+		float Ki;
+		float Kd;
 
-public:
-	// type of force given in the instruction
-	enum class ForceType
-	{
-		STEP,
-		SIN,
-		MAX,
-		TENDON_MAX,
-		TENDON_SIN
-	}
-	forceControl(float ff, float kp, float ki, float kd, float ks);
+		float Ks; // spring constant
 
-	void forcePID();
+		float expectedForce;
+		float resultantForce;
+
+		float encoderToForce(Encoder encoder); // read from encoder and calculate tendon force
+		void forceGeneration(ForceType forceType, int t); // t for time in sin force function
 };
 
 

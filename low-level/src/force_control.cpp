@@ -1,6 +1,6 @@
 #include "force_control.hpp"
 
-ForceControl::forceControl(float ff, float kp, float ki, float kd, float ks) :
+ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
 	Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks) {}
 
 float ForceControl::encoderToForce(Encoder encoder)
@@ -45,7 +45,7 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
 	}
 }
 
-float ForceControl::forcePID(int forcetype)
+void ForceControl::forcePID(int forcetype)
 {
-
+	
 }
