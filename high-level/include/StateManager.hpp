@@ -16,9 +16,6 @@ class StateManager {
         std::unique_ptr<Wrist> wrist;
         std::unique_ptr<DexterousFinger> dexFinger;
         std::unique_ptr<PowerFinger> powFinger;
-
-        comms::TeensyCANDriver<2, comms::CANBaudRate::CBR_500KBPS> _canDriver;
-        comms::CommsController _commsController;
         
         // Communication with MCU
         bool connected;
@@ -42,7 +39,7 @@ class StateManager {
         std::function<void(comms::MCUID)> _heartbeatCallback = nullptr;
     
     public:
-        StateManager(const std::string& port);
+        StateManager();
         ~StateManager() = default;
         
         // Basic system functions
@@ -73,10 +70,6 @@ class StateManager {
         void sendTorqueCommands();
         MovementPhase getMovementPhase() const { return currentMovementPhase; }
         bool isMovementComplete() const { return currentMovementPhase == COMPLETE; }
-
-        void sendHeartbeatRequest();
-        void setHeartbeatCallback(std::function<void(comms::MCUID)> callback);
-        comms::CommsController& getCommsController() { return _commsController; }
 };
 
 #endif //STATE_MANAGER_HPP
