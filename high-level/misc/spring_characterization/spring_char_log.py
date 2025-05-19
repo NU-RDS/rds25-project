@@ -2,14 +2,18 @@ import serial
 import csv
 from datetime import datetime
 import time
+import os
 
-SERIAL_PORT = '/dev/ttyACM0'
+# SERIAL_PORT = '/dev/ttyACM0'
+SERIAL_PORT = '/dev/tty.usbmodem149741401'
 BAUD_RATE = 9600
-DURATION_SECONDS = 30
+DURATION_SECONDS = 80
 
 # Output CSV file 
+output_dir = "data"
+os.makedirs(output_dir, exist_ok=True)
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-filename = f"sensor_log_{timestamp}.csv"
+filename = f"data/sensor_log_{timestamp}.csv"
 
 #  Open Serial and CSV 
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)

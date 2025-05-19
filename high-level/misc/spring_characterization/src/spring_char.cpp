@@ -6,7 +6,7 @@
 #define SCK 27
 #define DT 26
 #define BAUD_RATE 9600
-#define CALIBRATION_FACTOR 106.10
+#define CALIBRATION_FACTOR 120.75
 
 HX711 scale;
 // Scale weight reading counter
@@ -83,10 +83,11 @@ void setup() {
   scale.begin(DT, SCK);
 
   // Calibration values
-  scale.set_offset(4294799235);
   scale.set_scale(CALIBRATION_FACTOR);
 
   // Set the scale to 0
+  Serial.println("Tare. Remove any weights from the scale.");
+  delay(10000);
   scale.tare();
   Serial.println("Please place weight on scales");
 

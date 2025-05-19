@@ -26,9 +26,6 @@ void setup() {
 void loop() {
   if (scale.is_ready()) {
 
-    // LED ON: calibration start
-    digitalWrite(LED_BUILTIN, HIGH);
-
     // Reset scale
     scale.set_scale();
     Serial.println("Tare. Remove any weights from the scale.");
@@ -48,18 +45,7 @@ void loop() {
     Serial.print("Calibration factor: ");
     Serial.println(calibration_factor, 2);
 
-    // LED OFF: calibration done
-    digitalWrite(LED_BUILTIN, LOW);
   } 
   
-  else {
-
-    Serial.println("HX711 not found");
-    // Fast blink to indicate error
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(200);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(200);
-
-  }
+  delay(1000);
 }
