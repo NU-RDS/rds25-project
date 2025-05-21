@@ -3,7 +3,7 @@
 #include "StateManager.hpp"
 #include "comms.hpp"
 
-
+StateManager state_manager;
 
 comms::TeensyCANDriver<2, comms::CANBaudRate::CBR_500KBPS> g_canDriver;
 
@@ -14,7 +14,7 @@ comms::CommsController g_controller{
 
 void setup() {
     Serial.begin(9600);
-    Serial.println("TX Example Start!");
+    Serial.println("[HIGH]");
     g_controller.initialize();
 }
 

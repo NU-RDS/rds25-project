@@ -12,6 +12,8 @@ CommsController g_controller{
 };
 
 void setup() {
+    Serial.begin(9600);
+    Serial.println("[LOW]");
     g_controller.initialize();
 }
 
