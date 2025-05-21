@@ -20,7 +20,6 @@
 class Encoder {
 private:
     int _cs;            // Chip select pin
-    int _id;            // Encoder ID
     SPISettings settings;
     
     // Initialize SPI communication
@@ -34,14 +33,13 @@ private:
     
 public:
     // Constructor
-    Encoder(int cs, int id);
+    Encoder(int cs);
     
     // Read encoder value in degrees
     float readEncoderDeg();
     
     // Getters
     int getCS() const { return _cs; }
-    int getID() const { return _id; }
 };
 
 #endif // ENCODER_HPP

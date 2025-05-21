@@ -32,20 +32,22 @@ private:
     float pidCurrent;  // PID output
 
     ForceType forceType;
-    Encoder* encoder;  // Changed to pointer to avoid default constructor issue
+    Encoder* motorEncoder;
+    Encoder* SeaEncoder;
+
 
 public:
     // Constructor
     ForceControl(float ff, float kp, float ki, float kd, float ks);
     
     // Convert encoder reading to force
-    float encoderToForce(Encoder& encoder);
+    float encoderToForce(Encoder& motorEncoder, Encoder& SeaEncoder);
     
     // Generate reference force based on type
     void forceGeneration(ForceType forceType, int t);
     
     // PID controller for force - updated to match implementation
-    float forcePID(int encoderCS, int encoderId, ForceType forceType);
+    float forcePID(ForceType forceType);
     
     // Getters
     float getReferenceForce() { return this->referenceForce; }
@@ -62,7 +64,9 @@ public:
     void setKi(float ki) {this->Ki = ki;}
     void setKd(float kd) {this->Kd = kd;}
     void setForceType(int typeIndex);
-    void setEncoder(int encoderCS, int encoderId);
+    void setMotorEncoder(int encoderCS);
+    void setSeaEncoder(int encoderCS);
+
 };
 
 #endif // FORCE_CONTROL_HPP
