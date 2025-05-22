@@ -12,8 +12,6 @@ const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 // Constants
 const long BAUD_RATE = 115200;
 const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
-const float CONSTANT_TORQUE = 0.004f;
-const float TENSION_POS_THRES = 0.01f;
 
 // Global variables
 ForceControl forceController(0.0f, 0.0f, 0.0f, 0.0f, 1.0f); // Default values
