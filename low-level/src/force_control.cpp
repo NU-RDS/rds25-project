@@ -3,13 +3,17 @@
 ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
     Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
     referenceForce(0.0f), pidCurrent(0.0f), 
-    forceType(ForceType::STEP), encoder(nullptr) {  // Initialize encoder pointer to nullptr
+    forceType(ForceType::STEP), motorEncoder(nullptr), seaEncoder(nullptr) {  // Initialize encoder pointer to nullptr
 }
 
-float ForceControl::encoderToForce(Encoder& encoder)  // Changed parameter to reference
+float ForceControl::encoderToForce(Encoder& motorEncoder, Encoder& seaEncoder)  // Changed parameter to reference
 {
-    float angle = encoder.readEncoderDeg();
-    float distance = R_ENCODER_PULLEY * (angle / 180 * _PI);
+    float motor_angle = 0;//motorEncoder.readEncoderDeg();
+
+    float sea_angle = 0;//seaEncoder.readEncoderDeg();
+
+    float distance = R_ENCODER_PULLEY * ((motor_angle - sea_angle) / 180 * _PI);
+
     return distance * this->Ks;
 }
 
@@ -17,7 +21,7 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
     switch (forceType) {
         case ForceType::STEP:
             // Step input
-            this->referenceForce = (t % 2 == 0) ? 1.0f : 3.0f;
+            this->referenceForce = ((t/500) % 2 == 0) ? 1.0f : 3.0f;
             break;
             
         case ForceType::SIN:
@@ -50,7 +54,7 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
 }
 
 // Implementation now matches declaration in header
-float ForceControl::forcePID(int encoderCS, int encoderId, ForceType forceType)
+float ForceControl::forcePID(ForceType forceType)
 {
     static float prevErr = 0.0f;
     static float intErr = 0.0f;
@@ -59,12 +63,15 @@ float ForceControl::forcePID(int encoderCS, int encoderId, ForceType forceType)
     // Generate reference force
     this->forceGeneration(forceType, timeStep++);
     
-    // Current force from the encoder
-    Encoder encoder(encoderCS, encoderId);
-    float encoderForce = encoderToForce(encoder);
+    if (this->motorEncoder == nullptr || this->seaEncoder == nullptr) {        
+        Serial.println("Error: Encoders not initialized");
+        return 0.0f;
+    }
+    // Get force from the encoders
+    float SeaForce = encoderToForce(*this->motorEncoder, *this->seaEncoder);
     
     // Error
-    float error = this->referenceForce - encoderForce;
+    float error = this->referenceForce - SeaForce;
     intErr += error;
     
     // Anti-windup
@@ -110,10 +117,18 @@ void ForceControl::setForceType(int typeIndex)
     }
 } 
 
-void ForceControl::setEncoder(int encoderCS, int encoderId)
+void ForceControl::setMotorEncoder(int encoderCS)
 {
-    if (encoder != nullptr) {
-        delete encoder;  
+    if (this->motorEncoder != nullptr) {
+        delete this->motorEncoder;  
     }
-    encoder = new Encoder(encoderCS, encoderId);
+   this->motorEncoder = new Encoder(encoderCS);
+}
+
+void ForceControl::setSeaEncoder(int encoderCS)
+{
+    if (this->seaEncoder != nullptr) {
+        delete this->seaEncoder;  
+    }
+    this->seaEncoder = new Encoder(encoderCS);
 }

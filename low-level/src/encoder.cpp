@@ -1,7 +1,8 @@
 #include "encoder.hpp"
 
-Encoder::Encoder(int cs, int id) : 
-    _cs(cs), _id(id), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE) {
+
+Encoder::Encoder(int cs) :
+    _cs(cs), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE) {
     pinMode(_cs, OUTPUT);
     digitalWrite(_cs, HIGH);
 }
@@ -58,5 +59,6 @@ float Encoder::readEncoderDeg()
     this->beginSPI();
     uint16_t raw = this->readEncoderRaw();
     SPI.endTransaction();
-    return this->rawToDegree(raw);
+    // return this->rawToDegree(raw);
+    return 0.;
 }

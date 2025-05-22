@@ -252,6 +252,7 @@ class SerialGUI:
                             print(f"Encoder {i+1}: {encoder}")
                         except Exception as e:
                             print(f"Error reading encoder value: {e}")
+                            break
                     
                 elif selection == '8':
                     print("Exiting program...")
@@ -267,7 +268,7 @@ class SerialGUI:
     
 if __name__ == "__main__":
     # Use the correct port for your system
-    default_port = '/dev/tty.usbmodem166393701'  
+    default_port = '/dev/tty.usbmodem160567101'  
         
     serialGUI = SerialGUI(default_port, 115200)
     serialGUI.run()

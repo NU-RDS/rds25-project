@@ -14,7 +14,10 @@
 
 // Configuration
 #define CAN_BAUDRATE 250000
-#define ODRV0_NODE_ID 0
+#define ODRV0_NODE_ID 4
+
+// Forward declaration
+struct ODriveStatus;
 
 // User data structure
 struct ODriveUserData {
@@ -26,17 +29,11 @@ struct ODriveUserData {
     bool received_current = false;
 };
 
-// External declaration of the CAN interface
-extern FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
-
 // Function declarations
 bool setupCan();
 void onCanMessage(const CAN_message_t& msg);
 void onHeartbeat(Heartbeat_msg_t& msg, void* user_data);
 void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data);
 void getCurrent(Get_Iq_msg_t& msg, void* user_data);
-void setupODrive(ODriveCAN& drive, ODriveUserData& user_data);
-void checkODriveErrors(ODriveCAN& drive, ODriveUserData& user_data);
-// CanIntf wrap_can_intf(FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16>& can);
 
 #endif // ODRIVE_CAN_HPP

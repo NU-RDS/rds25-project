@@ -33,7 +33,7 @@ private:
 
     ForceType forceType;
     Encoder* motorEncoder;
-    Encoder* SeaEncoder;
+    Encoder* seaEncoder;
 
 
 public:
@@ -41,7 +41,7 @@ public:
     ForceControl(float ff, float kp, float ki, float kd, float ks);
     
     // Convert encoder reading to force
-    float encoderToForce(Encoder& motorEncoder, Encoder& SeaEncoder);
+    float encoderToForce(Encoder& motorEncoder, Encoder& seaEncoder);
     
     // Generate reference force based on type
     void forceGeneration(ForceType forceType, int t);
