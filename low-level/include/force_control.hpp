@@ -41,13 +41,13 @@ public:
     ForceControl(float ff, float kp, float ki, float kd, float ks);
     
     // Convert encoder reading to force
-    float encoderToForce(Encoder& motorEncoder, Encoder& seaEncoder);
+    float encoderToForce(float motor_angle, Encoder& seaEncoder);
     
     // Generate reference force based on type
     void forceGeneration(ForceType forceType, int t);
     
     // PID controller for force - updated to match implementation
-    float forcePID(ForceType forceType);
+    float forcePID(float motor_angle, ForceType forceType);
     
     // Getters
     float getReferenceForce() { return this->referenceForce; }

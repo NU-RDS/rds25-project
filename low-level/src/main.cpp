@@ -278,7 +278,10 @@ void loop() {
         forceController.forceGeneration(forceController.getForceType(), timeSeconds);
 
         // Calculate control signal using PID controller
-        float PIDtorque = forceController.forcePID(forceController.getForceType());
+        odrives[0].is_running = true;
+        Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
+        float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
+        float PIDtorque = forceController.forcePID(motor_angle, forceController.getForceType());
 
         // Apply torque to ODrive
         PIDtorque = 0.1;

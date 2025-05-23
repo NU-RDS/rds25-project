@@ -6,9 +6,9 @@ ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
     forceType(ForceType::STEP), motorEncoder(nullptr), seaEncoder(nullptr) {  // Initialize encoder pointer to nullptr
 }
 
-float ForceControl::encoderToForce(Encoder& motorEncoder, Encoder& seaEncoder)  // Changed parameter to reference
+float ForceControl::encoderToForce(float motor_angle, Encoder& seaEncoder)  // Changed parameter to reference
 {
-    float motor_angle = 0;//motorEncoder.readEncoderDeg();
+    motor_angle = 0;//motorEncoder.readEncoderDeg();
 
     float sea_angle = 0;//seaEncoder.readEncoderDeg();
 
@@ -54,7 +54,7 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
 }
 
 // Implementation now matches declaration in header
-float ForceControl::forcePID(ForceType forceType)
+float ForceControl::forcePID(float motor_angle, ForceType forceType)
 {
     static float prevErr = 0.0f;
     static float intErr = 0.0f;
@@ -68,7 +68,7 @@ float ForceControl::forcePID(ForceType forceType)
         return 0.0f;
     }
     // Get force from the encoders
-    float SeaForce = encoderToForce(*this->motorEncoder, *this->seaEncoder);
+    float SeaForce = encoderToForce(motor_angle, *this->seaEncoder);
     
     // Error
     float error = this->referenceForce - SeaForce;
