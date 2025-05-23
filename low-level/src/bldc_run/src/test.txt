@@ -1,0 +1,14 @@
+#include <Arduino.h>
+
+const int ledPin = 13; // LED is on pin 13 on Teensy 4.0
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(ledPin, HIGH);  // Turn the LED on (HIGH)
+  delay(1000);                // Wait for 1 second
+  digitalWrite(ledPin, LOW);   // Turn the LED off (LOW)
+  delay(1000);                // Wait for 1 second
+}

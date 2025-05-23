@@ -1,0 +1,103 @@
+#include <Arduino.h>
+// No need for SPI.h as we're using bit-banging
+
+// Pin definitions
+const int CS_PIN = 10;
+const int SCLK_PIN = 13;
+const int MISO_PIN = 12;
+
+// Function to read data from the sensor using bit banging
+uint16_t readSensor() {
+  uint16_t data = 0;
+
+  // Begin transaction
+  digitalWrite(CS_PIN, LOW);
+  delayMicroseconds(1);
+
+  // Clock out 14 bits and read the middle 12
+  for (int i = 0; i < 14; i++) {
+    // Clock high
+    digitalWrite(SCLK_PIN, HIGH);
+    delayMicroseconds(1);
+
+    // Clock low - read data on falling edge
+    digitalWrite(SCLK_PIN, LOW);
+
+    // Read data bits (skipping first 2 bits)
+    if (i >= 2 && i <= 13) {
+      if (digitalRead(MISO_PIN)) {
+        data |= (1 << (13 - i));
+      }
+    }
+
+    delayMicroseconds(1);
+  }
+
+  // End transaction
+  digitalWrite(CS_PIN, HIGH);
+  delayMicroseconds(10);
+
+  return data;
+}
+
+// Convert raw ADC value to differential voltage (AINP - AINM)
+float readDifferentialVoltage() {
+  uint16_t raw = readSensor();
+  
+  // For a 12-bit ADC with differential inputs
+  // 0 = -VREF/2, 2048 = 0V, 4095 = +VREF/2
+  // Since AINM is fixed at 1.65V (which is VREF/2 for a 3.3V reference)
+  // and AINP ranges from 0 to 3.3V
+  
+  // Map the 12-bit value (0-4095) to a voltage range (-VREF/2 to +VREF/2)
+  float differentialVoltage = ((float)raw - 2047.5) * 3.3 / 4095.0;
+  
+  // Actual voltage at AINP = differentialVoltage + AINM
+  float realVoltage = differentialVoltage + 1.65;
+  
+  return realVoltage;
+}
+
+// Calculate current based on voltage and calibration
+float getCurrent() {
+  // This would need to be adjusted based on your specific current sensing circuit
+  float voltage = readDifferentialVoltage();
+  float offset = 1.65f; // AINM voltage
+  float sensitivity = 100.0f; // mV/A - adjust based on your current sensor
+  
+  return (voltage - offset) * (1000.0f / sensitivity); // Convert to Amps
+}
+
+void setup() {
+  Serial.begin(9600);
+  while(!Serial);
+
+  // Setup pins
+  pinMode(CS_PIN, OUTPUT);
+  pinMode(SCLK_PIN, OUTPUT);
+  pinMode(MISO_PIN, INPUT);
+
+  digitalWrite(CS_PIN, HIGH);
+  digitalWrite(SCLK_PIN, LOW);
+
+  Serial.println("Bit-banging SPI initialized for ADS7044");
+  Serial.println("AINP: 0-3.3V, AINM: fixed at 1.65V");
+}
+
+void loop() {
+  uint16_t rawValue = readSensor();
+  float inputVoltage = readDifferentialVoltage();
+  float current = getCurrent();
+
+  Serial.print("Raw ADC: ");
+  Serial.println(rawValue);
+  //Serial.print(" | AINP Voltage: ");
+  //Serial.print(inputVoltage, 3);
+  //Serial.print("V | Differential: ");
+  //Serial.print(inputVoltage - 1.65, 3);
+  //Serial.print("V | Current: ");
+  //Serial.print(current, 3);
+  //Serial.println(" A");
+
+  delay(100);
+}

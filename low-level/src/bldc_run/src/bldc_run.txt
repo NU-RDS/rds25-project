@@ -27,7 +27,7 @@ MagneticSensorSPI sensor = MagneticSensorSPI(10, 14, 0x3FFF);
 BLDCDriver3PWM driver = BLDCDriver3PWM(PWM_A, PWM_B, PWM_C, PWM_ENABLE);
 
 //  InlineCurrentSense(shunt_resistance, gain, adc_a, adc_b)
-InlineCurrentSense current_sense = InlineCurrentSense(shunt_resistor, gain, CS_A, CS_B);
+InlineCurrentSenseSPI current_sense = InlineCurrentSenseSPI(shunt_resistor, gain, CS_A, CS_B);
 
 //  BLDCMotor( pole_pairs , ( phase_resistance, KV_rating  optional) )
 BLDCMotor motor = BLDCMotor(7, 0.461); // change phase resistance 
