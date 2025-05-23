@@ -6,7 +6,7 @@
 #define SCK 27
 #define DT 26
 #define BAUD_RATE 9600
-#define CALIBRATION_FACTOR 120.75
+#define CALIBRATION_FACTOR 136.15
 
 HX711 scale;
 // Scale weight reading counter

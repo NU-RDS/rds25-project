@@ -10,7 +10,7 @@ from sklearn.metrics import r2_score
 # Encoder 2 readings correspond to shaft
 # Encoder 1 readings correspond to motor
 # Loadcell values are measured in grams 
-df = pd.read_csv("data/sensor_log_20250518_230146.csv")
+df = pd.read_csv("data/sensor_log_20250522_202210.csv")
 
 # Motor gear ratio
 GEAR_RATIO = 36
@@ -77,36 +77,36 @@ print(f"r_squared - {r_squared_poly}")
 
 # Plot 
 
-# # Plot raw encoder and wrapped encoder 
-# plt.figure(figsize=(10, 6))
-# plt.plot(df["Encoder1"].values, label="Raw")
-# plt.plot(encoder1, label="Unwrapped", linestyle='--')
-# plt.title("Encoder 1: Raw vs Unwrapped")
-# plt.ylabel("Angle [rad]")
-# plt.legend()
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
+# Plot raw encoder and wrapped encoder 
+plt.figure(figsize=(10, 6))
+plt.plot(df["Encoder1"].values, label="Raw")
+plt.plot(encoder1, label="Unwrapped", linestyle='--')
+plt.title("Encoder 1: Raw vs Unwrapped")
+plt.ylabel("Angle [rad]")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
-# # Plot raw encoder and wrapped encoder 
-# plt.figure(figsize=(10, 6))
-# plt.plot(df["Encoder2"].values, label="Raw")
-# plt.plot(encoder2, label="Unwrapped", linestyle='--')
-# plt.title("Encoder 2: Raw vs Unwrapped")
-# plt.ylabel("Angle [rad]")
-# plt.legend()
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
+# Plot raw encoder and wrapped encoder 
+plt.figure(figsize=(10, 6))
+plt.plot(df["Encoder2"].values, label="Raw")
+plt.plot(encoder2, label="Unwrapped", linestyle='--')
+plt.title("Encoder 2: Raw vs Unwrapped")
+plt.ylabel("Angle [rad]")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 plt.figure(figsize=(10, 6))
 plt.scatter(x, y, alpha=0.6, s=15, color='k')
-plt.plot(x, y_lin_pred, color='green', linestyle='-', linewidth=2.0, label=f"Linear: $R^2$ - {r_squared_lin}")
-plt.plot(x, y_poly_pred, color='red', linestyle='-', linewidth=2.0, label=f"Poly: $R^2$ - {r_squared_poly}")
-plt.xlabel("Theta [deg]")
+# plt.plot(x, y_lin_pred, color='green', linestyle='-', linewidth=2.0, label=f"Linear: $R^2$ - {r_squared_lin}")
+# plt.plot(x, y_poly_pred, color='red', linestyle='-', linewidth=2.0, label=f"Poly: $R^2$ - {r_squared_poly}")
+plt.xlabel("Angular Deflection [deg]")
 plt.ylabel("Torque [Nm]")
 plt.title("Spring Characterization")
-plt.legend()
+# plt.legend()
 plt.grid(True)
 plt.tight_layout()
 

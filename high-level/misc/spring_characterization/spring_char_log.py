@@ -7,7 +7,7 @@ import os
 # SERIAL_PORT = '/dev/ttyACM0'
 SERIAL_PORT = '/dev/tty.usbmodem149741401'
 BAUD_RATE = 9600
-DURATION_SECONDS = 80
+DURATION_SECONDS = 90
 
 # Output CSV file 
 output_dir = "data"
