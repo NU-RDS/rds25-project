@@ -147,6 +147,14 @@ void loop() {
     // Check for errors
     checkErrors();
 
+    odrives[0].is_running = true;
+    Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
+    Serial.print(" - Revolutions: ");
+    Serial.print(feedback.Pos_Estimate);
+    Serial.print(" - Degrees: ");
+    Serial.println(fmod(feedback.Pos_Estimate*360., 360.0));
+    
+
     // Check for serial commands
     if (Serial.available() > 0) {
         int command = Serial.parseInt();
