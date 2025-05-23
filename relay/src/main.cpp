@@ -1,4 +1,5 @@
 #include <SPI.h>
+#include "encoder.hpp"
 
 // Pin definitions for AS5047 encoder - use primary SPI bus (SPI0)
 const int ENCODER_CS = 10;    // Connected to encoder nCS
@@ -14,11 +15,12 @@ const int ODRIVE_CLK = 27;    // Connected to ODrive SPI_SCK
 
 // SPI settings for AS5047 encoder
 SPISettings encoderSettings(1000000, MSBFIRST, SPI_MODE1);
-
 // Buffer to store encoder data
 volatile uint16_t rawEncoderValue = 0;
 volatile bool newDataReady = false;
 
+// Create encoder object using the provided library
+Encoder encoder(ENCODER_CS);
 
 // Read encoder position
 uint16_t readEncoder() {
@@ -92,14 +94,26 @@ void setup() {
 }
 
 void loop() {
-  // Continuously read encoder
+  // Continuously read encoder using both methods
   rawEncoderValue = readEncoder();
+  
+  // Also read using the encoder library for angle calculation
+  encoder.beginSPI();
+  uint16_t libRawValue = encoder.readEncoderRaw();
+  float angle = encoder.rawToDegree(libRawValue);
+  SPI.endTransaction();
   
   // Print encoder reading and transfers periodically
   static unsigned long lastPrintTime = 0;
   if (millis() - lastPrintTime > 100) {
-    Serial.print("Encoder value: 0x");
-    Serial.println(rawEncoderValue, HEX);
+    Serial.print("Encoder raw value: 0x");
+    Serial.print(rawEncoderValue, HEX);
+    Serial.print(" (");
+    Serial.print(rawEncoderValue);
+    Serial.print(") - Angle: ");
+    Serial.print(angle, 2);
+    Serial.println("°");
+    
     lastPrintTime = millis();
     
     if (newDataReady) {
