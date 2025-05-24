@@ -1,16 +1,8 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include "HX711.h"
+// #include "HX711.h"
 
-// HX711 Configuration 
-#define SCK 27
-#define DT 26
 #define BAUD_RATE 9600
-#define CALIBRATION_FACTOR 136.15
-
-HX711 scale;
-// Scale weight reading counter
-int count = 1;
 
 // SPI Encoder Configuration 
 #define NOP 0x0000
@@ -79,18 +71,6 @@ void setup() {
 
   Serial.println("Initializing HX711 and SPI Encoders...");
 
-  // HX711 Init
-  scale.begin(DT, SCK);
-
-  // Calibration values
-  scale.set_scale(CALIBRATION_FACTOR);
-
-  // Set the scale to 0
-  Serial.println("Tare. Remove any weights from the scale.");
-  delay(10000);
-  scale.tare();
-  Serial.println("Please place weight on scales");
-
   // SPI encoder init
   pinMode(cs1, OUTPUT);
   pinMode(cs2, OUTPUT);
@@ -102,9 +82,7 @@ void setup() {
 
 // Calculating & displaying the weight & encoder readings
 void loop() {
-  // Reading scale input
-  float weight = scale.get_units();
-
+  
   // Record start time
   SPI.beginTransaction(settings);
 
@@ -121,9 +99,7 @@ void loop() {
   // Print results
   Serial.print(angleDegrees1, 2);
   Serial.print(",");
-  Serial.print(angleDegrees2, 2);
-  Serial.print(",");
-  Serial.println(weight, 3);
+  Serial.println(angleDegrees2, 2);
 
   delay(100);
 }

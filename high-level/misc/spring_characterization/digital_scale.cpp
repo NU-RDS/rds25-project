@@ -1,43 +1,52 @@
-#include "HX711.h"
-#define SCK 27
-#define DT 26
+#include <Wire.h>
+#include <Adafruit_NAU7802.h>
+#include <Arduino.h>
 
-#define BAUD_RATE 9600
+Adafruit_NAU7802 nau;
 
-#define CALIBRATION_FACTOR 120.75
- 
-HX711 scale;
-// Scale weight reading counter
-int count = 1;
- 
+// Calibration constants
+const float ZERO_OFFSET = 102734;
+const float NEWTONS_PER_COUNT = 0.000046;
 
-// Initialising the teensy & load cell
 void setup() {
-  Serial.begin(BAUD_RATE);
-  unsigned long timeout = millis();
+  Serial.begin(115200);
+  // Wait for serial port to be available
+  while (!Serial);
 
-  while (!Serial && millis() - timeout < 3000);
+  Wire.begin();
+  Wire.setClock(400000);
 
-  Serial.println("Initializing HX711");
+  if (!nau.begin(&Wire)) {
+    Serial.println("NAU7802 not detected");
+    while (1);
+  }
 
-  scale.begin(DT, SCK);
-  
-  // Calibration values
-  scale.set_scale(CALIBRATION_FACTOR);
-  
-  // Set the scale to 0
-  Serial.println("Tare. Remove any weights from the scale.");
-  delay(5000);
-  scale.tare();
-  Serial.println("Please place weight on scales");
+  // Configure amplifier
+  nau.setLDO(NAU7802_3V0);
+  nau.setGain(NAU7802_GAIN_128);
+  nau.setRate(NAU7802_RATE_320SPS);
+
+  Serial.println("Remove all weight");
+  delay(2000);
+  nau.calibrate(NAU7802_CALMOD_INTERNAL);
+  nau.calibrate(NAU7802_CALMOD_OFFSET);
+
+  // Stabilize ADC
+  for (int i = 0; i < 10; i++) {
+    while (!nau.available());
+    nau.read();
+  }
+
+  Serial.println("Start streaming calibrated force values (N)...");
 }
- 
-// Calculating & displaying the weight & average weight readings
-void loop() {
-  // Reading scale input
 
-  // Checking for valid weight and updating the average
-  Serial.printf("reading %d: ", count++);
-  Serial.println(scale.get_units(), 3);
-  delay(500);
+void loop() {
+  if (nau.available()) {
+    int32_t reading = nau.read();
+    float force = (reading - ZERO_OFFSET) * NEWTONS_PER_COUNT;
+
+    Serial.print("Force (N): ");
+    Serial.println(force, 6);
+  }
+  delay(100);
 }

@@ -1,51 +1,88 @@
+#include <Wire.h>
+#include <Adafruit_NAU7802.h>
 #include <Arduino.h>
-#include "HX711.h"
 
-// Load cell's SCK & DT pins
-#define SCK 27
-#define DT 26
+Adafruit_NAU7802 nau;
 
-// Preset known weight (grams)
-#define KNOWN_WEIGHT 20.0
-#define BAUD_RATE 9600
+// Calibration variables
+int32_t ZERO_OFFSET = 0;
+float NEWTONS_PER_COUNT = 0.0;
 
-HX711 scale;
+// Constants
+// Known mass in grams
+const float KNOWN_MASS = 20.0;
+
+// acc due to gravity
+const float g = 9.81;
+
+// Calibration duration
+const unsigned long calibration_duration = 5000;
+
+int32_t averageReading(unsigned long duration_ms) {
+  unsigned long start = millis();
+  int32_t sum = 0;
+  int count = 0;
+  while (millis() - start < duration_ms) {
+    if (nau.available()) {
+      sum += nau.read();
+      count++;
+    }
+  }
+  return (count > 0) ? sum / count : 0;
+}
+
+void calibrateLoadCell() {
+  
+  Serial.println("Step 1: Remove all weight. Calibrating zero offset...");
+  delay(2000);
+  ZERO_OFFSET = averageReading(calibration_duration);
+  Serial.print("Zero offset: ");
+  Serial.println(ZERO_OFFSET);
+  
+  Serial.println("Step 2: Place known weight. Calibrating scale factor...");
+  delay(5000);
+  int32_t load_avg = averageReading(calibration_duration);
+  Serial.print("Loaded average: ");
+  Serial.println(load_avg);
+  
+  int32_t delta = load_avg - ZERO_OFFSET;
+  float force = KNOWN_MASS * g * 1e-3;
+  NEWTONS_PER_COUNT = force / delta;
+  Serial.print("Newtons per count: ");
+  Serial.println(NEWTONS_PER_COUNT, 6);
+  
+  Serial.println("Calibration complete.\n");
+}
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(115200);
+  // Wait for serial port to be available
+  while (!Serial);
+  
+  Wire.begin();
+  Wire.setClock(400000);
+  
+  if (!nau.begin(&Wire)) {
+    Serial.println("NAU7802 not found!");
+    while (1);
+  }
+  
+  // Configure amplifier
+  nau.setLDO(NAU7802_3V0);
+  nau.setGain(NAU7802_GAIN_128);
+  nau.setRate(NAU7802_RATE_320SPS);
+  nau.calibrate(NAU7802_CALMOD_INTERNAL);
+  nau.calibrate(NAU7802_CALMOD_OFFSET);
+  
+  // Stabilize ADC
+  for (int i = 0; i < 10; i++) {
+    while (!nau.available());
+    nau.read();
+  }
 
-  Serial.begin(BAUD_RATE);
-  unsigned long timeout = millis();
-
-  while (!Serial && millis() - timeout < 3000);
-
-  Serial.println("Initializing HX711");
-  scale.begin(DT, SCK);
 }
 
 void loop() {
-  if (scale.is_ready()) {
-
-    // Reset scale
-    scale.set_scale();
-    Serial.println("Tare. Remove any weights from the scale.");
-    delay(5000);
-    scale.tare();
-    Serial.println("Tare done");
-
-    delay(1000);
-    Serial.println("Place a known weight on the scale");
-    delay(5000);
-
-    float reading = scale.get_units(10);
-    Serial.print("Result: ");
-    Serial.println(reading, 2);
-
-    float calibration_factor = reading / KNOWN_WEIGHT;
-    Serial.print("Calibration factor: ");
-    Serial.println(calibration_factor, 2);
-
-  } 
-  
+  calibrateLoadCell();
   delay(1000);
 }
