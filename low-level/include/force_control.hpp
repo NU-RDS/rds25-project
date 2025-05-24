@@ -48,6 +48,9 @@ public:
     
     // PID controller for force - updated to match implementation
     float forcePID(float motor_angle, ForceType forceType);
+
+    // Abstracting SEA encoder angle
+    float getSeaEncoderAngle();
     
     // Getters
     float getReferenceForce() { return this->referenceForce; }

@@ -117,6 +117,14 @@ void ForceControl::setForceType(int typeIndex)
     }
 } 
 
+float ForceControl::getSeaEncoderAngle(){
+    if (this->seaEncoder == nullptr) {
+        Serial.println("Error: Sea encoder not initialized");
+        return 0.0f;
+    }
+    return this->seaEncoder->readEncoderDeg();
+}
+
 void ForceControl::setMotorEncoder(int encoderCS)
 {
     if (this->motorEncoder != nullptr) {
