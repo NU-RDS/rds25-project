@@ -9,7 +9,14 @@ class TendonKinematics{
         std::array<std::array<float, 4>, 4> J_dex;
         std::array<float, 4> null_dex;
         float J_pow;
-        std::array<std::array<float, 2>, 7> J_wrist;
+        float R_pitch = 24.0f;
+        float R_yaw = 24.0f;
+        float R_pow = 13.0f;
+        float R_mcp = 7.5f;
+        float R_splay = 7.5f;
+        float R_extensor = 13.0f;
+        float R_pip = 18.5f;
+        float R_motor = 5.0f;
 
     public:
         TendonKinematics() {
@@ -21,16 +28,7 @@ class TendonKinematics{
                 {1.0f, 2.52f, 1.2f, 1.2f}
             }};
             null_dex = {0.0f, 0.0f, -1.0f, 1.0f};
-            J_pow = 1.0;
-            J_wrist = {{
-                {1.0, 1.0},
-                {1.0, -1.0},
-                {-1.0, 1.0},
-                {-1.0, -1.0},
-                {1.5, 1.5},
-                {-1.5, -1.5},
-                {2.5, -2.5}
-            }};
+            J_pow = 1.0; //have to change 
         }
 
         std::array<float, 7> getMotorTorques(std::array<float, 7> joint_torques);
