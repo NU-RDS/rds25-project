@@ -5,7 +5,7 @@
 
 StateManager state_manager;
 
-comms::TeensyCANDriver<2, comms::CANBaudRate::CBR_500KBPS> g_canDriver;
+comms::TeensyCANDriver<1, comms::CANBaudRate::CBR_500KBPS> g_canDriver;
 
 comms::CommsController g_controller{
     g_canDriver,
@@ -33,6 +33,8 @@ void loop() {
 
     g_controller.sendCommand(motorCmd);
 
+    delay(1000);
+
     comms::SensorToggleCommandOpt toggleSensorDesc(
         comms::MCUID::MCU_LOW_LEVEL_0,  // who is recieving this?
         0,                       // what sensor?
@@ -43,5 +45,5 @@ void loop() {
 
     g_controller.sendCommand(sensorCmd);
 
-    delay(100);  // bad
+    delay(1000);
 }
