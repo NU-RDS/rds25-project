@@ -14,7 +14,7 @@ const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 const float offset = 0;
 const float newtonsPerCount = 0;
 
-Loadcell loadcell;
+// Loadcell loadcell;
 // Constants
 const long BAUD_RATE = 115200;
 const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
@@ -137,21 +137,29 @@ void setup() {
 
     // Initialize SPI for encoder
     SPI.begin();
+
+    Serial.println(1);
     
-    // Initialize force controller with encoder
-    forceController.setMotorEncoder(ENCODER_MOTOR_CS);
+    // // Initialize force controller with encoder
     forceController.setSeaEncoder(ENCODER_SEA_CS);
+    
+    Serial.println(2);
     
     // Default to STEP reference
     forceController.setForceType(0);
     
+    Serial.println(3);
+
     Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
+    Serial.println(4);
+
     float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
     motor_offset = motor_angle/GEAR_REDUCTION;
-    sea_offset = forceController.getSeaEncoderAngle();
+    sea_offset = 0;//forceController.getSeaEncoderAngle();
+    Serial.println(5);
 
-    loadcell.setNewtonsPerCount(newtonsPerCount);
-    loadcell.setOffset(offset);
+    // loadcell.setNewtonsPerCount(newtonsPerCount);
+    // loadcell.setOffset(offset);
 
     Serial.println("Force Control System Ready");
 }
@@ -282,6 +290,7 @@ void loop() {
                 break;
         }
     }
+
     if (runningPID)
     {        
         unsigned long currentTime = millis();
@@ -298,11 +307,11 @@ void loop() {
         Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
         float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
         motor_angle = motor_angle/GEAR_REDUCTION - motor_offset;
-        float sea_angle = forceController.getSeaEncoderAngle() - sea_offset;
+        float sea_angle = 0;//forceController.getSeaEncoderAngle() - sea_offset;
         float PIDtorque = forceController.forcePID(motor_angle, forceController.getForceType());
 
         // Apply torque to ODrive
-        PIDtorque = 0.1;
+        PIDtorque = 1;
         odrives[0].current_torque = PIDtorque;
         odrives[0].is_running = true;
         odrives[0].drive.setTorque(PIDtorque);
@@ -316,7 +325,7 @@ void loop() {
         Serial.print(forceController.getReferenceForce());
         Serial.print(" ");
         // float loadCellReading = 0;
-        Serial.println(loadcell.readForce());
+        // Serial.println(loadcell.readForce());
     }
     
     delay(1);  // Small delay to prevent overwhelming the system

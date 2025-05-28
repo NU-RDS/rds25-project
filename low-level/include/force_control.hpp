@@ -32,7 +32,6 @@ private:
     float pidCurrent;  // PID output
 
     ForceType forceType;
-    Encoder* motorEncoder;
     Encoder* seaEncoder;
 
 
@@ -49,9 +48,6 @@ public:
     // PID controller for force - updated to match implementation
     float forcePID(float motor_angle, ForceType forceType);
 
-    // Abstracting SEA encoder angle
-    float getSeaEncoderAngle();
-    
     // Getters
     float getReferenceForce() { return this->referenceForce; }
     float getPidCurrent() { return this->pidCurrent; }
@@ -60,6 +56,8 @@ public:
     float getKi() {return this->Ki; }
     float getKd() {return this->Kd; }
     ForceType getForceType() { return this->forceType; }
+    float getSeaEncoderAngle();
+
 
     // Setters
     void setFf(float ff) {this->Ff = ff;}
@@ -67,7 +65,6 @@ public:
     void setKi(float ki) {this->Ki = ki;}
     void setKd(float kd) {this->Kd = kd;}
     void setForceType(int typeIndex);
-    void setMotorEncoder(int encoderCS);
     void setSeaEncoder(int encoderCS);
 
 };
