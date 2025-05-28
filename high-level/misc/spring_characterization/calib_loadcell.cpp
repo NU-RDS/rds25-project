@@ -9,11 +9,12 @@ int32_t ZERO_OFFSET = 0;
 float NEWTONS_PER_COUNT = 0.0;
 
 // Constants
-// Known mass in grams
-const float KNOWN_MASS = 20.0;
 
 // acc due to gravity
 const float g = 9.81;
+
+// Known mass in grams
+const float KNOWN_MASS = 15000/g;
 
 // Calibration duration
 const unsigned long calibration_duration = 5000;
@@ -33,17 +34,18 @@ int32_t averageReading(unsigned long duration_ms) {
 
 void calibrateLoadCell() {
   
-  Serial.println("Step 1: Remove all weight. Calibrating zero offset...");
-  delay(2000);
-  ZERO_OFFSET = averageReading(calibration_duration);
-  Serial.print("Zero offset: ");
-  Serial.println(ZERO_OFFSET);
   
   Serial.println("Step 2: Place known weight. Calibrating scale factor...");
-  delay(5000);
+  delay(10000);
   int32_t load_avg = averageReading(calibration_duration);
   Serial.print("Loaded average: ");
   Serial.println(load_avg);
+
+  Serial.println("Step 1: Remove all weight. Calibrating zero offset...");
+  delay(10000);
+  ZERO_OFFSET = averageReading(calibration_duration);
+  Serial.print("Zero offset: ");
+  Serial.println(ZERO_OFFSET);
   
   int32_t delta = load_avg - ZERO_OFFSET;
   float force = KNOWN_MASS * g * 1e-3;
@@ -68,7 +70,7 @@ void setup() {
   }
   
   // Configure amplifier
-  nau.setLDO(NAU7802_3V0);
+  nau.setLDO(NAU7802_3V3);
   nau.setGain(NAU7802_GAIN_128);
   nau.setRate(NAU7802_RATE_320SPS);
   nau.calibrate(NAU7802_CALMOD_INTERNAL);

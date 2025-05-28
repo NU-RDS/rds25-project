@@ -31,6 +31,7 @@ float convertTo360(uint16_t rawValue) {
 uint16_t readEncoderRaw(int csPin) {
   uint16_t pos_temp;
 
+  Serial.println("11");
   // Read angle command
   cmd = (0b11 << 14) | ANGLECOM;
   digitalWriteFast(csPin, LOW);
@@ -38,6 +39,7 @@ uint16_t readEncoderRaw(int csPin) {
   digitalWriteFast(csPin, HIGH);
   delayNanoseconds(400);
 
+  Serial.println("22");
   // Read error flags
   cmd = (0b01 << 14) | ERRFL;
   digitalWriteFast(csPin, LOW);
@@ -45,6 +47,7 @@ uint16_t readEncoderRaw(int csPin) {
   digitalWriteFast(csPin, HIGH);
   delayNanoseconds(400);
 
+  Serial.println("33");
   // Read diagnostics
   cmd = (0b11 << 14) | DIAAGC;
   digitalWriteFast(csPin, LOW);
@@ -52,6 +55,7 @@ uint16_t readEncoderRaw(int csPin) {
   digitalWriteFast(csPin, HIGH);
   delayNanoseconds(400);
 
+  Serial.println("44");
   // NOP command
   cmd = (0b11 << 14) | NOP;
   digitalWriteFast(csPin, LOW);
@@ -73,11 +77,11 @@ void setup() {
 
   // SPI encoder init
   pinMode(cs1, OUTPUT);
-  pinMode(cs2, OUTPUT);
+  // pinMode(cs2, OUTPUT);
   digitalWriteFast(cs1, HIGH);
-  digitalWriteFast(cs2, HIGH);
+  // digitalWriteFast(cs2, HIGH);
 
-  SPI.begin(); 
+  SPI.begin();
 }
 
 // Calculating & displaying the weight & encoder readings
@@ -85,21 +89,19 @@ void loop() {
   
   // Record start time
   SPI.beginTransaction(settings);
-
   // Read from first encoder
   uint16_t rawAngle1 = readEncoderRaw(cs1);
   float angleDegrees1 = convertTo360(rawAngle1);
-
-  // Read from second encoder
-  uint16_t rawAngle2 = readEncoderRaw(cs2);
-  float angleDegrees2 = convertTo360(rawAngle2);
+  // // Read from second encoder
+  // uint16_t rawAngle2 = readEncoderRaw(cs2);
+  // float angleDegrees2 = convertTo360(rawAngle2);
 
   SPI.endTransaction();
 
   // Print results
   Serial.print(angleDegrees1, 2);
-  Serial.print(",");
-  Serial.println(angleDegrees2, 2);
+  // Serial.print(",");
+  // Serial.println(angleDegrees2, 2);
 
   delay(100);
 }

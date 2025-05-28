@@ -5,8 +5,23 @@
 Adafruit_NAU7802 nau;
 
 // Calibration constants
-const float ZERO_OFFSET = 102734;
-const float NEWTONS_PER_COUNT = 0.000046;
+int32_t ZERO_OFFSET = 13010;
+const float NEWTONS_PER_COUNT = -0.000034;
+
+const unsigned long zero_duration = 5000;
+
+int32_t averageReading(unsigned long duration_ms) {
+  unsigned long start = millis();
+  int32_t sum = 0;
+  int count = 0;
+  while (millis() - start < duration_ms) {
+    if (nau.available()) {
+      sum += nau.read();
+      count++;
+    }
+  }
+  return (count > 0) ? sum / count : 0;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -22,7 +37,7 @@ void setup() {
   }
 
   // Configure amplifier
-  nau.setLDO(NAU7802_3V0);
+  nau.setLDO(NAU7802_3V3);
   nau.setGain(NAU7802_GAIN_128);
   nau.setRate(NAU7802_RATE_320SPS);
 
@@ -37,7 +52,12 @@ void setup() {
     nau.read();
   }
 
+  ZERO_OFFSET = averageReading(zero_duration);
+  Serial.print("Zero Offset - ");
+  Serial.println(ZERO_OFFSET);
+
   Serial.println("Start streaming calibrated force values (N)...");
+
 }
 
 void loop() {
@@ -46,7 +66,7 @@ void loop() {
     float force = (reading - ZERO_OFFSET) * NEWTONS_PER_COUNT;
 
     Serial.print("Force (N): ");
-    Serial.println(force, 6);
+    Serial.println(force);
   }
   delay(100);
 }
