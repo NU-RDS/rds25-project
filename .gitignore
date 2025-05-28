@@ -1,7 +1,7 @@
-<<<<<<< HEAD
 .vscode
-=======
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/settings.json
->>>>>>> 5e21067 (Created and implemented encoder library)
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.vscode/settings.json
