@@ -1,7 +1,7 @@
-#ifndef FORCE_CONTROL_HPP
-#define FORCE_CONTROL_HPP
+#ifndef FORCECONTROL_HPP
+#define FORCECONTROL_HPP
 
-#include "encoder.hpp"
+#include "Encoder.hpp"
 
 #define R_ENCODERPULLEY 1
 #define _PI 3.1415
