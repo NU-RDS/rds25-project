@@ -5,11 +5,11 @@ StateManager::StateManager()
       dexFinger(std::make_unique<DexterousFinger>()),
       powFinger(std::make_unique<PowerFinger>()) {
     
-    currentMovementPhase = IDLE;
 }
 
 bool StateManager::initialize() {
-    // Other initialization
+    Serial.println("Initializing StateManager.");
+    currentMovementPhase = IDLE;
     return true;
 }
 
@@ -28,6 +28,33 @@ void StateManager::updateGUI() {
 void StateManager::controlLoop() {
     // Update the communication controller to process messages
     
+}
+
+void StateManager::processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw) {
+    if (message_info.type == comms::MessageContentType::MT_COMMAND) {
+        Serial.println("[HIGH] INFO: Command received.");
+        comms::Result<comms::CommandMessagePayload> cmdRes = comms::CommandMessagePayload::fromRaw(message_raw);
+
+        if (cmdRes.isError()) {
+            COMMS_DEBUG_PRINT_ERROR("Unable to handle command: %s\,", cmdRes.error);
+            return;
+        }
+
+        comms::CommandMessagePayload cmd = cmdRes.value();
+
+        if (cmd.commandID == comms::CommandType::CMD_SENSOR_TOGGLE) {
+            // Update encoder values
+        }
+    }
+    else if (message_info.type == comms::MessageContentType::MT_HEARTBEAT) {
+        Serial.println("[HIGH] INFO: Heartbeat received.");
+    }
+    else if (message_info.type == comms::MessageContentType::MT_ERROR) {
+        Serial.println("[HIGH] ERROR: Error received!");
+    }
+    else {
+        Serial.println("[HIGH] ERROR: Received unknown message!");
+    }
 }
 
 void StateManager::setJointPositions(double wristRoll, double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp) {

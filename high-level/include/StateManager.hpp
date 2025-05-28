@@ -11,6 +11,14 @@
 #include "Wrist.hpp"
 #include "comms.hpp"
 
+enum MovementPhase {
+    IDLE,
+    PAUSED,
+    WRIST_MOVEMENT,
+    FINGER_MOVEMENT,
+    COMPLETE
+};
+
 class StateManager {
     private:
         std::unique_ptr<Wrist> wrist;
@@ -24,15 +32,6 @@ class StateManager {
         // Timing
         std::chrono::time_point<std::chrono::steady_clock> lastUpdateTime;
         double dt; // Time step in seconds
-
-        // Movement control state
-        enum MovementPhase {
-            IDLE,
-            PAUSED,
-            WRIST_MOVEMENT,
-            FINGER_MOVEMENT,
-            COMPLETE
-        };
 
         MovementPhase currentMovementPhase;
 
@@ -49,6 +48,7 @@ class StateManager {
         void updateGUI();
 
         void controlLoop();
+        void processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw);
 
         // Subsystem access
         Wrist* getWrist() { return wrist.get(); }
