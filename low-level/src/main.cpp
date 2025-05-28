@@ -11,8 +11,8 @@
 const int ENCODER_SEA_CS = 10;  // Chip select pin for encoder
 const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 
-const float offset = 0;
-const float newtonsPerCount = 0;
+const float offset = -305;
+const float newtonsPerCount = -0.000034;
 
 // Loadcell loadcell;
 // Constants
