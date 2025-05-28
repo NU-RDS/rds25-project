@@ -11,9 +11,9 @@ void Loadcell::configure()
     i2c->begin();
     i2c->setClock(400000);
 
-    if (!nau.begin(i2c)) {
-        while (1); // Hang if device not detected
-    }
+    //if (!nau.begin(i2c)) {
+    //    while (1); // Hang if device not detected
+    //}
 
     nau.setLDO(NAU7802_3V3);
     nau.setGain(NAU7802_GAIN_128);

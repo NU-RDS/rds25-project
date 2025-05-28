@@ -20,7 +20,7 @@ const long BAUD_RATE = 115200;
 const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
 
 // Global variables
-ForceControl forceController(0.0f, 0.0f, 0.0f, 0.0f, 1.0f); // Default values
+ForceControl forceController(0.0f, 0.0f, 0.0f, 0.0f, 0.00103f); // Default values
 unsigned long lastTime = 0;
 unsigned long startTime = 0;
 boolean runningPID = false;
