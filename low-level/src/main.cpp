@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include "encoder.hpp"
 #include "force_control.hpp"
+#include "load_cell.hpp"
 
 #define GEAR_REDUCTION 36.0f
 
@@ -10,7 +11,10 @@
 const int ENCODER_SEA_CS = 10;  // Chip select pin for encoder
 const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 
+const float offset = 0;
+const float newtonsPerCount = 0;
 
+Loadcell loadcell;
 // Constants
 const long BAUD_RATE = 115200;
 const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
@@ -145,6 +149,9 @@ void setup() {
     float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
     motor_offset = motor_angle/GEAR_REDUCTION;
     sea_offset = forceController.getSeaEncoderAngle();
+
+    loadcell.setNewtonsPerCount(newtonsPerCount);
+    loadcell.setOffset(offset);
 
     Serial.println("Force Control System Ready");
 }
@@ -308,8 +315,8 @@ void loop() {
         Serial.print(" ");
         Serial.print(forceController.getReferenceForce());
         Serial.print(" ");
-        float loadCellReading = 0;
-        Serial.println(loadCellReading);
+        // float loadCellReading = 0;
+        Serial.println(loadcell.readForce());
     }
     
     delay(1);  // Small delay to prevent overwhelming the system
