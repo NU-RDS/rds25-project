@@ -19,7 +19,7 @@ import queue
 
 
 class CommandID:
-    # Individual joint commands
+    # Individual joint commands (optional - for debugging/testing)
     SET_JOINT_WRIST_ROLL = 1
     SET_JOINT_WRIST_PITCH = 2
     SET_JOINT_WRIST_YAW = 3
@@ -28,6 +28,8 @@ class CommandID:
     SET_JOINT_DEX_MCP = 6
     SET_JOINT_DEX_SPLAIN = 7
     SET_JOINT_POW_GRASP = 8
+
+    # Main command - send all joints at once
     SET_ALL_JOINTS = 10
 
     # System commands
@@ -40,7 +42,7 @@ class CommandID:
     PRESET_OPEN_HAND = 40
     PRESET_CLOSE_HAND = 41
 
-    # Joint name to command ID mapping
+    # Joint name to command ID mapping (for individual commands if needed)
     JOINT_MAP = {
         'wrist_roll': SET_JOINT_WRIST_ROLL,
         'wrist_pitch': SET_JOINT_WRIST_PITCH,
@@ -116,12 +118,32 @@ class SerialCommunicator:
             try:
                 if values is not None:
                     if isinstance(values, (list, tuple)):
-                        value_str = ",".join([f"{v:.2f}" for v in values])
+                        # Format as space-separated values for easier parsing on MCU side
+                        value_str = " ".join([f"{v:.2f}" for v in values])
                         command = f"{command_id}:{value_str}\n"
                     else:
                         command = f"{command_id}:{values:.2f}\n"
                 else:
                     command = f"{command_id}\n"
+
+                self.serial_port.write(command.encode())
+                self.serial_port.flush()
+                return command.strip()
+            except Exception as e:
+                print(f"Send error: {e}")
+        return None
+
+    def send_all_joints_optimized(self, joint_values: list):
+        """
+        Optimized method to send all 8 joint values in one command
+        Expected order: wrist_roll, wrist_pitch, wrist_yaw, dex_pip, dex_dip, dex_mcp, dex_splain, pow_grasp
+        """
+        if self.is_connected and self.serial_port:
+            try:
+                # Format: "10:val1 val2 val3 val4 val5 val6 val7 val8"
+                # Using space separation for easier parsing on Arduino side
+                value_str = " ".join([f"{v:.2f}" for v in joint_values])
+                command = f"{CommandID.SET_ALL_JOINTS}:{value_str}\n"
 
                 self.serial_port.write(command.encode())
                 self.serial_port.flush()
@@ -218,7 +240,7 @@ class JointControlFrame(ttk.Frame):
 class RDSHandGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RDS Hand Control - Simple Command ID System")
+        self.root.title("RDS Hand Control - Unified Command System")
         self.root.geometry("800x700")
 
         self.communicator = SerialCommunicator()
@@ -330,9 +352,12 @@ class RDSHandGUI:
         button_frame.pack(fill='x', padx=10, pady=10)
 
         # Main send button - most prominent
-        ttk.Button(button_frame, text="SEND ALL POSITIONS",
-                   command=self.send_all_positions,
-                   style="Accent.TButton").pack(side='left', padx=10)
+        send_btn = ttk.Button(button_frame, text="🚀 SEND ALL POSITIONS",
+                              command=self.send_all_positions)
+        send_btn.pack(side='left', padx=10)
+
+        # Make the button more prominent
+        send_btn.configure(style="Accent.TButton")
 
         # Separator
         ttk.Separator(button_frame, orient='vertical').pack(
@@ -361,9 +386,8 @@ class RDSHandGUI:
             self.system_frame, text="Emergency Controls")
         emergency_group.pack(fill='x', padx=10, pady=10)
 
-        ttk.Button(emergency_group, text="EMERGENCY STOP",
-                   command=self.emergency_stop,
-                   style="Danger.TButton").pack(side='left', padx=10, pady=10)
+        ttk.Button(emergency_group, text="🛑 EMERGENCY STOP",
+                   command=self.emergency_stop).pack(side='left', padx=10, pady=10)
 
         ttk.Button(emergency_group, text="Clear Emergency",
                    command=self.emergency_clear).pack(side='left', padx=10, pady=10)
@@ -428,13 +452,13 @@ class RDSHandGUI:
             self.log_message("Disconnected")
 
     def send_all_positions(self):
-        """Send all current joint positions to MCU in one message"""
+        """Send all current joint positions to MCU in ONE message"""
         if not self.communicator.is_connected:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
             return
 
-        # Collect all joint values in the correct order
+        # Collect all joint values in the exact order expected by MCU
         # Order: wrist_roll, wrist_pitch, wrist_yaw, dex_pip, dex_dip, dex_mcp, dex_splain, pow_grasp
         joint_order = ['wrist_roll', 'wrist_pitch', 'wrist_yaw',
                        'dex_pip', 'dex_dip', 'dex_mcp', 'dex_splain', 'pow_grasp']
@@ -446,14 +470,26 @@ class RDSHandGUI:
             else:
                 values.append(0.0)  # Default value if joint not found
 
-        # Send all values in one command
-        sent_command = self.communicator.send_command(
-            CommandID.SET_ALL_JOINTS, values)
+        # Send all values in ONE optimized command
+        sent_command = self.communicator.send_all_joints_optimized(values)
+
         if sent_command:
-            value_str = ", ".join(
-                [f"{joint_order[i]}={values[i]:.1f}°" for i in range(len(values))])
-            self.log_message(f"Sent all positions: {sent_command}")
-            self.log_message(f"Values: {value_str}")
+            # Log the successful send
+            self.log_message(f"✅ ALL JOINTS SENT: {sent_command}")
+
+            # Log human-readable values
+            value_descriptions = []
+            for i, joint_name in enumerate(joint_order):
+                value_descriptions.append(
+                    f"{joint_name.replace('_', ' ')}={values[i]:.1f}°")
+
+            self.log_message(f"📊 Values: {', '.join(value_descriptions)}")
+
+            # Update status
+            self.status_var.set(f"✅ Sent {len(values)} joint positions")
+        else:
+            self.log_message("❌ Failed to send joint positions")
+            self.status_var.set("❌ Send failed")
 
     def load_open_preset(self):
         """Load open hand preset values into controls (don't send yet)"""
@@ -472,7 +508,8 @@ class RDSHandGUI:
             if joint_name in self.joint_controls:
                 self.joint_controls[joint_name].set_position_display(value)
 
-        self.log_message("Open hand preset loaded (click 'SEND ALL' to apply)")
+        self.log_message(
+            "📖 Open hand preset loaded (click 'SEND ALL' to apply)")
 
     def load_close_preset(self):
         """Load close hand preset values into controls (don't send yet)"""
@@ -492,7 +529,7 @@ class RDSHandGUI:
                 self.joint_controls[joint_name].set_position_display(value)
 
         self.log_message(
-            "Close hand preset loaded (click 'SEND ALL' to apply)")
+            "📖 Close hand preset loaded (click 'SEND ALL' to apply)")
 
     def reset_all_joints(self):
         """Reset all joint displays to zero (don't send yet)"""
@@ -500,14 +537,14 @@ class RDSHandGUI:
             control.set_position_display(0.0)
 
         self.log_message(
-            "All joints reset to zero (click 'SEND ALL' to apply)")
+            "🔄 All joints reset to zero (click 'SEND ALL' to apply)")
 
     def emergency_stop(self):
         if self.communicator.is_connected:
             sent_command = self.communicator.send_command(
                 CommandID.EMERGENCY_STOP)
             if sent_command:
-                self.log_message(f"EMERGENCY STOP: {sent_command}")
+                self.log_message(f"🚨 EMERGENCY STOP: {sent_command}")
         else:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
@@ -517,7 +554,7 @@ class RDSHandGUI:
             sent_command = self.communicator.send_command(
                 CommandID.EMERGENCY_CLEAR)
             if sent_command:
-                self.log_message(f"Emergency cleared: {sent_command}")
+                self.log_message(f"✅ Emergency cleared: {sent_command}")
         else:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
@@ -528,7 +565,7 @@ class RDSHandGUI:
             sent_command = self.communicator.send_command(
                 CommandID.PRESET_OPEN_HAND)
             if sent_command:
-                self.log_message(f"Open hand preset sent: {sent_command}")
+                self.log_message(f"🖐️ Open hand preset sent: {sent_command}")
         else:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
@@ -539,7 +576,7 @@ class RDSHandGUI:
             sent_command = self.communicator.send_command(
                 CommandID.PRESET_CLOSE_HAND)
             if sent_command:
-                self.log_message(f"Close hand preset sent: {sent_command}")
+                self.log_message(f"✊ Close hand preset sent: {sent_command}")
         else:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
@@ -548,7 +585,7 @@ class RDSHandGUI:
         if self.communicator.is_connected:
             sent_command = self.communicator.send_command(CommandID.GET_STATUS)
             if sent_command:
-                self.log_message(f"Status request: {sent_command}")
+                self.log_message(f"📊 Status request: {sent_command}")
         else:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
@@ -558,7 +595,7 @@ class RDSHandGUI:
             sent_command = self.communicator.send_command(
                 CommandID.GET_POSITIONS)
             if sent_command:
-                self.log_message(f"Position request: {sent_command}")
+                self.log_message(f"📍 Position request: {sent_command}")
         else:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
@@ -575,7 +612,7 @@ class RDSHandGUI:
         try:
             while True:
                 message = self.communicator.message_queue.get_nowait()
-                self.log_message(f"Received: {message}")
+                self.log_message(f"📨 Received: {message}")
 
                 # Parse position updates if they come from MCU
                 # Example format: "[HIGH] POSITIONS: 0.0,0.0,0.0,45.0,30.0,15.0,0.0,60.0"

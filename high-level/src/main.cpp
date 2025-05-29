@@ -13,6 +13,24 @@ comms::CommsController g_controller{
     comms::MCUID::MCU_HIGH_LEVEL
 };
 
+enum CommandID {
+    SET_JOINT_WRIST_ROLL = 1,
+    SET_JOINT_WRIST_PITCH = 2,
+    SET_JOINT_WRIST_YAW = 3,
+    SET_JOINT_DEX_PIP = 4,
+    SET_JOINT_DEX_DIP = 5,
+    SET_JOINT_DEX_MCP = 6,
+    SET_JOINT_DEX_SPLAIN = 7,
+    SET_JOINT_POW_GRASP = 8,
+    SET_ALL_JOINTS = 10,
+    EMERGENCY_STOP = 20,
+    EMERGENCY_CLEAR = 21,
+    GET_STATUS = 30,
+    GET_POSITIONS = 31,
+    PRESET_OPEN_HAND = 40,
+    PRESET_CLOSE_HAND = 41
+};
+
 std::string serialCommand = "";
 
 bool checkSerial(std::string& serialCommand) {
@@ -40,6 +58,73 @@ bool checkSerial(std::string& serialCommand) {
     return false;  // No complete command yet
 }
 
+std::vector<std::string> splitString(const std::string& str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token = "";
+    
+    for (char c : str) {
+        if (c == delimiter) {
+            if (!token.empty()) {
+                tokens.push_back(token);
+                token = "";
+            }
+        } else {
+            token += c;
+        }
+    }
+    
+    if (!token.empty()) {
+        tokens.push_back(token);
+    }
+    
+    return tokens;
+}
+
+std::vector<float> parseFloatValues(const std::string& valueStr) {
+    std::vector<float> values;
+    std::vector<std::string> tokens = splitString(valueStr, ' ');
+    
+    for (const std::string& token : tokens) {
+        if (!token.empty()) {
+            float value = atof(token.c_str());
+            values.push_back(value);
+        }
+    }
+    
+    return values;
+}
+
+bool parseSerialCommand(const std::string& command, uint8_t& commandID, std::vector<float>& values) {
+    // Clear previous values
+    values.clear();
+    commandID = 0xFF; // Invalid default
+    
+    if (command.empty()) {
+        return false;
+    }
+    
+    // Find colon separator
+    size_t colonPos = command.find(':');
+    
+    if (colonPos != std::string::npos) {
+        // Format: "ID:value1 value2 value3..."
+        std::string idStr = command.substr(0, colonPos);
+        std::string valueStr = command.substr(colonPos + 1);
+        
+        if (!idStr.empty() && !valueStr.empty()) {
+            commandID = atoi(idStr.c_str());
+            values = parseFloatValues(valueStr);
+            return true;
+        }
+    } else {
+        // Format: "ID" (no values)
+        commandID = atoi(command.c_str());
+        return true;
+    }
+    
+    return false;
+}
+
 void setup() {
     Serial.begin(9600);
     Serial.println("[HIGH]");
@@ -49,62 +134,21 @@ void setup() {
 
 void loop() {
     if (checkSerial(serialCommand)) {
-        // Parse the command
-        uint8_t commandID = 0xFF;  // Default invalid
-        float value = 0.0f;
-        bool hasValue = false;
+        Serial.printf("[HIGH] Received command: '%s'\n", serialCommand.c_str());
         
-        // Simple parsing: "ID" or "ID:value"
-        bool validCommand = false;
-        size_t colonPos = serialCommand.find(':');
+        uint8_t commandID;
+        std::vector<float> values;
         
-        if (colonPos != std::string::npos) {
-            // Format: "ID:value"
-            std::string idStr = serialCommand.substr(0, colonPos);
-            std::string valueStr = serialCommand.substr(colonPos + 1);
-            
-            // Simple validation and conversion
-            if (!idStr.empty() && !valueStr.empty()) {
-                commandID = atoi(idStr.c_str());
-                value = atof(valueStr.c_str());
-                hasValue = true;
-                validCommand = true;
-            } else {
-                Serial.println("[HIGH] Parse error: Invalid format");
+        if (parseSerialCommand(serialCommand, commandID, values)) {
+            switch(commandID) {
+                case SET_ALL_JOINTS:
+                    state_manager.setJointPositions(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7]);
+                    break;
+                default:
+                    break;
             }
         } else {
-            // Format: "ID" (no value)
-            if (!serialCommand.empty()) {
-                commandID = atoi(serialCommand.c_str());
-                hasValue = false;
-                validCommand = true;
-            } else {
-                Serial.println("[HIGH] Parse error: Empty command");
-            }
-        }
-        
-        if (validCommand) {
-            Serial.print("[HIGH] Received - ID: ");
-            Serial.print(commandID);
-            if (hasValue) {
-                Serial.print(" Value: ");
-                Serial.print(value);
-            }
-            Serial.println();
-            
-            // TODO: Add your command handling logic here
-            // Example:
-            // switch (commandID) {
-            //     case 1:
-            //         // Handle command 1
-            //         break;
-            //     case 2:
-            //         // Handle command 2
-            //         break;
-            //     default:
-            //         Serial.println("[HIGH] Unknown command");
-            //         break;
-            // }
+            Serial.println("[HIGH] ERROR: Failed to parse command");
         }
         
         // Clear command buffer
