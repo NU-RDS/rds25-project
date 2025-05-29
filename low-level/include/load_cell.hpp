@@ -16,11 +16,11 @@ private:
     TwoWire* i2c;
     float offset;
     float newtonsPerCount;
-
-    void configure();
-
+    
+    
 public:
-    Loadcell(TwoWire* i2c = &Wire);
+    void configure();
+    Loadcell(TwoWire* i2c);
     void setOffset(float offset);
     void setNewtonsPerCount(float newtonsPerCount);
     float getOffset() const;

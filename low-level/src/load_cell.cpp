@@ -2,23 +2,22 @@
 
 Loadcell::Loadcell(TwoWire* i2c)
     : i2c(i2c), offset(0.0f), newtonsPerCount(0.0f)
-{
-    configure();
-}
+{}
 
 void Loadcell::configure()
 {
     i2c->begin();
     i2c->setClock(400000);
 
-    //if (!nau.begin(i2c)) {
-    //    while (1); // Hang if device not detected
-    //}
+    while (!nau.begin(i2c)) {
+       Serial.println("ERROR: NAU7802 not found");
+       delay(1000);
+    }
 
     nau.setLDO(NAU7802_3V3);
-    nau.setGain(NAU7802_GAIN_128);
     nau.setRate(NAU7802_RATE_320SPS);
-
+    nau.setGain(NAU7802_GAIN_128);
+    
     nau.calibrate(NAU7802_CALMOD_INTERNAL);
     nau.calibrate(NAU7802_CALMOD_OFFSET);
 

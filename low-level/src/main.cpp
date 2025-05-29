@@ -14,7 +14,7 @@ const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 const float offset = -305;
 const float newtonsPerCount = -0.000034;
 
-// Loadcell loadcell;
+// Loadcell loadcell(&Wire);
 // Constants
 const long BAUD_RATE = 115200;
 const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
@@ -156,6 +156,7 @@ void setup() {
     sea_offset = 0;//forceController.getSeaEncoderAngle();
     Serial.println(5);
 
+    // loadcell.configure();
     // loadcell.setNewtonsPerCount(newtonsPerCount);
     // loadcell.setOffset(offset);
 
