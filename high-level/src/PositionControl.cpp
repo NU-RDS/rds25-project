@@ -1,8 +1,11 @@
 #include "PositionControl.hpp"
 
-PositionControl::PositionControl(float ff, float kp, float ki, float kd, float ks) :
-    Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
-    referencePosition(0.0f), resultantPosition(0.0f) {}
+PositionControl::PositionControl(float ff, float kp, float kd, float ks) :
+    Ff(ff), Kp(kp), Kd(kd), Ks(ks), 
+    referencePosition(0.0f), resultantPosition(0.0f) {
+        PositionControl::posType = PositionType::STEP;
+    }
+
 
 float PositionControl::getJointAngle(Encoder& encoder)
 {
@@ -10,8 +13,8 @@ float PositionControl::getJointAngle(Encoder& encoder)
 }
 
 // NOT IMPLEMENTED 
-void PositionControl::positionGeneration(PositionType positionType, int t) {
-    switch (positionType) {
+void PositionControl::positionGeneration(PositionType posType, int t) {
+    switch (posType) {
         case PositionType::STEP:
             break;
             
@@ -21,7 +24,7 @@ void PositionControl::positionGeneration(PositionType positionType, int t) {
     }
 }
 
-float PositionControl::forcePID(int encoderCS, int encoderId, PositionControl::PositionType forceType)
+float PositionControl::positionPD(int encoderCS, int encoderId, PositionControl::PositionType posType)
 {
     // Use static maps to track PID state per encoder
     static std::map<int, float> prevErrMap;
@@ -41,7 +44,7 @@ float PositionControl::forcePID(int encoderCS, int encoderId, PositionControl::P
     int& timeStep = timeStepMap[encoderId];
 
     // Generate reference force
-    this->positionGeneration(forceType, timeStep++);
+    this->positionGeneration(posType, timeStep++);
     
     // Current force from the encoder
     Encoder encoder(encoderCS, encoderId);

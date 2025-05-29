@@ -1,6 +1,7 @@
 #ifndef POSITIONCONTROL_HPP
 #define POSITIONCONTROL_HPP
 
+#include <Arduino.h>
 #include <map>
 
 #include "Encoder.hpp"
@@ -18,9 +19,9 @@ public:
 		SIN
 	};
 
-	PositionControl(float ff, float kp, float ki, float kd, float ks);
+	PositionControl(float ff, float kp, float kd, float ks);
 
-	float forcePID(int encoderCS, int encoderId, PositionType forceType);
+	float positionPD(int encoderCS, int encoderId, PositionType forceType);
 	void positionPrint();
 
     // Getters
@@ -38,6 +39,8 @@ private:
 
 	float referencePosition; // input joint angle 
 	float resultantPosition; // after PID
+
+	PositionType posType;
 
 	void positionGeneration(PositionType positionType, int t); // t for time in sin force function
 };

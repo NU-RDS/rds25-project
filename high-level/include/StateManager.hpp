@@ -1,6 +1,7 @@
 #ifndef STATE_MANAGER_HPP
 #define STATE_MANAGER_HPP
 
+#include <Arduino.h>
 #include <memory>
 #include <string>
 #include <chrono>

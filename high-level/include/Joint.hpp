@@ -1,6 +1,7 @@
 #ifndef JOINT_HPP
 #define JOINT_HPP
 
+#include <Arduino.h>
 #include <string>
 #include <cmath>
 

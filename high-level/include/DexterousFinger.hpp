@@ -1,6 +1,7 @@
 #ifndef DEXTEROUS_FINGER_HPP
 #define DEXTEROUS_FINGER_HPP
 
+#include <Arduino.h>
 #include <memory>
 #include <unordered_map>
 
