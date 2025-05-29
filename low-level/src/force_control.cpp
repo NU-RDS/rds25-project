@@ -63,22 +63,16 @@ float ForceControl::forcePID(float motor_angle, ForceType forceType)
     // Generate reference force
     this->forceGeneration(forceType, timeStep++);
     
-<<<<<<< HEAD
-    if (this->seaEncoder == nullptr) {        
-        Serial.println("Error: Encoders not initialized");
-        return 0.0f;
-    }
-=======
+
     //if (this->motorEncoder == nullptr || this->seaEncoder == nullptr) {        
     //    Serial.println("Error: Encoders not initialized");
     //    return 0.0f;
     //}
->>>>>>> f1a936f (Committing to stash changes)
     // Get force from the encoders
     float SeaForce = encoderToForce(motor_angle, *this->seaEncoder);
     
     // Error
-    float error = this->referenceForce - SeaForce;
+    float error = this->referenceForce - 0;//SeaForce;
     intErr += error;
     
     // Anti-windup

@@ -118,8 +118,6 @@ void setup() {
     Serial.begin(BAUD_RATE);
     while (!Serial) delay(100);
     
-    Serial.println("Starting ODrive GUI Tensioning Demo");
-
     // Initialize CAN
     if (!setupCan()) {
         Serial.println("CAN failed to initialize: reset required");
@@ -291,7 +289,7 @@ void loop() {
         }
     }
 
-    if (runningPID)
+    if (true)
     {        
         unsigned long currentTime = millis();
 
@@ -311,7 +309,7 @@ void loop() {
         float PIDtorque = forceController.forcePID(motor_angle, forceController.getForceType());
 
         // Apply torque to ODrive
-        PIDtorque = 1;
+        PIDtorque = 0.1;
         odrives[0].current_torque = PIDtorque;
         odrives[0].is_running = true;
         odrives[0].drive.setTorque(PIDtorque);
