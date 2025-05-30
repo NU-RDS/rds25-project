@@ -181,169 +181,119 @@ void loop() {
     
 
     // Check for serial commands
-    //if (Serial.available() > 0) {
-    //    int command = Serial.parseInt();
-    //    Serial.read(); // Read the newline character
-    //    
-    //    switch (command) {
-    //        case 0: // Set Feedforward term
-    //            while (Serial.available() <= 0) {
-    //                delay(10); // Wait for input
-    //            }
-    //            {
-    //                float ff = Serial.parseFloat();
-    //                Serial.read(); // Read the newline character
-    //                forceController.setFf(ff);
-    //            }
-    //            break;
-    //            
-    //        case 1: // Set Kp
-    //            while (Serial.available() <= 0) {
-    //                delay(10); // Wait for input
-    //            }
-    //            {
-    //                float kp = Serial.parseFloat();
-    //                Serial.read(); // Read the newline character
-    //                forceController.setKp(kp);
-    //            }
-    //            break;
-    //            
-    //        case 2: // Set Ki term
-    //            while (Serial.available() <= 0) {
-    //                delay(10); // Wait for input
-    //            }
-    //            {
-    //                float ki = Serial.parseFloat();
-    //                Serial.read(); // Read the newline character
-    //                forceController.setKi(ki);
-    //            }
-    //            break;
-    //            
-    //        case 3: // Set Kd term
-    //            while (Serial.available() <= 0) {
-    //                delay(10); // Wait for input
-    //            }
-    //            {
-    //                float kd = Serial.parseFloat();
-    //                Serial.read(); // Read the newline character
-    //                forceController.setKd(kd);
-    //            }
-    //            break;
-    //            
-    //        case 4: // Select reference type
-    //            while (Serial.available() <= 0) {
-    //                delay(10); // Wait for input
-    //            }
-    //            {
-    //                int refType = Serial.parseInt();
-    //                Serial.read(); // Read the newline character
-    //                forceController.setForceType(refType);
-    //            }
-    //            break;
-////
-    ////        case 5: // Run PID and plot
-    ////            runningPID = true;
-    ////            startTime = millis(); // Set the absolute start time
-    ////            lastTime = startTime; // Reset timer for the control loop
-    ////            Serial.println("START_DATA_STREAM"); // Signal start of data
-    ////            break;
-    ////        
-    ////        case 6: // Show PID params
-    ////            {
-    ////                float ff = forceController.getFf();
-    ////                float kp = forceController.getKp();
-    ////                float ki = forceController.getKi();
-    ////                float kd = forceController.getKd();
-    ////                int forcetype = int(forceController.getForceType());
-    ////                Serial.println(ff);
-    ////                Serial.println(kp);
-    ////                Serial.println(ki);
-    ////                Serial.println(kd);
-    ////                Serial.println(forcetype);
-    ////            }
-    ////            break;
-////
-    ////        case 7: // Show Encoder - read 100 values
-    ////            {
-    ////                Encoder encoder = Encoder(ENCODER_MOTOR_CS);
-    ////                for (int i = 0; i < 100; i++) {
-    ////                    Serial.print(i);
-    ////                    Serial.print(": ");
-    ////                    Serial.println(encoder.readEncoderDeg());
-    ////                    delay(10); // Small delay between readings
-    ////                }
-    ////            }
-    ////            break;
-    ////            
-    ////        case 9: // Stop PID
-    ////            runningPID = false;
-    ////            Serial.println("DATA_STREAM_STOPPED");
-    ////            odrives[0].current_torque = 0;
-    ////            odrives[0].is_running = true;
-    ////            odrives[0].drive.setTorque(0);
-    ////            break;
-    ////            
-    ////        default:
-    ////            runningPID = false;
-    ////            odrives[0].current_torque = 0;
-    ////            odrives[0].is_running = true;
-    ////            odrives[0].drive.setTorque(0);
-    ////            break;
-    ////    }
-    ////}
-    //
-    //        case 5: // Run PID and plot
-    //            runningPID = true;
-    //            startTime = millis(); // Set the absolute start time
-    //            lastTime = startTime; // Reset timer for the control loop
-    //            Serial.println("START_DATA_STREAM"); // Signal start of data
-    //            break;
-    //        
-    //        case 6: // Show PID params
-    //            {
-    //                float ff = forceController.getFf();
-    //                float kp = forceController.getKp();
-    //                float ki = forceController.getKi();
-    //                float kd = forceController.getKd();
-    //                int forcetype = int(forceController.getForceType());
-    //                Serial.println(ff);
-    //                Serial.println(kp);
-    //                Serial.println(ki);
-    //                Serial.println(kd);
-    //                Serial.println(forcetype);
-    //            }
-    //            break;
-//
-    //        case 7: // Show Encoder - read 100 values
-    //            {
-    //                Encoder encoder = Encoder(ENCODER_SEA_CS);
-    //                for (int i = 0; i < 100; i++) {
-    //                    // Serial.print(i);
-    //                    // Serial.print(": ");
-    //                    Serial.println(encoder.readEncoderDeg());
-    //                    delay(10); // Small delay between readings
-    //                }
-    //            }
-    //            break;
-    //            
-    //        case 9: // Stop PID
-    //            runningPID = false;
-    //            Serial.println("DATA_STREAM_STOPPED");
-    //            odrives[0].current_torque = 0;
-    //            odrives[0].is_running = true;
-    //            odrives[0].drive.setTorque(0);
-    //            break;
-    //            
-    //        default:
-    //            runningPID = false;
-    //            odrives[0].current_torque = 0;
-    //            odrives[0].is_running = true;
-    //            odrives[0].drive.setTorque(0);
-    //            break;
-    //    }
-    //}
+    if (Serial.available() > 0) 
+    {
+       int command = Serial.parseInt();
+       Serial.read(); // Read the newline character
+       
+       switch (command) {
+           case 0: // Set Feedforward term
+               while (Serial.available() <= 0) {
+                   delay(10); // Wait for input
+               }
+               {
+                   float ff = Serial.parseFloat();
+                   Serial.read(); // Read the newline character
+                   forceController.setFf(ff);
+               }
+               break;
+               
+           case 1: // Set Kp
+               while (Serial.available() <= 0) {
+                   delay(10); // Wait for input
+               }
+               {
+                   float kp = Serial.parseFloat();
+                   Serial.read(); // Read the newline character
+                   forceController.setKp(kp);
+               }
+               break;
+               
+           case 2: // Set Ki term
+               while (Serial.available() <= 0) {
+                   delay(10); // Wait for input
+               }
+               {
+                   float ki = Serial.parseFloat();
+                   Serial.read(); // Read the newline character
+                   forceController.setKi(ki);
+               }
+               break;
+               
+           case 3: // Set Kd term
+               while (Serial.available() <= 0) {
+                   delay(10); // Wait for input
+               }
+               {
+                   float kd = Serial.parseFloat();
+                   Serial.read(); // Read the newline character
+                   forceController.setKd(kd);
+               }
+               break;
+               
+           case 4: // Select reference type
+               while (Serial.available() <= 0) {
+                   delay(10); // Wait for input
+               }
+               {
+                   int refType = Serial.parseInt();
+                   Serial.read(); // Read the newline character
+                   forceController.setForceType(refType);
+               }
+               break;
 
-    if (true)
+           case 5: // Run PID and plot
+               runningPID = true;
+               startTime = millis(); // Set the absolute start time
+               lastTime = startTime; // Reset timer for the control loop
+               Serial.println("START_DATA_STREAM"); // Signal start of data
+               break;
+           
+           case 6: // Show PID params
+               {
+                   float ff = forceController.getFf();
+                   float kp = forceController.getKp();
+                   float ki = forceController.getKi();
+                   float kd = forceController.getKd();
+                   int forcetype = int(forceController.getForceType());
+                   Serial.println(ff);
+                   Serial.println(kp);
+                   Serial.println(ki);
+                   Serial.println(kd);
+                   Serial.println(forcetype);
+               }
+               break;
+
+           case 7: // Show Encoder - read 100 values
+               {
+                   Encoder encoder = Encoder(ENCODER_MOTOR_CS);
+                   for (int i = 0; i < 100; i++) {
+                       Serial.print(i);
+                       Serial.print(": ");
+                       Serial.println(encoder.readEncoderDeg());
+                       delay(10); // Small delay between readings
+                   }
+               }
+               break;
+               
+           case 9: // Stop PID
+               runningPID = false;
+               Serial.println("DATA_STREAM_STOPPED");
+               odrives[0].current_torque = 0;
+               odrives[0].is_running = true;
+               odrives[0].drive.setTorque(0);
+               break;
+               
+           default:
+               runningPID = false;
+               odrives[0].current_torque = 0;
+               odrives[0].is_running = true;
+               odrives[0].drive.setTorque(0);
+               break;
+       }
+    } // <-- This closing brace was missing!
+
+    if (runningPID)
     {        
         unsigned long currentTime = millis();
 
@@ -360,7 +310,7 @@ void loop() {
         float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
         motor_angle = motor_angle/GEAR_REDUCTION - motor_offset;
         float sea_angle = forceController.getSeaEncoderAngle() - sea_offset;
-        float PIDtorque = -1*forceController.forcePID(motor_angle, sea_angle, forceController.getForceType());
+        float PIDtorque = -forceController.forcePID(motor_angle, sea_angle, forceController.getForceType());
 
         // Apply torque to ODrive
         //PIDtorque = .1;

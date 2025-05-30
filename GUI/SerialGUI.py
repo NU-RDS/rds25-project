@@ -268,6 +268,6 @@ class SerialGUI:
     
 if __name__ == "__main__":
     # Use the correct port for your system
-    default_port = '/dev/ttyACM0'  # Change this to your Teensy port     
+    default_port = '/dev/tty.usbmodem166396801'  # Change this to your Teensy port     
     serialGUI = SerialGUI(default_port, 115200)
     serialGUI.run()
