@@ -9,6 +9,8 @@ ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
 float ForceControl::encoderToForce(float motor_angle, float sea_angle)  // Changed parameter to reference
 {
     float distance = R_ENCODER_PULLEY * ((motor_angle - sea_angle)); 
+    float diff = motor_angle - sea_angle;
+    float force = diff * 0.00522f - 0.0000274 * diff * diff;
 
     return distance * this->Ks;
 }
