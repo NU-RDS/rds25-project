@@ -11,7 +11,7 @@
 const int ENCODER_SEA_CS = 10;  // Chip select pin for encoder
 const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 
-int32_t ZERO_OFFSET = -643;
+const int32_t ZERO_OFFSET = -643;
 const float NEWTONS_PER_COUNT = -0.000093;
 
 Loadcell loadcell(&Wire);
@@ -155,9 +155,10 @@ void setup() {
     sea_offset = forceController.getSeaEncoderAngle();
     Serial.println(5);
 
+    // Loadcell configuration
     loadcell.configure();
-    loadcell.setNewtonsPerCount(newtonsPerCount);
-    loadcell.setOffset(offset);
+    loadcell.setNewtonsPerCount(NEWTONS_PER_COUNT);
+    loadcell.setOffset(ZERO_OFFSET);s
 
     Serial.println("Force Control System Ready");
 }
@@ -307,7 +308,7 @@ void loop() {
         // Calculate control signal using PID controller
         odrives[0].is_running = true;
         Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
-        float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
+        float motor_angle = feedback.Pos_Estimate * 360.0;
         motor_angle = motor_angle/GEAR_REDUCTION - motor_offset;
         float sea_angle = forceController.getSeaEncoderAngle() - sea_offset;
         float PIDtorque = -forceController.forcePID(motor_angle, sea_angle, forceController.getForceType());
