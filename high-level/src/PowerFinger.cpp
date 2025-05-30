@@ -5,7 +5,11 @@ PowerFinger::PowerFinger() {
 }
 
 void PowerFinger::kinematics() {
+    double joint_grasp = Grasp->getControlSignal();
 
+    double motor_grasp = (J_pow * joint_grasp) / MOTOR_RADIUS;
+
+    Grasp->setCommandTorque(motor_grasp);
 }
 
 void PowerFinger::setJointAngles(double grasp_desired) {
@@ -30,4 +34,9 @@ const std::unordered_map<std::string, double> PowerFinger::getCurrentJointAngles
     std::unordered_map<std::string, double> current_joints = {{"Grasp", grasp}};
 
     return current_joints;
+}
+
+double PowerFinger::calculateControl() {
+    double grasp = Grasp->calculateControlSignal();
+    return grasp;
 }

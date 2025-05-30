@@ -1,13 +1,15 @@
 #ifndef TENDON_KINEMATICS_HPP
 #define TENDON_KINEMATICS_HPP
 
-#include <array>
+#include <vector>
 #include <math.h>
+
+#include "RDS_constants.hpp"
 
 class TendonKinematics{
     private:
-        std::array<std::array<float, 4>, 4> J_dex;
-        std::array<float, 4> null_dex;
+        std::vector<std::vector<double>> J_dex;
+        std::vector<double> null_dex;
         float J_pow;
         float R_pitch = 24.0f;
         float R_yaw = 24.0f;
@@ -31,7 +33,7 @@ class TendonKinematics{
             J_pow = 1.0; //have to change 
         }
 
-        std::array<float, 7> getMotorTorques(std::array<float, 7> joint_torques);
+        std::vector<double> getMotorTorques(std::vector<double> joint_torques);
                         
 };
 

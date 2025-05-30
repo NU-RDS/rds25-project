@@ -7,6 +7,8 @@
 #include <chrono>
 #include <functional>
 
+#include "SerialHelpers.hpp"
+#include "TendonKinematics.hpp"
 #include "PowerFinger.hpp"
 #include "DexterousFinger.hpp"
 #include "Wrist.hpp"
@@ -14,9 +16,8 @@
 
 enum MovementPhase {
     IDLE,
-    PAUSED,
-    WRIST_MOVEMENT,
-    FINGER_MOVEMENT,
+    ERROR,
+    MOVING,
     COMPLETE
 };
 
@@ -25,6 +26,7 @@ class StateManager {
         std::unique_ptr<Wrist> wrist;
         std::unique_ptr<DexterousFinger> dexFinger;
         std::unique_ptr<PowerFinger> powFinger;
+        std::unique_ptr<TendonKinematics> kinematics;
         
         // Communication with MCU
         bool connected;
@@ -45,7 +47,7 @@ class StateManager {
         // Basic system functions
         bool initialize();
         bool connectToMCU();
-        void updateState();
+        void updateState(std::string& serialCommand);
         void updateGUI();
 
         void controlLoop();
@@ -57,7 +59,7 @@ class StateManager {
         PowerFinger* getPowFinger() { return powFinger.get(); }
 
         // Joint position setting
-        void setJointPositions(double wristRoll, double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp);
+        void setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp);
 
         // Get current and desired joint positions
         std::unordered_map<std::string, double> getCurrentJointPositions();
@@ -69,6 +71,7 @@ class StateManager {
         void pauseMovement();
         void resumeMovement();
         void sendTorqueCommands();
+        void setMovementPhase(MovementPhase phase);
         MovementPhase getMovementPhase() const { return currentMovementPhase; }
         bool isMovementComplete() const { return currentMovementPhase == COMPLETE; }
 };

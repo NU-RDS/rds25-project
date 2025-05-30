@@ -3,7 +3,8 @@
 StateManager::StateManager() 
     : wrist(std::make_unique<Wrist>()),
       dexFinger(std::make_unique<DexterousFinger>()),
-      powFinger(std::make_unique<PowerFinger>()) {
+      powFinger(std::make_unique<PowerFinger>()),
+      kinematics(std::make_unique<TendonKinematics>()) {
     
 }
 
@@ -17,8 +18,28 @@ bool StateManager::connectToMCU() {
     return true;
 }
 
-void StateManager::updateState() {
-
+void StateManager::updateState(std::string& serialCommand) {
+    if (checkSerial(serialCommand)) {
+        Serial.printf("[HIGH] Received command: '%s'\n", serialCommand.c_str());
+        
+        uint8_t commandID;
+        std::vector<float> values;
+        
+        if (parseSerialCommand(serialCommand, commandID, values)) {
+            switch(commandID) {
+                case SET_ALL_JOINTS:
+                    this->setJointPositions(values[0], values[1], values[2], values[3], values[4], values[5], values[6]);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            Serial.println("[HIGH] ERROR: Failed to parse command");
+        }
+        
+        // Clear command buffer
+        serialCommand.clear();
+    }
 }
 
 void StateManager::updateGUI() {
@@ -26,8 +47,27 @@ void StateManager::updateGUI() {
 }
 
 void StateManager::controlLoop() {
-    // Update the communication controller to process messages
+    std::vector<double> dexControl = dexFinger->calculateControl();
+    double powControl = powFinger->calculateControl();
+    std::vector<double> wristControl = wrist->calculateControl();
     
+    std::vector<double> motorTorques = kinematics->getMotorTorques({dexControl[0], dexControl[1], dexControl[2], dexControl[3], powControl, wristControl[0], wristControl[1]});
+    Serial.print("[HIGH] INFO: Motor torques: ");
+    Serial.print(motorTorques[0]);
+    Serial.print(", ");
+    Serial.print(motorTorques[1]);
+    Serial.print(", ");
+    Serial.print(motorTorques[2]);
+    Serial.print(", ");
+    Serial.print(motorTorques[3]);
+    Serial.print(", ");
+    Serial.print(motorTorques[4]);
+    Serial.print(", ");
+    Serial.print(motorTorques[5]);
+    Serial.print(", ");
+    Serial.print(motorTorques[6]);
+    Serial.print(", ");
+    Serial.println(motorTorques[7]);
 }
 
 void StateManager::processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw) {
@@ -57,10 +97,10 @@ void StateManager::processMessage(const comms::MessageInfo& message_info, const 
     }
 }
 
-void StateManager::setJointPositions(double wristRoll, double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp) {
-    wrist->setWristOrientation(wristRoll, wristPitch, wristYaw);
+void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp) {
     dexFinger->setDexterousFingerPositions(dexPip, dexDip, dexMcp, dexSplain);
     powFinger->setJointAngles(powGrasp);
+    wrist->setWristOrientation(wristPitch, wristYaw);
 }
 
 std::unordered_map<std::string, double> StateManager::getCurrentJointPositions() {
@@ -91,4 +131,8 @@ void StateManager::pauseMovement() {
 
 void StateManager::resumeMovement() {
 
+}
+
+void StateManager::setMovementPhase(MovementPhase phase) {
+    currentMovementPhase = phase;
 }
