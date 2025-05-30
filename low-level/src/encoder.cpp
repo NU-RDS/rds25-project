@@ -59,6 +59,6 @@ float Encoder::readEncoderDeg()
     this->beginSPI();
     uint16_t raw = this->readEncoderRaw();
     SPI.endTransaction();
-    // return this->rawToDegree(raw);
-    return 0.;
+    return this->rawToDegree(raw);
+    //return 0.;
 }

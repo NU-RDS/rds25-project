@@ -8,7 +8,6 @@ ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
 
 float ForceControl::encoderToForce(float motor_angle, float sea_angle)  // Changed parameter to reference
 {
-
     float distance = R_ENCODER_PULLEY * ((motor_angle - sea_angle)); 
 
     return distance * this->Ks;
@@ -60,7 +59,6 @@ float ForceControl::forcePID(float motor_angle, float sea_angle, ForceType force
     // Generate reference force
     this->forceGeneration(forceType, timeStep++);
     
-
     // Get force from the encoders
     float SeaForce = encoderToForce(motor_angle, sea_angle);
     

@@ -16,11 +16,12 @@ const float newtonsPerCount = -0.000034;
 
 // Loadcell loadcell(&Wire);
 // Constants
-const long BAUD_RATE = 115200;
+const long BAUD_RATE = 250000;  // CAN bus baud rate
 const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
 
 // Global variables
-ForceControl forceController(0.0f, 0.0f, 0.0f, 0.0f, 0.00103f); // Default values
+float ks = 0.00103f;  // Spring constant in N/m
+ForceControl forceController(0.0f, 0.0f, 0.0f, 0.0f, ks); // Default values
 unsigned long lastTime = 0;
 unsigned long startTime = 0;
 boolean runningPID = false;
@@ -73,18 +74,23 @@ void onCanMessage(const CAN_message_t& msg) {
 void setupODrive(int index) {
     // Register callbacks
     odrives[index].drive.onFeedback(onFeedback, &odrives[index].user_data);
+    Serial.println("Registering heartbeat callback");
     odrives[index].drive.onStatus(onHeartbeat, &odrives[index].user_data);
+    Serial.println("Registering feedback callback");
 
     // Set control mode to torque control
     odrives[index].drive.setControllerMode(ODriveControlMode::CONTROL_MODE_TORQUE_CONTROL, 
                                          ODriveInputMode::INPUT_MODE_PASSTHROUGH);
+    Serial.println("Setting control mode to torque control");
 
     // Enable closed loop control
     while (odrives[index].user_data.last_heartbeat.Axis_State != 
            ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
         odrives[index].drive.clearErrors();
         delay(1);
+        Serial.println("Waiting for ODrive to enter closed loop control state...");
         odrives[index].drive.setState(ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL);
+        Serial.println("Setting ODrive to closed loop control state");
 
         for (int i = 0; i < 15; ++i) {
             delay(10);
@@ -115,8 +121,8 @@ void checkErrors(void) {
 
 
 void setup() {
-    Serial.begin(BAUD_RATE);
-    while (!Serial) delay(100);
+    //Serial.begin(BAUD_RATE);
+    while (!Serial);
     
     // Initialize CAN
     if (!setupCan()) {
@@ -147,8 +153,7 @@ void setup() {
     float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
     motor_offset = motor_angle/GEAR_REDUCTION;
     sea_offset = forceController.getSeaEncoderAngle();
-    Serial.print("SEA offset: ");
-    Serial.println(sea_offset);
+    Serial.println(5);
 
     // loadcell.configure();
     // loadcell.setNewtonsPerCount(newtonsPerCount);
@@ -235,6 +240,57 @@ void loop() {
                     forceController.setForceType(refType);
                 }
                 break;
+//
+    //        case 5: // Run PID and plot
+    //            runningPID = true;
+    //            startTime = millis(); // Set the absolute start time
+    //            lastTime = startTime; // Reset timer for the control loop
+    //            Serial.println("START_DATA_STREAM"); // Signal start of data
+    //            break;
+    //        
+    //        case 6: // Show PID params
+    //            {
+    //                float ff = forceController.getFf();
+    //                float kp = forceController.getKp();
+    //                float ki = forceController.getKi();
+    //                float kd = forceController.getKd();
+    //                int forcetype = int(forceController.getForceType());
+    //                Serial.println(ff);
+    //                Serial.println(kp);
+    //                Serial.println(ki);
+    //                Serial.println(kd);
+    //                Serial.println(forcetype);
+    //            }
+    //            break;
+//
+    //        case 7: // Show Encoder - read 100 values
+    //            {
+    //                Encoder encoder = Encoder(ENCODER_MOTOR_CS);
+    //                for (int i = 0; i < 100; i++) {
+    //                    Serial.print(i);
+    //                    Serial.print(": ");
+    //                    Serial.println(encoder.readEncoderDeg());
+    //                    delay(10); // Small delay between readings
+    //                }
+    //            }
+    //            break;
+    //            
+    //        case 9: // Stop PID
+    //            runningPID = false;
+    //            Serial.println("DATA_STREAM_STOPPED");
+    //            odrives[0].current_torque = 0;
+    //            odrives[0].is_running = true;
+    //            odrives[0].drive.setTorque(0);
+    //            break;
+    //            
+    //        default:
+    //            runningPID = false;
+    //            odrives[0].current_torque = 0;
+    //            odrives[0].is_running = true;
+    //            odrives[0].drive.setTorque(0);
+    //            break;
+    //    }
+    //}
 
             case 5: // Run PID and plot
                 runningPID = true;
