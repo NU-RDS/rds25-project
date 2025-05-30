@@ -12,9 +12,9 @@
 
 // Define CS pins for both encoders
 const int cs1 = 7;  // First encoder
-const int cs2 = 37;  // Second encoder
+const int cs2 = 8;  // Second encoder
 
-SPISettings settings(10000000, MSBFIRST, SPI_MODE);
+SPISettings settings(100000, MSBFIRST, SPI_MODE1);
 uint16_t nop, error, cmd, diag;
 
 float convertTo360(uint16_t rawValue) {
@@ -30,28 +30,28 @@ uint16_t readEncoderRaw(int csPin) {
   
   cmd = (0b11<<14) | ANGLECOM;
   digitalWriteFast(csPin, LOW);
-  nop = SPI.transfer16(cmd);
+  nop = SPI1.transfer16(cmd);
   digitalWriteFast(csPin, HIGH);
   delayNanoseconds(400);
   
   // Read error flags
   cmd = (0b01<<14) | ERRFL;
   digitalWriteFast(csPin, LOW);
-  pos_temp = SPI.transfer16(cmd);
+  pos_temp = SPI1.transfer16(cmd);
   digitalWriteFast(csPin, HIGH);
   delayNanoseconds(400);
   
   // Read diagnostics
   cmd = (0b11<<14) | DIAAGC;
   digitalWriteFast(csPin, LOW);
-  error = SPI.transfer16(cmd);
+  error = SPI1.transfer16(cmd);
   digitalWriteFast(csPin, HIGH);
   delayNanoseconds(400);
   
   // NOP command
   cmd = (0b11<<14) | NOP;
   digitalWriteFast(csPin, LOW);
-  diag = SPI.transfer16(cmd);
+  diag = SPI1.transfer16(cmd);
   digitalWriteFast(csPin, HIGH);
   
   // Extract the 14-bit angle value and return it
@@ -68,13 +68,13 @@ void setup() {
   
   Serial.begin(9600);  // Initialize serial communication
   
-  SPI.begin(); 
+  SPI1.begin(); 
 }
 
 void loop() {
   // Record start time
   
-  SPI.beginTransaction(settings);
+  SPI1.beginTransaction(settings);
   
   // Read from second encoder
   uint16_t rawAngle1 = readEncoderRaw(cs1);
@@ -83,7 +83,7 @@ void loop() {
   float angleDegrees2 = convertTo360(rawAngle2);
   
 
-  SPI.endTransaction();
+  SPI1.endTransaction();
   
   // Calculate elapsed time
   
@@ -91,8 +91,8 @@ void loop() {
   Serial.print("Encoder 1 - Degrees: ");
   Serial.println(angleDegrees1, 2);
   
-  //Serial.print("Encoder 2 - Degrees: ");
-  //Serial.println(angleDegrees2, 2);
+  // Serial.print("Encoder 2 - Degrees: ");
+  // Serial.println(angleDegrees2, 2);
   
   // Print timing information
   // Serial.print(" | Loop Time: ");
