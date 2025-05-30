@@ -135,26 +135,20 @@ void setup() {
 
     // Initialize SPI for encoder
     SPI.begin();
-
-    Serial.println(1);
     
     // // Initialize force controller with encoder
     forceController.setSeaEncoder(ENCODER_SEA_CS);
-    
-    Serial.println(2);
-    
+        
     // Default to STEP reference
     forceController.setForceType(0);
     
-    Serial.println(3);
-
     Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
-    Serial.println(4);
 
     float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
     motor_offset = motor_angle/GEAR_REDUCTION;
-    sea_offset = 0;//forceController.getSeaEncoderAngle();
-    Serial.println(5);
+    sea_offset = forceController.getSeaEncoderAngle();
+    Serial.print("SEA offset: ");
+    Serial.println(sea_offset);
 
     // loadcell.configure();
     // loadcell.setNewtonsPerCount(newtonsPerCount);
@@ -172,10 +166,13 @@ void loop() {
 
     odrives[0].is_running = true;
     Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
-    Serial.print(" - Revolutions: ");
-    Serial.print(feedback.Pos_Estimate);
-    Serial.print(" - Degrees: ");
-    Serial.println(fmod(feedback.Pos_Estimate*360., 360.0));
+    Encoder encoder = Encoder(ENCODER_SEA_CS);
+    Serial.println(encoder.readEncoderDeg());
+
+    // Serial.print(" - Revolutions: ");
+    // Serial.print(feedback.Pos_Estimate);
+    // Serial.print(" - Degrees: ");
+    // Serial.println(fmod(feedback.Pos_Estimate*360., 360.0));
     
 
     // Check for serial commands
@@ -263,10 +260,10 @@ void loop() {
 
             case 7: // Show Encoder - read 100 values
                 {
-                    Encoder encoder = Encoder(ENCODER_MOTOR_CS);
+                    Encoder encoder = Encoder(ENCODER_SEA_CS);
                     for (int i = 0; i < 100; i++) {
-                        Serial.print(i);
-                        Serial.print(": ");
+                        // Serial.print(i);
+                        // Serial.print(": ");
                         Serial.println(encoder.readEncoderDeg());
                         delay(10); // Small delay between readings
                     }
@@ -290,7 +287,7 @@ void loop() {
         }
     }
 
-    if (true)
+    if (runningPID)
     {        
         unsigned long currentTime = millis();
 
@@ -306,11 +303,11 @@ void loop() {
         Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
         float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
         motor_angle = motor_angle/GEAR_REDUCTION - motor_offset;
-        float sea_angle = 0;//forceController.getSeaEncoderAngle() - sea_offset;
-        float PIDtorque = forceController.forcePID(motor_angle, forceController.getForceType());
+        float sea_angle = forceController.getSeaEncoderAngle() - sea_offset;
+        float PIDtorque = forceController.forcePID(motor_angle, sea_angle, forceController.getForceType());
 
         // Apply torque to ODrive
-        PIDtorque = 0.1;
+        PIDtorque = .1;
         odrives[0].current_torque = PIDtorque;
         odrives[0].is_running = true;
         odrives[0].drive.setTorque(PIDtorque);
@@ -324,7 +321,7 @@ void loop() {
         Serial.print(forceController.getReferenceForce());
         Serial.print(" ");
         // float loadCellReading = 0;
-        // Serial.println(loadcell.readForce());
+        Serial.println(1);//loadcell.readForce());
     }
     
     delay(1);  // Small delay to prevent overwhelming the system

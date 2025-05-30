@@ -6,11 +6,8 @@ ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
     forceType(ForceType::STEP), seaEncoder(nullptr) {  // Initialize encoder pointer to nullptr
 }
 
-float ForceControl::encoderToForce(float motor_angle, Encoder& seaEncoder)  // Changed parameter to reference
+float ForceControl::encoderToForce(float motor_angle, float sea_angle)  // Changed parameter to reference
 {
-    motor_angle = 0;//motorEncoder.readEncoderDeg();
-
-    float sea_angle = 0;//seaEncoder.readEncoderDeg();
 
     float distance = R_ENCODER_PULLEY * ((motor_angle - sea_angle)); 
 
@@ -54,7 +51,7 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
 }
 
 // Implementation now matches declaration in header
-float ForceControl::forcePID(float motor_angle, ForceType forceType)
+float ForceControl::forcePID(float motor_angle, float sea_angle, ForceType forceType)
 {
     static float prevErr = 0.0f;
     static float intErr = 0.0f;
@@ -64,12 +61,8 @@ float ForceControl::forcePID(float motor_angle, ForceType forceType)
     this->forceGeneration(forceType, timeStep++);
     
 
-    //if (this->motorEncoder == nullptr || this->seaEncoder == nullptr) {        
-    //    Serial.println("Error: Encoders not initialized");
-    //    return 0.0f;
-    //}
     // Get force from the encoders
-    float SeaForce = encoderToForce(motor_angle, *this->seaEncoder);
+    float SeaForce = encoderToForce(motor_angle, sea_angle);
     
     // Error
     float error = this->referenceForce - 0;//SeaForce;
