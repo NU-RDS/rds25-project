@@ -317,6 +317,8 @@ void loop() {
         odrives[0].current_torque = PIDtorque;
         odrives[0].is_running = true;
         odrives[0].drive.setTorque(PIDtorque);
+        // Serial.print("PID: ");
+        // Serial.println(PIDtorque);
 
         // Update last execution time
         lastTime = currentTime;
@@ -328,6 +330,14 @@ void loop() {
         Serial.print(" ");
         // float loadCellReading = 0;
         Serial.println(loadcell.readForce());
+
+        // Serial.print("SEA angle: ");
+        // Serial.println(forceController.getSeaEncoderAngle());
+        // Serial.print("motor angle: ");
+        // Serial.println(motor_angle);
+
+        // Serial.println(forceController.encoderToForce(motor_angle, sea_angle));
+
     }
     
     delay(1);  // Small delay to prevent overwhelming the system
