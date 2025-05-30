@@ -153,12 +153,11 @@ void setup() {
     float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
     motor_offset = motor_angle/GEAR_REDUCTION;
     sea_offset = forceController.getSeaEncoderAngle();
-    Serial.println(5);
 
     // Loadcell configuration
     loadcell.configure();
     loadcell.setNewtonsPerCount(NEWTONS_PER_COUNT);
-    loadcell.setOffset(ZERO_OFFSET);s
+    loadcell.setOffset(ZERO_OFFSET);
 
     Serial.println("Force Control System Ready");
 }
