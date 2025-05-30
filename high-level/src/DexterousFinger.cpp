@@ -31,7 +31,7 @@ void DexterousFinger::kinematics() {
     DIP->setCommandTorque(motor_dip);
 }
 
-void DexterousFinger::sendTorqueCommand(double T_pip, double T_dip, double T_mcp, double T_splain) {
+void DexterousFinger::sendTorqueCommand(double T_pip, double T_dip, double T_mcp, double T_splay) {
     // CAN library
 }
 
@@ -39,9 +39,9 @@ const std::unordered_map<std::string, double> DexterousFinger::getDesiredJointAn
     double pip = PIP->getDesiredPosition();
     double dip = DIP->getDesiredPosition();
     double mcp = MCP->getDesiredPosition();
-    double splain = Splay->getDesiredPosition();
+    double splay = Splay->getDesiredPosition();
 
-    std::unordered_map<std::string, double> desired_joints = {{"PIP", pip}, {"DIP", dip}, {"MCP", mcp}, {"Splain", splain}};
+    std::unordered_map<std::string, double> desired_joints = {{"PIP", pip}, {"DIP", dip}, {"MCP", mcp}, {"Splay", splay}};
 
     return desired_joints;
 }

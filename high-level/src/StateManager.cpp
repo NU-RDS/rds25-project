@@ -65,9 +65,7 @@ void StateManager::controlLoop() {
     Serial.print(", ");
     Serial.print(motorTorques[5]);
     Serial.print(", ");
-    Serial.print(motorTorques[6]);
-    Serial.print(", ");
-    Serial.println(motorTorques[7]);
+    Serial.println(motorTorques[6]);
 }
 
 void StateManager::processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw) {
@@ -97,8 +95,8 @@ void StateManager::processMessage(const comms::MessageInfo& message_info, const 
     }
 }
 
-void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp) {
-    dexFinger->setDexterousFingerPositions(dexPip, dexDip, dexMcp, dexSplain);
+void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp) {
+    dexFinger->setDexterousFingerPositions(dexPip, dexDip, dexMcp, dexSplay);
     powFinger->setJointAngles(powGrasp);
     wrist->setWristOrientation(wristPitch, wristYaw);
 }

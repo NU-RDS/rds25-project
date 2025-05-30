@@ -31,12 +31,12 @@ class DexterousFinger {
         Joint* getPIP() { return PIP.get(); }
         Joint* getDIP() { return DIP.get(); }
         Joint* getMCP() { return MCP.get(); }
-        Joint* getSplain() { return Splay.get(); }
+        Joint* getSplay() { return Splay.get(); }
 
         void kinematics();
         
         void setDexterousFingerPositions(double pip_desired, double dip_desired, double mcp_desired, double splay_desired);
-        void sendTorqueCommand(double T_pip, double T_dip, double T_mcp, double T_splain);
+        void sendTorqueCommand(double T_pip, double T_dip, double T_mcp, double T_splay);
 
         const std::unordered_map<std::string, double> getDesiredJointAngles();
         const std::unordered_map<std::string, double> getCurrentJointAngles();

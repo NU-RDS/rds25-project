@@ -20,13 +20,12 @@ import queue
 
 class CommandID:
     # Individual joint commands (optional - for debugging/testing)
-    SET_JOINT_WRIST_ROLL = 1
     SET_JOINT_WRIST_PITCH = 2
     SET_JOINT_WRIST_YAW = 3
     SET_JOINT_DEX_PIP = 4
     SET_JOINT_DEX_DIP = 5
     SET_JOINT_DEX_MCP = 6
-    SET_JOINT_DEX_SPLAIN = 7
+    SET_JOINT_DEX_splay = 7
     SET_JOINT_POW_GRASP = 8
 
     # Main command - send all joints at once
@@ -44,13 +43,12 @@ class CommandID:
 
     # Joint name to command ID mapping (for individual commands if needed)
     JOINT_MAP = {
-        'wrist_roll': SET_JOINT_WRIST_ROLL,
         'wrist_pitch': SET_JOINT_WRIST_PITCH,
         'wrist_yaw': SET_JOINT_WRIST_YAW,
         'dex_pip': SET_JOINT_DEX_PIP,
         'dex_dip': SET_JOINT_DEX_DIP,
         'dex_mcp': SET_JOINT_DEX_MCP,
-        'dex_splain': SET_JOINT_DEX_SPLAIN,
+        'dex_splay': SET_JOINT_DEX_splay,
         'pow_grasp': SET_JOINT_POW_GRASP
     }
 
@@ -66,9 +64,8 @@ class RDSConstants:
         'dex_dip': JointLimits(0.0, 90.0),
         'dex_pip': JointLimits(0.0, 110.0),
         'dex_mcp': JointLimits(-15.0, 90.0),
-        'dex_splain': JointLimits(-15.0, 15.0),
+        'dex_splay': JointLimits(-15.0, 15.0),
         'pow_grasp': JointLimits(0.0, 120.0),
-        'wrist_roll': JointLimits(-90.0, 90.0),
         'wrist_pitch': JointLimits(-70.0, 60.0),
         'wrist_yaw': JointLimits(-30.0, 20.0)
     }
@@ -135,12 +132,12 @@ class SerialCommunicator:
 
     def send_all_joints_optimized(self, joint_values: list):
         """
-        Optimized method to send all 8 joint values in one command
-        Expected order: wrist_roll, wrist_pitch, wrist_yaw, dex_pip, dex_dip, dex_mcp, dex_splain, pow_grasp
+        Optimized method to send all 7 joint values in one command
+        Expected order: wrist_pitch, wrist_yaw, dex_pip, dex_dip, dex_mcp, dex_splay, pow_grasp
         """
         if self.is_connected and self.serial_port:
             try:
-                # Format: "10:val1 val2 val3 val4 val5 val6 val7 val8"
+                # Format: "10:val1 val2 val3 val4 val5 val6 val7"
                 # Using space separation for easier parsing on Arduino side
                 value_str = " ".join([f"{v:.2f}" for v in joint_values])
                 command = f"{CommandID.SET_ALL_JOINTS}:{value_str}\n"
@@ -240,7 +237,7 @@ class JointControlFrame(ttk.Frame):
 class RDSHandGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RDS Hand Control - Unified Command System")
+        self.root.title("RDS Hand Control - Unified Command System (7 Joints)")
         self.root.geometry("800x700")
 
         self.communicator = SerialCommunicator()
@@ -318,11 +315,11 @@ class RDSHandGUI:
             scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-        # Wrist controls
+        # Wrist controls (pitch and yaw only)
         wrist_group = ttk.LabelFrame(scrollable_frame, text="Wrist Control")
         wrist_group.pack(fill='x', padx=10, pady=5)
 
-        for i, joint in enumerate(['wrist_roll', 'wrist_pitch', 'wrist_yaw']):
+        for i, joint in enumerate(['wrist_pitch', 'wrist_yaw']):
             limits = RDSConstants.JOINT_LIMITS[joint]
             control = JointControlFrame(wrist_group, joint, limits)
             control.grid(row=i, column=0, sticky='ew', pady=2)
@@ -332,7 +329,7 @@ class RDSHandGUI:
         dex_group = ttk.LabelFrame(scrollable_frame, text="Dexterous Finger")
         dex_group.pack(fill='x', padx=10, pady=5)
 
-        for i, joint in enumerate(['dex_pip', 'dex_dip', 'dex_mcp', 'dex_splain']):
+        for i, joint in enumerate(['dex_pip', 'dex_dip', 'dex_mcp', 'dex_splay']):
             limits = RDSConstants.JOINT_LIMITS[joint]
             control = JointControlFrame(dex_group, joint, limits)
             control.grid(row=i, column=0, sticky='ew', pady=2)
@@ -458,10 +455,10 @@ class RDSHandGUI:
                 "Not Connected", "Please connect to MCU first")
             return
 
-        # Collect all joint values in the exact order expected by MCU
-        # Order: wrist_roll, wrist_pitch, wrist_yaw, dex_pip, dex_dip, dex_mcp, dex_splain, pow_grasp
-        joint_order = ['wrist_roll', 'wrist_pitch', 'wrist_yaw',
-                       'dex_pip', 'dex_dip', 'dex_mcp', 'dex_splain', 'pow_grasp']
+        # Collect all joint values in the exact order expected by MCU (7 joints without wrist_roll)
+        # Order: wrist_pitch, wrist_yaw, dex_pip, dex_dip, dex_mcp, dex_splay, pow_grasp
+        joint_order = ['wrist_pitch', 'wrist_yaw',
+                       'dex_pip', 'dex_dip', 'dex_mcp', 'dex_splay', 'pow_grasp']
 
         values = []
         for joint_name in joint_order:
@@ -494,13 +491,12 @@ class RDSHandGUI:
     def load_open_preset(self):
         """Load open hand preset values into controls (don't send yet)"""
         preset_values = {
-            'wrist_roll': 0.0,
             'wrist_pitch': 0.0,
             'wrist_yaw': 0.0,
             'dex_pip': 0.0,
             'dex_dip': 0.0,
             'dex_mcp': 0.0,
-            'dex_splain': 0.0,
+            'dex_splay': 0.0,
             'pow_grasp': 0.0
         }
 
@@ -514,13 +510,12 @@ class RDSHandGUI:
     def load_close_preset(self):
         """Load close hand preset values into controls (don't send yet)"""
         preset_values = {
-            'wrist_roll': 0.0,
             'wrist_pitch': 0.0,
             'wrist_yaw': 0.0,
             'dex_pip': 45.0,
             'dex_dip': 45.0,
             'dex_mcp': 45.0,
-            'dex_splain': 0.0,
+            'dex_splay': 0.0,
             'pow_grasp': 60.0
         }
 
@@ -615,16 +610,16 @@ class RDSHandGUI:
                 self.log_message(f"📨 Received: {message}")
 
                 # Parse position updates if they come from MCU
-                # Example format: "[HIGH] POSITIONS: 0.0,0.0,0.0,45.0,30.0,15.0,0.0,60.0"
+                # Example format: "[HIGH] POSITIONS: 0.0,0.0,45.0,30.0,15.0,0.0,60.0"
                 if "POSITIONS:" in message:
                     try:
                         pos_data = message.split("POSITIONS:")[1].strip()
                         positions = [float(x.strip())
                                      for x in pos_data.split(',')]
 
-                        if len(positions) >= 8:
-                            joint_names = ['wrist_roll', 'wrist_pitch', 'wrist_yaw',
-                                           'dex_pip', 'dex_dip', 'dex_mcp', 'dex_splain', 'pow_grasp']
+                        if len(positions) >= 7:
+                            joint_names = ['wrist_pitch', 'wrist_yaw',
+                                           'dex_pip', 'dex_dip', 'dex_mcp', 'dex_splay', 'pow_grasp']
 
                             for i, joint_name in enumerate(joint_names):
                                 if joint_name in self.joint_controls:

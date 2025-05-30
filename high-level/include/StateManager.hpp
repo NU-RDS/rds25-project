@@ -59,7 +59,7 @@ class StateManager {
         PowerFinger* getPowFinger() { return powFinger.get(); }
 
         // Joint position setting
-        void setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp);
+        void setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp);
 
         // Get current and desired joint positions
         std::unordered_map<std::string, double> getCurrentJointPositions();

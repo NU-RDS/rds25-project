@@ -22,6 +22,7 @@ void setup() {
 }
 
 void loop() {
+    state_manager.updateState(serialCommand);
 
     comms::Option<comms::CommsTickResult> tick_result = g_controller.tick();
 
@@ -34,6 +35,8 @@ void loop() {
     else {
         // DO something else if no feedback
     }
+
+    state_manager.controlLoop();
 
     MovementPhase phase = state_manager.getMovementPhase();
     switch(phase) {

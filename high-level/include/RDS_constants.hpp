@@ -5,7 +5,7 @@
 const int DEX_DIP_ID = 0;
 const int DEX_PIP_ID = 1;
 const int DEX_MCP_ID = 2;
-const int DEX_SPLAIN_ID = 3;
+const int DEX_SPLAY_ID = 3;
 const int POW_GRASP_ID = 4;
 const int WRIST_ROLL = 5;
 const int WRIST_PITCH = 6;
