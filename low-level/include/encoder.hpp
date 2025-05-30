@@ -22,6 +22,11 @@ private:
     int _cs;            // Chip select pin
     SPISettings settings;
     
+    // Variables for unwrapped angle tracking
+    uint16_t _prevRaw;
+    int32_t _rotationCount;
+    bool _firstReading;
+    
     // Initialize SPI communication
     void beginSPI();
     

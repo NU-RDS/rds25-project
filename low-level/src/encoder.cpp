@@ -2,7 +2,8 @@
 
 
 Encoder::Encoder(int cs) :
-    _cs(cs), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE) {
+    _cs(cs), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE), 
+    _prevRaw(0), _rotationCount(0), _firstReading(true) {
     pinMode(_cs, OUTPUT);
     digitalWrite(_cs, HIGH);
 }
@@ -14,8 +15,31 @@ void Encoder::beginSPI()
 
 float Encoder::rawToDegree(uint16_t raw)
 {
-    float angle = (raw * 360.0) / 16383.0;
-    return angle;
+    // Threshold for detecting wrapping (3/4 of full range)
+    const uint16_t WRAP_THRESHOLD = 12287;
+    
+    if (!_firstReading) {
+        // Calculate the difference between current and previous reading
+        int32_t diff = (int32_t)raw - (int32_t)_prevRaw;
+        
+        // Check for forward wrap
+        if (diff < -WRAP_THRESHOLD) {
+            _rotationCount++;
+        }
+        // Check for backward wrap
+        else if (diff > WRAP_THRESHOLD) {
+            _rotationCount--;
+        }
+    } else {
+        _firstReading = false;
+    }
+    
+    _prevRaw = raw;
+    
+    // Calculate unwrapped angle
+    float baseAngle = (raw * 360.0) / 16383.0;
+    float unwrappedAngle = baseAngle + (_rotationCount * 360.0);
+    return unwrappedAngle;
 }
 
 uint16_t Encoder::readEncoderRaw()
