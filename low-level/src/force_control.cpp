@@ -64,7 +64,7 @@ float ForceControl::forcePID(float motor_angle, float sea_angle, ForceType force
     float SeaForce = encoderToForce(motor_angle, sea_angle);
     
     // Error
-    float error = this->referenceForce - 0;//SeaForce;
+    float error = this->referenceForce - SeaForce;
     intErr += error;
     
     // Anti-windup
