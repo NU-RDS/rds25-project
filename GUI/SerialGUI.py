@@ -253,8 +253,12 @@ class SerialGUI:
                         except Exception as e:
                             print(f"Error reading encoder value: {e}")
                             break
-                    
+                
                 elif selection == '8':
+                    print("Slacking on tendon...")
+                    break
+                  
+                elif selection == '9':
                     print("Exiting program...")
                     self.ser.close()
                     break

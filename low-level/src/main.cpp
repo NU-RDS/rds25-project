@@ -275,13 +275,17 @@ void loop() {
                    }
                }
                break;
-               
-           case 9: // Stop PID
+
+           case 8: // Stop PID
                runningPID = false;
                Serial.println("DATA_STREAM_STOPPED");
-               odrives[0].current_torque = 0.01;
-               odrives[0].is_running = true;
-               odrives[0].drive.setTorque(0.01);
+               unsigned long startTime = millis();
+               while (millis() - startTime < 1000)
+               { 
+                odrives[0].current_torque = 0.01;
+                odrives[0].is_running = true;
+                odrives[0].drive.setTorque(0.01);
+               }
                break;
                
            default:
