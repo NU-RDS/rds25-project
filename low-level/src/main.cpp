@@ -6,6 +6,7 @@
 #include "load_cell.hpp"
 
 #define GEAR_REDUCTION 36.0f
+const int NUM_DRIVES = 5;
 
 // Pin definitions
 const int ENCODER_SEA_CS = 10;  // Chip select pin for encoder
@@ -31,13 +32,16 @@ float sea_offset = 0.0f;
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
 
 // Array of ODrives
-const int NUM_DRIVES = 1;
 struct ODriveControl {
     ODriveCAN drive;
     ODriveUserData user_data;
     bool is_running;
     float current_torque;
 } odrives[NUM_DRIVES] = {
+    {ODriveCAN(wrap_can_intf(can_intf), 0), ODriveUserData(), false, 0.0f},
+    {ODriveCAN(wrap_can_intf(can_intf), 1), ODriveUserData(), false, 0.0f},
+    {ODriveCAN(wrap_can_intf(can_intf), 2), ODriveUserData(), false, 0.0f},
+    {ODriveCAN(wrap_can_intf(can_intf), 3), ODriveUserData(), false, 0.0f},
     {ODriveCAN(wrap_can_intf(can_intf), 4), ODriveUserData(), false, 0.0f},
 };
 
