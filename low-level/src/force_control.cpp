@@ -18,7 +18,10 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
     switch (forceType) {
         case ForceType::STEP:
             // Step input
-            this->referenceForce = ((t/500) % 2 == 0) ? 1.0f : 3.0f;
+            // this->referenceForce = ((t/500) % 2 == 0) ? 1.0f : 3.0f;
+            this->referenceForce = ((t/250) % 4 == 0) ? 1.0f : 
+                       ((t/250) % 4 == 1) ? 0.0f : 
+                       ((t/250) % 4 == 2) ? 3.0f : 0.0f;
             break;
             
         case ForceType::SIN:

@@ -11,8 +11,8 @@
 const int ENCODER_SEA_CS = 10;  // Chip select pin for encoder
 const int ENCODER_MOTOR_CS = 4;  // Chip select pin for encoder
 
-const int32_t ZERO_OFFSET = -643;
-const float NEWTONS_PER_COUNT = -0.000093;
+const int32_t ZERO_OFFSET = -817;
+const float NEWTONS_PER_COUNT = -0.000095;
 
 Loadcell loadcell(&Wire);
 // Constants
@@ -21,7 +21,7 @@ const int LOOP_TIME_MS = 10;  // 10ms control loop (100Hz)
 
 // Global variables
 float ks = 0.00103f;  // Spring constant in N/m
-ForceControl forceController(0.0f, 0.1f, 0.0f, 0.0f, ks); // Default values
+ForceControl forceController(0.1f, 0.1f, 0.0f, 0.0f, ks); // Default values
 unsigned long lastTime = 0;
 unsigned long startTime = 0;
 boolean runningPID = false;
@@ -268,25 +268,27 @@ void loop() {
                {
                    Encoder encoder = Encoder(ENCODER_MOTOR_CS);
                    for (int i = 0; i < 100; i++) {
-                       Serial.print(i);
-                       Serial.print(": ");
-                       Serial.println(encoder.readEncoderDeg());
+                    //    Serial.print(i);
+                    //    Serial.print(": ");
+                       Serial.println(loadcell.readForce());
                        delay(10); // Small delay between readings
                    }
                }
                break;
 
            case 8: // Stop PID
-               runningPID = false;
-               Serial.println("DATA_STREAM_STOPPED");
-               unsigned long startTime = millis();
-               while (millis() - startTime < 1000)
-               { 
-                odrives[0].current_torque = 0.01;
-                odrives[0].is_running = true;
-                odrives[0].drive.setTorque(0.01);
-               }
-               break;
+            {  // Add braces to create scope
+                runningPID = false;
+                Serial.println("DATA_STREAM_STOPPED");
+                unsigned long start = millis();
+                while (millis() - start < 1000)
+                { 
+                    odrives[0].current_torque = 0.01;
+                    odrives[0].is_running = true;
+                    odrives[0].drive.setTorque(0.01);
+                }
+            }  // Close the scope
+            break;
                
            default:
                runningPID = false;

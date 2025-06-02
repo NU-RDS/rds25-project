@@ -4,6 +4,8 @@ import numpy as np
 import time
 import sys
 import threading
+import csv
+from datetime import datetime
 
 class SerialGUI:
     def __init__(self, port, baud):
@@ -21,6 +23,45 @@ class SerialGUI:
        self.ser = None
        self.stop_flag = False
        
+    def save_to_csv(self, time_sec, ref_ls, data_ls):
+        """Save the collected data to a CSV file"""
+        try:
+            # Generate filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"force_control_data_{timestamp}.csv"
+            
+            # Calculate error for saving
+            error = [ref - act for ref, act in zip(ref_ls, data_ls)]
+            
+            with open(filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                
+                # Write header
+                writer.writerow(['Time_sec', 'Reference_Force_N', 'Actual_Force_N', 'Error_N'])
+                
+                # Write data rows
+                for i in range(len(time_sec)):
+                    writer.writerow([time_sec[i], ref_ls[i], data_ls[i], error[i]])
+            
+            print(f"Data saved to: {filename}")
+            return filename
+        except KeyboardInterrupt:
+            print("Data collection interrupted")
+        finally:
+            # Send command to stop PID
+            self.ser.write(b'9\n')
+            print("Sent stop command to Teensy")
+            
+            # Wait for stop acknowledgement with a timeout
+            timeout = time.time() + 2.0  # 2 second timeout
+            while time.time() < timeout:
+                if self.ser.in_waiting > 0:
+                    line = self.ser.read_until(b'\n').decode('utf-8').strip()
+                    if line == "DATA_STREAM_STOPPED":
+                        print("Data stream stopped successfully")
+                        break
+                time.sleep(0.1)
+        
     def initSerial(self):
         try:
             self.ser = serial.Serial(self.port, self.baud, timeout=1)
@@ -130,6 +171,9 @@ class SerialGUI:
             # Convert time to seconds for better readability
             time_sec = [t/1000 for t in self.time_ls]
             
+            # Save data to CSV
+            csv_filename = self.save_to_csv(time_sec, self.ref_ls, self.data_ls)
+            
             plt.figure(figsize=(12, 8))
             
             # Plot reference vs actual force
@@ -162,6 +206,8 @@ class SerialGUI:
             print(f"Test duration: {time_sec[-1]:.2f} seconds")
             print(f"RMS Error: {rms_error:.4f} N")
             print(f"Maximum Error: {max_error:.4f} N")
+            if csv_filename:
+                print(f"Data exported to: {csv_filename}")
         else:
             print("Not enough data points collected for plotting")
            
@@ -179,8 +225,9 @@ class SerialGUI:
             print("4. Set reference type")
             print("5. Run PID and plot")
             print("6. Show PID params")
-            print("7. Show encoder reading")
-            print("8. Quit")
+            print("7. Show loadcell reading")
+            print("8. Slack tendon")
+            print("9. Quit")
             print("-"*20)
             
             try:
@@ -211,7 +258,7 @@ class SerialGUI:
                     self.ser.write((str(self.ref_type)+'\n').encode())
                 
                 elif selection == '5':
-                    duration = 3.0 
+                    duration = 6.0 
                     print(f"Running PID for {duration} seconds (Press Enter to stop early)")
                     self.livePlot(duration)
                 
@@ -249,7 +296,7 @@ class SerialGUI:
                         try:
                             encoder_str = self.ser.read_until(b'\n').decode('utf-8').strip()
                             encoder = float(encoder_str)
-                            print(f"Encoder {i+1}: {encoder}")
+                            print(f"Loadcell {i+1}: {encoder}")
                         except Exception as e:
                             print(f"Error reading encoder value: {e}")
                             break
