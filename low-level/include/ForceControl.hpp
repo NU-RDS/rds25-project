@@ -2,14 +2,15 @@
 #define FORCE_CONTROL_HPP
 
 #include <Arduino.h>
-#include "encoder.hpp"
+#include "Encoder.hpp"
+#include "SEALookup.hpp"
 
 // Constants
 #define _PI 3.14159265359f
 #define MAX_TENDON_FORCE 5.0f
 #define ANTI_WINDUP_F 5.0f
 #define R_ENCODER_PULLEY 0.02f  // 20mm radius in meters
-#define MAX_CURRENT 10 // A
+#define MAX_TORQUE 1.2 // Nm
 
 // Force pattern types
 enum class ForceType {
@@ -29,7 +30,7 @@ private:
     float Ks;  // Spring constant
     
     float referenceForce;  // Desired force
-    float pidCurrent;  // PID output
+    float pidTorque;  // PID output
 
     ForceType forceType;
     Encoder* seaEncoder;
@@ -40,17 +41,14 @@ public:
     ForceControl(float ff, float kp, float ki, float kd, float ks);
     
     // Convert encoder reading to force
-    float encoderToForce(float motor_angle, float sea_angle);
-    
-    // Generate reference force based on type
-    void forceGeneration(ForceType forceType, int t);
+    float encoderToTorque(float motor_angle, float sea_angle, int sea_id);
     
     // PID controller for force - updated to match implementation
-    float forcePID(float motor_angle, float sea_angle, ForceType forceType);
+    float forcePID(float motor_angle, float sea_angle, float setTorque);
 
     // Getters
     float getReferenceForce() { return this->referenceForce; }
-    float getPidCurrent() { return this->pidCurrent; }
+    float getPidTorque() { return this->pidTorque; }
     float getFf() {return this->Ff; }
     float getKp() {return this->Kp; }
     float getKi() {return this->Ki; }
