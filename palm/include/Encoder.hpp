@@ -10,6 +10,7 @@
  #include <SPI.h>
  
  // Register definitions
+ #define SPIx SPI 
  #define ENC_NOP 0x0000
  #define ENC_ERRFL 0x0001
  #define ENC_PROG 0x0003
