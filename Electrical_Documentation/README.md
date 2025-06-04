@@ -100,7 +100,7 @@ The design is structured for **stackable, role-specific PCBs**, easing debugging
 <details>
   <summary>📷 Click to view Modular Control Goal Diagram</summary>
 
-  ![Modular Control Goal](./figures/8c793dd9-d42b-4715-9a13-339b90cecc76.png)  
+  ![Modular Control Goal](./figures/modular-control-goal.png)  
   **Figure 3.** Modular PCB stack: domain separation by function with visual overlays and control pathways highlighted.
 
 </details>
