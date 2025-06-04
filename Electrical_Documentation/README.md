@@ -116,20 +116,21 @@ We defined success as:
 
 | Plan Order       | Status / Result                      |
 |------------------|--------------------------------------|
-| A                |  |
-| B                |  |
-| C                |  |
-| D                |  |
+| A                |  A|
+| B                | Ivor new |
+| C                |  Ivor Old |
+| D                | Odrive |
 
 ---
 ## 5. Project Outcome
 
-| Deliverable       | Status / Result                      |
+| Component      | Status / Result                      |
 |------------------|--------------------------------------|
-| Hardware Rev 1    |                                     |
-| Hardware Rev 2    |                                     |
-| Firmware v1.2.3   |                                     |
-| Deployment        |                                     |
+| Motor Driver & Logic/Control      | ODrive for FOC               |
+| Power Distribution                | Han's custom PCB            |
+| Logic / Control                   | Han's custom PCB with 7 joint encoders    |
+| Motor Sensing                     | Pre-fabbed encoder boards from Mouser |
+| Joint Position Sensing            | Custom 12mm wide encoders  |
 
 ---
 
@@ -137,9 +138,11 @@ We defined success as:
 
 | Category          | Problem                              | Resolution / Notes                          |
 |------------------|--------------------------------------|---------------------------------------------|
-| MCU Sleep Modes   | Unreliable LPM3 wakeup               | RTC interrupt logic revised                 |
-| SPI Communication | Glitch at low VCAP                   | Capacitance buffer improved                 |
-| Cold Start        | Unstable VOUT under low light        | Increased input capacitance + watchdog delay|
+| Encoder sizing and wiring   | abcd         |                  |
+| SPI Communication           | abcd         |                  |
+| CAN power                   | abcd         |                  |
+| Custom Motor Driver         | abcd         |                  |
+| Teensy 4.0 Daughter Board   | abcd         |                  |
 
 ---
 
@@ -147,10 +150,8 @@ We defined success as:
 
 | Area              | Next Steps                           |
 |------------------|--------------------------------------|
-| Hardware          | Migrate to Apollo3 for ultra-low power |
-| Sensors           | Solid-state pH + moisture hybrid     |
-| Networking        | Evaluate LoRa P2P for redundancy     |
-| Storage           | Add FRAM buffering during outages    |
+| Motor Driver         | abcd |
+| Encoders             |abcd  |
 
 ---
 
@@ -158,10 +159,7 @@ We defined success as:
 
 | Tip                                      | Why It Matters                               |
 |------------------------------------------|-----------------------------------------------|
-| Start with power-first design            | Energy availability drives all decisions      |
-| Use precise current measurement early    | Debugging low-power bugs is easier upfront    |
-| Version-control firmware + hardware docs | Prevent loss of institutional knowledge       |
-| Modularize and test incrementally        | Complex systems fail at integration           |
+| abcd            | abcd      |
 
 ---
 
