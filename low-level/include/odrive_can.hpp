@@ -16,11 +16,14 @@
 // Configuration
 #define CAN_BAUDRATE 250000
 #define NUM_DRIVES 1
+int odrive_idx[NUM_DRIVES] = {1}; // Your specific node IDs
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_intf;
 
-// Forward declaration
-struct ODriveStatus;
+// Forward declarations
+struct ODriveUserData;
+struct ODriveControl;
+void onHeartbeat(Heartbeat_msg_t& msg, void* user_data);
+void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data);
 
 // User data structure
 struct ODriveUserData {
@@ -32,25 +35,37 @@ struct ODriveUserData {
     bool received_current = false;
 };
 
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_intf;
+
 // ODrive control structure
 struct ODriveControl {
     ODriveCAN drive;
     ODriveUserData user_data;
     bool is_running;
     float current_torque;
+    
+    // Constructor
+    ODriveControl() : drive(ODriveCAN(wrap_can_intf(can_intf), 0)), 
+                      user_data(), 
+                      is_running(false), 
+                      current_torque(0.0f) {}
+    
+    // Constructor with node ID
+    ODriveControl(int node_id) : drive(ODriveCAN(wrap_can_intf(can_intf), node_id)), 
+                                 user_data(), 
+                                 is_running(false), 
+                                 current_torque(0.0f) {}
 };
 
+// Global variables - declare after struct definitions
+ODriveControl odrives[NUM_DRIVES];
 
-ODriveControl odrives[NUM_DRIVES] = {
-    {ODriveCAN(wrap_can_intf(can_intf), 0), ODriveUserData(), false, 0.0f},
-    // {ODriveCAN(wrap_can_intf(can_intf), 1), ODriveUserData(), false, 0.0f},
-    // {ODriveCAN(wrap_can_intf(can_intf), 2), ODriveUserData(), false, 0.0f},
-    // {ODriveCAN(wrap_can_intf(can_intf), 3), ODriveUserData(), false, 0.0f},
-    // {ODriveCAN(wrap_can_intf(can_intf), 4), ODriveUserData(), false, 0.0f},
-    // {ODriveCAN(wrap_can_intf(can_intf), 5), ODriveUserData(), false, 0.0f},
-    // {ODriveCAN(wrap_can_intf(can_intf), 6), ODriveUserData(), false, 0.0f},
-};
-
+// Initialize ODrive array properly
+void initializeODrives() {
+    for (int i = 0; i < NUM_DRIVES; i++) {
+        odrives[i] = ODriveControl(odrive_idx[i]);
+    }
+}
 
 // Callback implementations
 void onHeartbeat(Heartbeat_msg_t& msg, void* user_data) {
@@ -86,8 +101,15 @@ void checkErrors() {
 }
 
 void onCanMessage(const CAN_message_t& msg) {
+    // Extract node ID from CAN message ID
+    uint32_t node_id = (msg.id >> 5) & 0x3F; // Extract bits 5-10 for ODrive node ID
+    
+    // Find which ODrive array index corresponds to this node ID
     for (int i = 0; i < NUM_DRIVES; i++) {
-        onReceive(msg, odrives[i].drive);
+        if (odrive_idx[i] == node_id) {
+            onReceive(msg, odrives[i].drive);
+            break;
+        }
     }
 }
 
@@ -113,6 +135,9 @@ void setupODrive(int index) {
         return;
     }
     
+    Serial.print("Setting up ODrive with node ID: ");
+    Serial.println(odrive_idx[index]);
+    
     // Register callbacks
     odrives[index].drive.onFeedback(onFeedback, &odrives[index].user_data);
     Serial.println("Registering heartbeat callback");
@@ -129,9 +154,13 @@ void setupODrive(int index) {
            ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
         odrives[index].drive.clearErrors();
         delay(1);
-        Serial.println("Waiting for ODrive to enter closed loop control state...");
+        Serial.print("Waiting for ODrive ");
+        Serial.print(odrive_idx[index]);
+        Serial.println(" to enter closed loop control state...");
         odrives[index].drive.setState(ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL);
-        Serial.println("Setting ODrive to closed loop control state");
+        Serial.print("Setting ODrive ");
+        Serial.print(odrive_idx[index]);
+        Serial.println(" to closed loop control state");
 
         for (int i = 0; i < 15; ++i) {
             delay(10);
