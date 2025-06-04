@@ -27,7 +27,7 @@ boolean runningPID = false;
 float motor_offset = 0.0f;
 float sea_offset = 0.0f;
 
-FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_intf;
 
 // Array of ODrives
 const int NUM_DRIVES = 1;
@@ -137,12 +137,6 @@ void setup() {
     }
 
     Serial.println("All ODrives ready!");
-    
-    Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
-
-    float motor_angle = fmod(feedback.Pos_Estimate*360., 360.0);
-    motor_offset = motor_angle/GEAR_REDUCTION;
-    sea_offset = forceController.getSeaEncoderAngle();
 
     Serial.println("Force Control System Ready");
 }
@@ -156,9 +150,14 @@ void loop() {
 
     odrives[0].is_running = true;
     Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
+    Serial.print(" - Heartbeat received: ");
+    Serial.print(odrives[0].user_data.received_heartbeat ? "YES" : "NO");
+    Serial.print(", Feedback received: ");
+    Serial.println(odrives[0].user_data.received_feedback ? "YES" : "NO");
 
-    Serial.print(" - Revolutions: ");
-    Serial.println(feedback.Pos_Estimate);
-    
+    odrives[0].current_torque = 0.5;
+    odrives[0].is_running = true;
+    odrives[0].drive.setTorque(0.5);
+
     delay(1);  // Small delay to prevent overwhelming the system
 }
