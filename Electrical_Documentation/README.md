@@ -92,15 +92,15 @@ Our primary objective for Spring 2025 was to **consolidate disparate electrical 
 | Domain                    | Responsibilities                                       |
 |---------------------------|--------------------------------------------------------|
 | 🟧 **Power Domain**        | 24V input → 5V regulation and stable power delivery    |
-| 🟩 **Switching Domain**    | 40kHz gate driving and isolation switching logic       |
-| 🟦 **Logic & Communication** | SPI, CAN, and MCU interfacing for control & telemetry |
+| 🟦 **Switching Domain**    | 40kHz gate driving and isolation switching logic       |
+| 🟩 **Logic & Communication** | SPI, CAN, and MCU interfacing for control & telemetry |
 
 The design is structured for **stackable, role-specific PCBs**, easing debugging, replacement, and scalability. The final layout aggregates all functional blocks into a clear topological arrangement, as shown below.
 
 <details>
   <summary>📷 Click to view Modular Control Goal Diagram</summary>
 
-  ![Modular Control Goal](./figures/modular-control-goal.png)  
+  ![Modular Control Goal](./figures/modular-control-goal1.png)  
   **Figure 3.** Modular PCB stack: domain separation by function with visual overlays and control pathways highlighted.
 
 </details>
