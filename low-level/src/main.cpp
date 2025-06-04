@@ -27,18 +27,24 @@ boolean runningPID = false;
 float motor_offset = 0.0f;
 float sea_offset = 0.0f;
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_intf;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
 
 // Array of ODrives
-const int NUM_DRIVES = 1;
+const int NUM_DRIVES = 4;
 struct ODriveControl {
     ODriveCAN drive;
     ODriveUserData user_data;
     bool is_running;
     float current_torque;
+    uint8_t node_id;
 } odrives[NUM_DRIVES] = {
-    {ODriveCAN(wrap_can_intf(can_intf), 4), ODriveUserData(), false, 0.0f},
+    {ODriveCAN(wrap_can_intf(can_intf), 2), ODriveUserData(), false, 0.0f, 2},
+    {ODriveCAN(wrap_can_intf(can_intf), 5), ODriveUserData(), false, 0.0f, 5},
+    {ODriveCAN(wrap_can_intf(can_intf), 4), ODriveUserData(), false, 0.0f, 4},
+    {ODriveCAN(wrap_can_intf(can_intf), 6), ODriveUserData(), false, 0.0f, 6}
 };
+
+void onCanMessage(const CAN_message_t& msg);
 
 // CAN setup implementation
 bool setupCan() {
@@ -56,6 +62,17 @@ void onHeartbeat(Heartbeat_msg_t& msg, void* user_data) {
     ODriveUserData* odrv_user_data = static_cast<ODriveUserData*>(user_data);
     odrv_user_data->last_heartbeat = msg;
     odrv_user_data->received_heartbeat = true;
+    
+    for (int i = 0; i < NUM_DRIVES; i++) {
+        if (&odrives[i].user_data == odrv_user_data) {
+            uint8_t node_id = odrives[i].node_id;
+            Serial.print("Heartbeat received from node ID: ");
+            Serial.print(node_id);
+            Serial.print(", Axis State: ");
+            Serial.println(msg.Axis_State);
+        }
+        delay(1);
+    }
 }
 
 void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data) {
@@ -69,6 +86,8 @@ void onCanMessage(const CAN_message_t& msg) {
         onReceive(msg, odrives[i].drive);
     }
 }
+
+void checkErrors(void);
 
 void setupODrive(int index) {
     // Register callbacks
@@ -87,14 +106,19 @@ void setupODrive(int index) {
            ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
         odrives[index].drive.clearErrors();
         delay(1);
-        Serial.println("Waiting for ODrive to enter closed loop control state...");
+        Serial.print("Waiting for ODrive ");
+        Serial.print(odrives[index].node_id);
+        Serial.println(" to enter closed loop control state...");
         odrives[index].drive.setState(ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL);
-        Serial.println("Setting ODrive to closed loop control state");
+        Serial.print("Setting ODrive ");
+        Serial.print(odrives[index].node_id);
+        Serial.println(" to closed loop control state");
 
         for (int i = 0; i < 15; ++i) {
             delay(10);
             pumpEvents(can_intf);
         }
+        checkErrors();
     }
 }
 
@@ -129,6 +153,8 @@ void setup() {
         while (true);
     }
 
+    checkErrors();
+
     // Initialize all ODrives
     for (int i = 0; i < NUM_DRIVES; i++) {
         Serial.print("Initializing ODrive ");
@@ -148,16 +174,16 @@ void loop() {
     // Check for errors
     checkErrors();
 
-    odrives[0].is_running = true;
-    Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
-    Serial.print(" - Heartbeat received: ");
-    Serial.print(odrives[0].user_data.received_heartbeat ? "YES" : "NO");
-    Serial.print(", Feedback received: ");
-    Serial.println(odrives[0].user_data.received_feedback ? "YES" : "NO");
+    // odrives[0].is_running = true;
+    // Get_Encoder_Estimates_msg_t feedback = odrives[0].user_data.last_feedback;
+    // Serial.print(" - Heartbeat received: ");
+    // Serial.print(odrives[0].user_data.received_heartbeat ? "YES" : "NO");
+    // Serial.print(", Feedback received: ");
+    // Serial.println(odrives[0].user_data.received_feedback ? "YES" : "NO");
 
-    odrives[0].current_torque = 0.5;
-    odrives[0].is_running = true;
-    odrives[0].drive.setTorque(0.5);
+    // odrives[0].current_torque = 0.0;
+    // odrives[0].is_running = true;
+    // odrives[0].drive.setTorque(0.0);
 
-    delay(1);  // Small delay to prevent overwhelming the system
+    delay(10);  // Small delay to prevent overwhelming the system
 }
