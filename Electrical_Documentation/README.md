@@ -11,11 +11,11 @@ Welcome to the final documentation portal for RDS 2025 Electrical Team. This wik
 | [1. Original Architecture](#1-original-architecture)     | Initial ebedded system design, the primary driver of electrical hardware decisions |
 | [2. Existing Tooling](#2-existing-tooling)               | The motor drivers, position sensors, MCU, and power domain tools alreafy in place as of 1 April 2025 |
 | [3. Project Goals](#3-project-goals)                     | The Design Parameters, goals, plans, and backup plans we agreed upon for Spring quarter '25    |
-| [4.]
-| [4. Project Outcome](#4-project-outcome)                 | Summary of results, deliverables, and performance           |
-| [5. Issues and Painpoints](#5-issues-and-painpoints)     | Technical and procedural blockers encountered, and how we overcame them |
-| [6. Future Work](#6-future-work)                         | Suggestions for extending and improving the project         |
-| [7. Recommendations for Future Teams](#7-recommendations-for-future-teams) | Practical advice from this iteration, and how to pick up where we left off |
+| [4. Project Plans and Backup Plans](#4-project-plans-and-backup-plans) 
+| [5. Project Outcome](#5-project-outcome)                 | Summary of results, deliverables, and performance           |
+| [6. Issues and Painpoints](#6-issues-and-painpoints)     | Technical and procedural blockers encountered, and how we overcame them |
+| [7. Future Work](#7-future-work)                         | Suggestions for extending and improving the project         |
+| [8. Recommendations for Future Teams](#8-recommendations-for-future-teams) | Practical advice from this iteration, and how to pick up where we left off |
 
 ---
 
@@ -27,9 +27,9 @@ Welcome to the final documentation portal for RDS 2025 Electrical Team. This wik
 | Mid-Level Control              | Teensy 4.0             |
 | Low-Level Control              | Teensy 4.0        |
 | Joint Encoders                 | AS5047P to agggregating sensor board (palm board)     |
-| Motor Encoders                 | AS5047P to agggregating sensor board (palm board)     |
-| Power Domain                   | Power Distribution Board|
-| Palm Board                     | Sensor Aggregation
+| Motor Encoders                 | AS5047P straight to mid-level teensy    |
+| Power Domain                   | Power Distribution Board |
+| Palm Board                     | Sensor Aggregation |
 
 ---
 <details>
