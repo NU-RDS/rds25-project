@@ -16,7 +16,8 @@
 // Configuration
 #define CAN_BAUDRATE 250000
 #define NUM_DRIVES 1
-int odrive_idx[NUM_DRIVES] = {1}; // Your specific node IDs
+uint32_t odrive_idx[NUM_DRIVES] = {6}; // Your specific node IDs
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
 
 
 // Forward declarations
@@ -35,7 +36,6 @@ struct ODriveUserData {
     bool received_current = false;
 };
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_intf;
 
 // ODrive control structure
 struct ODriveControl {
@@ -101,10 +101,13 @@ void checkErrors() {
 }
 
 void onCanMessage(const CAN_message_t& msg) {
-    // Extract node ID from CAN message ID
-    uint32_t node_id = (msg.id >> 5) & 0x3F; // Extract bits 5-10 for ODrive node ID
+    uint32_t node_id = (msg.id >> 5) & 0x3F;
     
-    // Find which ODrive array index corresponds to this node ID
+    Serial.print("Received CAN message from node: ");
+    Serial.print(node_id);
+    Serial.print(", Expected: ");
+    Serial.println(odrive_idx[0]);
+    
     for (int i = 0; i < NUM_DRIVES; i++) {
         if (odrive_idx[i] == node_id) {
             onReceive(msg, odrives[i].drive);
@@ -125,24 +128,12 @@ bool setupCan() {
 }
 
 void setupODrive(int index) {
-    // Bounds check
-    if (index >= NUM_DRIVES) {
-        Serial.print("Error: ODrive index ");
-        Serial.print(index);
-        Serial.print(" exceeds NUM_DRIVES (");
-        Serial.print(NUM_DRIVES);
-        Serial.println(")");
-        return;
-    }
-    
-    Serial.print("Setting up ODrive with node ID: ");
-    Serial.println(odrive_idx[index]);
-    
+    checkErrors();
     // Register callbacks
     odrives[index].drive.onFeedback(onFeedback, &odrives[index].user_data);
     Serial.println("Registering heartbeat callback");
     odrives[index].drive.onStatus(onHeartbeat, &odrives[index].user_data);
-    Serial.println("Registering feedback callback");
+    // odrives[index].drive.getCurrent(getCurrents, &odrives[index].user_data);
 
     // Set control mode to torque control
     odrives[index].drive.setControllerMode(ODriveControlMode::CONTROL_MODE_TORQUE_CONTROL, 

@@ -95,7 +95,6 @@ void loop() {
             Serial.print(") -- revolutions: ");
             Serial.println(feedback.Pos_Estimate);
             
-            // Uncomment and modify as needed:
             // float motor_angle = feedback.Pos_Estimate * 360.0;
             // motor_angle = motor_angle/GEAR_REDUCTION - motor_offset;
             // float sea_angle = forceController.getSeaEncoderAngle() - sea_offset;
