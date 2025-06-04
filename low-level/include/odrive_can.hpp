@@ -15,16 +15,9 @@
 
 // Configuration
 #define CAN_BAUDRATE 250000
-#define MCU_ID 0
+#define NUM_DRIVES 1
 
-// Define NUM_DRIVES based on MCU_ID
-#if MCU_ID == 2
-    #define NUM_DRIVES 1
-#else
-    #define NUM_DRIVES 2
-#endif
-
-FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_intf;
 
 // Forward declaration
 struct ODriveStatus;
@@ -47,17 +40,17 @@ struct ODriveControl {
     float current_torque;
 };
 
-// Array of ODrives - declare with maximum size but only initialize what we need
-#if MCU_ID == 2
-    ODriveControl odrives[NUM_DRIVES] = {
-        {ODriveCAN(wrap_can_intf(can_intf), nodeID(MCU_ID)[0]), ODriveUserData(), false, 0.0f},
-    };
-#else
-    ODriveControl odrives[NUM_DRIVES] = {
-        {ODriveCAN(wrap_can_intf(can_intf), nodeID(MCU_ID)[0]), ODriveUserData(), false, 0.0f},
-        {ODriveCAN(wrap_can_intf(can_intf), nodeID(MCU_ID)[1]), ODriveUserData(), false, 0.0f},
-    };
-#endif
+
+ODriveControl odrives[NUM_DRIVES] = {
+    {ODriveCAN(wrap_can_intf(can_intf), 0), ODriveUserData(), false, 0.0f},
+    // {ODriveCAN(wrap_can_intf(can_intf), 1), ODriveUserData(), false, 0.0f},
+    // {ODriveCAN(wrap_can_intf(can_intf), 2), ODriveUserData(), false, 0.0f},
+    // {ODriveCAN(wrap_can_intf(can_intf), 3), ODriveUserData(), false, 0.0f},
+    // {ODriveCAN(wrap_can_intf(can_intf), 4), ODriveUserData(), false, 0.0f},
+    // {ODriveCAN(wrap_can_intf(can_intf), 5), ODriveUserData(), false, 0.0f},
+    // {ODriveCAN(wrap_can_intf(can_intf), 6), ODriveUserData(), false, 0.0f},
+};
+
 
 // Callback implementations
 void onHeartbeat(Heartbeat_msg_t& msg, void* user_data) {
