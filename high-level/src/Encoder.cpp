@@ -1,7 +1,7 @@
-#include "encoder.hpp"
+#include "Encoder.hpp"
 
 Encoder::Encoder(int cs, int id) : 
-    _cs(cs), _id(id), settings(SPI_CLOCK_SPEED, MSBFIRST, ENC_SPI_MODE) {
+    _cs(cs), _id(id), settings(500000, MSBFIRST, ENC_SPI_MODE) {
     pinMode(_cs, OUTPUT);
     digitalWrite(_cs, HIGH);
 }

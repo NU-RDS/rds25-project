@@ -2,7 +2,7 @@
 #include <array>
 #include <vector>
 #include <SPI.h> // Ensure SPI library is included for SPI communication
-#include "encoder.hpp" // Include the header file for the Encoder class
+#include "Encoder.hpp" // Include the header file for the Encoder class
 
 // Encoder chip selects and corresponding IDs
 const std::array<int, 8> CS = {2, 3, 4, 5, 6, 14, 15, 18};
