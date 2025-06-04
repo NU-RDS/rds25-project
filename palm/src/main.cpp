@@ -36,7 +36,7 @@ void loop() {
     Serial.print(": ");
     Serial.print(joint_angles[i]);
     Serial.print(" degrees\n");
-    delay(1);
+    delay(10);
   }
   Serial.print("\n\n\n");
   delay(1000); // Delay for readability
