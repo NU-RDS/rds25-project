@@ -48,3 +48,7 @@ float TendonKinematics::toShaft(float ang)
 {
     return ang / GEAR_RATIO;
 }
+
+float TendonKinematics::motorToJointAngle(float pitch, float yaw) {
+    
+}
