@@ -163,10 +163,24 @@ void loop() {
 
         odrives[1].current_torque = 0.5f;
         odrives[1].is_running = true;
-        odrives[1].drive.setTorque(state_manager.getWrist()->getPitch()->getControlSignal());
+        float pitch_control = state_manager.getWrist()->getPitch()->getControlSignal();
+        if (pitch_control > 2.0f) {
+            pitch_control = 2.0f;
+        }
+        if (pitch_control < -2.0f) {
+            pitch_control = -2.0f;
+        }
+        odrives[1].drive.setTorque(pitch_control);
 
         odrives[0].current_torque = 0.5f;
         odrives[0].is_running = true;
-        odrives[0].drive.setTorque(state_manager.getWrist()->getYaw()->getControlSignal());
+        float yaw_control = state_manager.getWrist()->getYaw()->getControlSignal();
+        if (yaw_control > 2.0f) {
+            yaw_control = 2.0f;
+        }
+        if (yaw_control < -2.0f) {
+            yaw_control = -2.0f;
+        }
+        odrives[0].drive.setTorque(yaw_control);
     }
 }

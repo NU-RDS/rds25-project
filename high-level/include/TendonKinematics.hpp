@@ -4,6 +4,7 @@
 #include <vector>
 #include <math.h>
 
+#include <Arduino.h>
 #include "RDS_constants.hpp"
 
 class TendonKinematics{
