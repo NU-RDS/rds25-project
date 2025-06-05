@@ -133,7 +133,7 @@ void loop() {
 
     Get_Encoder_Estimates_msg_t encoder = odrives[0].user_data.last_feedback;
     // motor ang is motor shaft ang
-    float motor_pitch = (state_manager.getKinematics()->RevToDeg(encoder.Pos_Estimate - odrives[0].encoder_offset));
+    float motor_pitch = state_manager.getKinematics()->toShaft(state_manager.getKinematics()->RevToDeg(encoder.Pos_Estimate - odrives[0].encoder_offset));
     state_manager.getWrist()->getPitch()->setMotorValue(state_manager.getKinematics()->toShaft(motor_pitch));
     Serial.print("Motor ");
     Serial.print(0);
@@ -151,7 +151,7 @@ void loop() {
 
     std::vector<float> current_joint_angles = state_manager.getKinematics()->motorToJointAngle(motor_pitch, motor_yaw);
     state_manager.getWrist()->getPitch()->setCurrentPosition(current_joint_angles[1]);
-    state_manager.getWrist()->getPitch()->setCurrentPosition(current_joint_angles[0]);
+    state_manager.getWrist()->getYaw()->setCurrentPosition(current_joint_angles[0]);
 
     state_manager.controlLoop();
 
