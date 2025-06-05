@@ -40,7 +40,9 @@ class TendonKinematics{
         float DegToRad(float ang);
         float RevToDeg(float encoder);
         float toShaft(float ang);
+
+        std::vector<float> motorToJointAngle(float pitch, float yaw);
                         
 };
 
-#endif
+#endif // TENDON_KINEMATICS_HPP
