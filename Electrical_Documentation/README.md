@@ -43,13 +43,13 @@ Welcome to the final documentation portal for RDS 2025 Electrical Team. This wik
 
 ## 2. Existing Tooling
 
-| Tool              | Purpose                              |
+| Component         | Details                              |
 |------------------|--------------------------------------|
-| Motor Driver & Logic/Control| Firmware development               |
-| Motor Driver | Analog simulation and modeling       |
-| Power Distribution  | PCB schematic and layout             |
-| Logic / Control| Data logging and visualization       |
-| Position Sensing | Pre-fabbed encoder boards from Mouser |
+| Motor Driver & Logic/Control  | ODrive Pro            |
+| Motor Driver                  | Ivor's Master's thesis, V1 and V2     |
+| Power Distribution            | RDS2024 PDU           |
+| Logic / Control               | RDS2024 Teensy 4.1 breakout board       |
+| Position Sensing              | Pre-fabbed encoder boards from Mouser |
 
 ---
 <details>
@@ -85,9 +85,22 @@ Welcome to the final documentation portal for RDS 2025 Electrical Team. This wik
 
 ---
 
-## 3. 🚀 Project Goals
+## 3. Project Goals
 
-Our primary objective for Spring 2025 was to **consolidate disparate electrical subsystems** into a **modular, unified PCB stack** that handled:
+Our primary objective for Spring 2025 was to **consolidate disparate electrical subsystems** into a **modular, unified PCB stack** 
+
+The existing tooling had several known drawbacks.
+
+| Existing tool | Drawback |
+|----------------|----------------------------|
+|ODrive |Finicky SPI connectors, Exclusive support list for peripherals, Wasted Z space, Limited power output, Only drives one motor |
+|Ivor's Boards | No Logic domain |
+|Teensy 4.1 |Large Footprint, finnicky readily accept wire harnesses |
+|RDS '24 PDU |Separate from other boards, does not readily accept wire harnesses |
+|Prefabbed encoders|Large footprint, does not readily accept wire harnesses |
+
+
+Our design goal was structured for **stackable, role-specific PCBs**, easing debugging, replacement, and scalability. The final layout aggregates all functional blocks into a clear topological arrangement, as shown below. Specifically, we wanted to handle:
 
 | Domain                    | Responsibilities                                       |
 |---------------------------|--------------------------------------------------------|
@@ -95,7 +108,7 @@ Our primary objective for Spring 2025 was to **consolidate disparate electrical 
 | 🟦 **Switching Domain**    | 40kHz gate driving and isolation switching logic       |
 | 🟩 **Logic & Communication** | SPI, CAN, and MCU interfacing for control & telemetry |
 
-The design is structured for **stackable, role-specific PCBs**, easing debugging, replacement, and scalability. The final layout aggregates all functional blocks into a clear topological arrangement, as shown below.
+
 
 <details>
   <summary>📷 Click to view Modular Control Goal Diagram</summary>
@@ -116,14 +129,26 @@ We defined success as:
 
 | Plan Order       | Status / Result                      |
 |------------------|--------------------------------------|
-| A                |  A|
-| B                | Ivor new |
-| C                |  Ivor Old |
-| D                | Odrive |
+| A                |  Our custom board interfaces with a controlling teensy, and talks over CAN to a palm sensor board which aggregates data over SPI from encoders|
+| B                |  Use our daughter board with Ivor's V2 motor driver |
+| C                |  Use our daughter board with Ivor's V1 motor driver |
+| D                |  Resort back to Odrive and any combination of logic which is compatible with that architecture|
 
 ---
 ## 5. Project Outcome
+What we made!
 
+| Component                  | Status / Result                                              |
+|---------------------------|--------------------------------------------------------------|
+| [Motor Driver & Logic/Control](MotorDriver.md) | Charlie's custom GaNFET motor driver, with 2x 3 phases |
+| [Power Distribution](PowerDistBoard.md)        | Han's custom PCB with joint encoders                   |
+| [Logic / Control](PalmBoard.md)                | Caroline's custom PCB with motor encoders              |
+| [Motor Sensing](Encoders.md)                   | Jack's custom encoder boards (2 designs)               |
+| [Joint Position Sensing](DaughterBoard.md)     | A third, custom 12mm wide encoder                      |
+
+
+---
+What actually ended up in the final design
 | Component      | Status / Result                      |
 |------------------|--------------------------------------|
 | Motor Driver & Logic/Control      | ODrive for FOC               |
@@ -131,9 +156,7 @@ We defined success as:
 | Logic / Control                   | Han's custom PCB with 7 joint encoders    |
 | Motor Sensing                     | Pre-fabbed encoder boards from Mouser |
 | Joint Position Sensing            | Custom 12mm wide encoders  |
-
 ---
-
 ## 6. Issues and Painpoints
 
 | Category          | Problem                              | Resolution / Notes                          |
