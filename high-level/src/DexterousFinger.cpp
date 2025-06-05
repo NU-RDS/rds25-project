@@ -1,10 +1,10 @@
 #include "DexterousFinger.hpp"
 
 DexterousFinger::DexterousFinger() {
-    PIP = std::make_unique<Joint>("PIP");
-    DIP = std::make_unique<Joint>("DIP");
-    MCP = std::make_unique<Joint>("MCP");
-    Splay = std::make_unique<Joint>("Splay");
+    PIP = std::make_unique<Joint>("PIP", 1.0, 1.0);
+    DIP = std::make_unique<Joint>("DIP", 1.0, 1.0);
+    MCP = std::make_unique<Joint>("MCP", 1.0, 1.0);
+    Splay = std::make_unique<Joint>("Splay", 1.0, 1.0);
 }
 
 void DexterousFinger::setDexterousFingerPositions(double pip_desired, double dip_desired, double mcp_desired, double splay_desired) {

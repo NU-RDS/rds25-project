@@ -18,8 +18,8 @@ struct ODriveControl {
     float encoder_offset;
     bool offset_captured;
 } odrives[NUM_DRIVES] = {
-    {ODriveCAN(wrap_can_intf(can_intf), 0), ODriveUserData(), false, 0.0f, 0.0f, false},
-    {ODriveCAN(wrap_can_intf(can_intf), 1), ODriveUserData(), false, 0.0f, 0.0f, false}
+    {ODriveCAN(wrap_can_intf(can_intf), 5), ODriveUserData(), false, 0.0f, 0.0f, false},
+    {ODriveCAN(wrap_can_intf(can_intf), 6), ODriveUserData(), false, 0.0f, 0.0f, false}
 };
 
 bool setupCan() {
@@ -127,41 +127,46 @@ void onCanMessage(const CAN_message_t& msg) {
 }
 
 void loop() {
+    static unsigned long lastControlTime = 0;
+    const unsigned long CONTROL_PERIOD_MS = 10; // 100Hz control rate
+
     pumpEvents(can_intf);
+    
+    if (millis() - lastControlTime >= CONTROL_PERIOD_MS) {
+        lastControlTime = millis();
 
-    state_manager.updateState(serialCommand);
+        state_manager.updateState(serialCommand);
 
-    Get_Encoder_Estimates_msg_t encoder = odrives[0].user_data.last_feedback;
-    // motor ang is motor shaft ang
-    float motor_pitch = state_manager.getKinematics()->toShaft(state_manager.getKinematics()->RevToDeg(encoder.Pos_Estimate - odrives[0].encoder_offset));
-    state_manager.getWrist()->getPitch()->setMotorValue(motor_pitch);
-    Serial.print("Motor ");
-    Serial.print(0);
-    Serial.print(" is at ");
-    Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
+        Get_Encoder_Estimates_msg_t encoder = odrives[1].user_data.last_feedback;
+        // motor ang is motor shaft ang
+        float motor_pitch = state_manager.getKinematics()->toShaft(state_manager.getKinematics()->RevToDeg(encoder.Pos_Estimate - odrives[1].encoder_offset));
+        state_manager.getWrist()->getPitch()->setMotorValue(motor_pitch);
+        Serial.print("Motor ");
+        Serial.print(1);
+        Serial.print(" is at ");
+        Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
 
-    encoder = odrives[1].user_data.last_feedback;
-    // motor ang is motor shaft ang
-    float motor_yaw = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToDeg(encoder.Pos_Estimate - odrives[1].encoder_offset)));
-    state_manager.getWrist()->getYaw()->setMotorValue(motor_yaw);
-    Serial.print("Motor ");
-    Serial.print(1);
-    Serial.print(" is at ");
-    Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
+        encoder = odrives[0].user_data.last_feedback;
+        // motor ang is motor shaft ang
+        float motor_yaw = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToDeg(encoder.Pos_Estimate - odrives[0].encoder_offset)));
+        state_manager.getWrist()->getYaw()->setMotorValue(motor_yaw);
+        Serial.print("Motor ");
+        Serial.print(0);
+        Serial.print(" is at ");
+        Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
 
-    std::vector<float> current_joint_angles = state_manager.getKinematics()->motorToJointAngle(motor_pitch, motor_yaw);
-    state_manager.getWrist()->getPitch()->setCurrentPosition(current_joint_angles[1]);
-    state_manager.getWrist()->getYaw()->setCurrentPosition(current_joint_angles[0]);
+        std::vector<float> current_joint_angles = state_manager.getKinematics()->motorToJointAngle(motor_pitch, motor_yaw);
+        state_manager.getWrist()->getPitch()->setCurrentPosition(current_joint_angles[1]);
+        state_manager.getWrist()->getYaw()->setCurrentPosition(current_joint_angles[0]);
 
-    state_manager.controlLoop();
+        state_manager.controlLoop();
 
-    odrives[0].current_torque = 0.5f;
-    odrives[0].is_running = true;
-    odrives[0].drive.setTorque(state_manager.getWrist()->getPitch()->getControlSignal());
+        odrives[1].current_torque = 0.5f;
+        odrives[1].is_running = true;
+        odrives[1].drive.setTorque(state_manager.getWrist()->getPitch()->getControlSignal());
 
-    odrives[1].current_torque = 0.5f;
-    odrives[1].is_running = true;
-    odrives[1].drive.setTorque(state_manager.getWrist()->getYaw()->getControlSignal());
-
-    delay(10);
+        odrives[0].current_torque = 0.5f;
+        odrives[0].is_running = true;
+        odrives[0].drive.setTorque(state_manager.getWrist()->getYaw()->getControlSignal());
+    }
 }
