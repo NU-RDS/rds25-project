@@ -66,14 +66,6 @@ void StateManager::controlLoop() {
     Serial.print(motorTorques[5]);
     Serial.print(", ");
     Serial.println(motorTorques[6]);
-
-
-    // For wrist
-    motorTorques[0] = 0.0;
-    motorTorques[1] = 0.0;
-    motorTorques[2] = 0.0;
-    motorTorques[3] = 0.0;
-    motorTorques[4] = 0.0;
 }
 
 void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp) {
