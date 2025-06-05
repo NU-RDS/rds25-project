@@ -25,3 +25,26 @@ std::vector<double> TendonKinematics::getMotorTorques(std::vector<double> joint_
 
     return motor_torques;
 }
+
+float TendonKinematics::RadToDeg(float ang)
+{
+    return ang / M_PI * 180.;
+}
+
+// degree to radian
+float TendonKinematics::DegToRad(float ang)
+{
+    return ang * M_PI / 180.;
+}
+
+// revolutions to degrees
+float TendonKinematics::RevToDeg(float encoder)
+{
+    return encoder * 360.0f;
+}
+
+// motor angle to shaft angle
+float TendonKinematics::toShaft(float ang)
+{
+    return ang / GEAR_RATIO;
+}

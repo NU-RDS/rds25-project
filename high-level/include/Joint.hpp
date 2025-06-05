@@ -16,6 +16,7 @@ class Joint {
         double commandTorque;   // Nm to be sent to MCU
         double controlSignal;
         double encoderValue;
+        double motorValue;
 
         // Joint limits
         double maxLimit;
@@ -34,10 +35,13 @@ class Joint {
         double getDesiredPosition();
         double getCommandTorque();
         double getControlSignal();
+        double getMotorValue();
     
         void setCurrentPosition(double current_pos);
         void setDesiredPosition(double desired_pos);
         void setCommandTorque(double command_torque);
+        void setControlSignal(double control_signal);
+        void setMotorValue(double motor_value);
         
         // Control functionality
         double calculateControlSignal();

@@ -31,6 +31,10 @@ double Joint::getCommandTorque() {
     return this->commandTorque;
 }
 
+double Joint::getMotorValue() {
+    return this->motorValue;
+}
+
 // Likely from encoder
 void Joint::setCurrentPosition(double current_pos) {
     this->currentPosition = current_pos;
@@ -42,6 +46,14 @@ void Joint::setDesiredPosition(double desired_pos) {
 
 void Joint::setCommandTorque(double command_torque) {
     this->commandTorque = command_torque;
+}
+
+void Joint::setControlSignal(double control_signal) {
+    this->controlSignal = control_signal;
+}
+
+void Joint::setMotorValue(double motor_value) {
+    this->motorValue = motor_value;
 }
 
 double Joint:: calculateControlSignal() {

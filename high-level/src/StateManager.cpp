@@ -66,33 +66,14 @@ void StateManager::controlLoop() {
     Serial.print(motorTorques[5]);
     Serial.print(", ");
     Serial.println(motorTorques[6]);
-}
 
-void StateManager::processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw) {
-    if (message_info.type == comms::MessageContentType::MT_COMMAND) {
-        Serial.println("[HIGH] INFO: Command received.");
-        comms::Result<comms::CommandMessagePayload> cmdRes = comms::CommandMessagePayload::fromRaw(message_raw);
 
-        if (cmdRes.isError()) {
-            COMMS_DEBUG_PRINT_ERROR("Unable to handle command: %s\,", cmdRes.error);
-            return;
-        }
-
-        comms::CommandMessagePayload cmd = cmdRes.value();
-
-        if (cmd.commandID == comms::CommandType::CMD_SENSOR_TOGGLE) {
-            // Update encoder values
-        }
-    }
-    else if (message_info.type == comms::MessageContentType::MT_HEARTBEAT) {
-        Serial.println("[HIGH] INFO: Heartbeat received.");
-    }
-    else if (message_info.type == comms::MessageContentType::MT_ERROR) {
-        Serial.println("[HIGH] ERROR: Error received!");
-    }
-    else {
-        Serial.println("[HIGH] ERROR: Received unknown message!");
-    }
+    // For wrist
+    motorTorques[0] = 0.0;
+    motorTorques[1] = 0.0;
+    motorTorques[2] = 0.0;
+    motorTorques[3] = 0.0;
+    motorTorques[4] = 0.0;
 }
 
 void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp) {

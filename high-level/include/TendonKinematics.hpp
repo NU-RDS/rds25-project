@@ -19,6 +19,7 @@ class TendonKinematics{
         float R_extensor = 13.0f;
         float R_pip = 18.5f;
         float R_motor = 5.0f;
+        const float GEAR_RATIO = 36.0f;
 
     public:
         TendonKinematics() {
@@ -34,6 +35,11 @@ class TendonKinematics{
         }
 
         std::vector<double> getMotorTorques(std::vector<double> joint_torques);
+
+        float RadToDeg(float ang);
+        float DegToRad(float ang);
+        float RevToDeg(float encoder);
+        float toShaft(float ang);
                         
 };
 

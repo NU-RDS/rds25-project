@@ -12,7 +12,6 @@
 #include "PowerFinger.hpp"
 #include "DexterousFinger.hpp"
 #include "Wrist.hpp"
-#include "comms.hpp"
 
 enum MovementPhase {
     IDLE,
@@ -37,8 +36,6 @@ class StateManager {
         double dt; // Time step in seconds
 
         MovementPhase currentMovementPhase;
-
-        std::function<void(comms::MCUID)> _heartbeatCallback = nullptr;
     
     public:
         StateManager();
@@ -51,12 +48,12 @@ class StateManager {
         void updateGUI();
 
         void controlLoop();
-        void processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw);
 
         // Subsystem access
         Wrist* getWrist() { return wrist.get(); }
         DexterousFinger* getDexFinger() { return dexFinger.get(); }
         PowerFinger* getPowFinger() { return powFinger.get(); }
+        TendonKinematics* getKinematics() {return kinematics.get(); }
 
         // Joint position setting
         void setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp);
