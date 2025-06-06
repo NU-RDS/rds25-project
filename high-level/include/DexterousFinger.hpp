@@ -16,12 +16,12 @@ class DexterousFinger {
         std::unique_ptr<Joint> Splay;
 
         const std::vector<std::vector<double>> J_dex = {
-            {1.0, -2.0, -1.2, -1.2},
-            {-1.0, 0.0, 0.0, 0.0},
-            {-1.0, 2.0, 1.2, 1.2},
-            {1.0, 2.52, 1.2, 1.2}
+            {-0.137, 0.525, -2.16},
+            {-0.472, 0.328, -1.283},
+            {-0.401, 0.361, -1.101},
+            {0.264, 0.164, -0.225}
         };
-        const std::vector<double> null_dex = {0.0, 0.0, -1.0, 1.0};
+        const std::vector<double> null_dex = {-0.519, 2.0, -1.518, 1.0};
 
 
     public:

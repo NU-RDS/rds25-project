@@ -43,7 +43,8 @@ class TendonKinematics{
         float RevToRad(float encoder);
         float toShaft(float ang);
 
-        std::vector<float> motorToJointAngle(float pitch, float yaw);
+        std::vector<float> motorToJointAngleWrist(float pitch, float yaw);
+        std::vector<float> motorToJointAngleDex(float splay, float mcp,  float pip, float dip);
                         
 };
 

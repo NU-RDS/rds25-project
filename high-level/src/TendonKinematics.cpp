@@ -70,10 +70,22 @@ float TendonKinematics::toShaft(float ang)
     return ang / GEAR_RATIO;
 }
 
-std::vector<float> TendonKinematics::motorToJointAngle(float motor_pitch, float motor_yaw) {
+std::vector<float> TendonKinematics::motorToJointAngleWrist(float motor_pitch, float motor_yaw) {
     float joint_pitch = (R_motor / R_pitch) * motor_pitch;
     float joint_yaw = (R_motor * motor_yaw - R_pitch * joint_pitch) / R_yaw;
     std::vector<float> result = {joint_yaw, joint_pitch};
+
+    return result;
+}
+
+
+std::vector<float> TendonKinematics::motorToJointAngleDex(float motor_splay, float motor_mcp, float motor_pip, float motor_dip) {
+    float joint_splay = -0.137 * motor_splay + 0.472 * motor_mcp + 0.401 * motor_pip + 0.264 * motor_dip;
+    float joint_mcp = 0.525 * motor_splay + 0.328 * motor_mcp + 0.361 * motor_pip + 0.164 * motor_dip;
+    float joint_pip = 1.64 * joint_mcp;
+    float joint_dip = -2.16 * motor_splay - 1.283 * motor_mcp - 1.101 * motor_pip - 0.225 * motor_dip;
+
+    std::vector<float> result = {joint_splay, joint_mcp, joint_pip, joint_dip};
 
     return result;
 }
