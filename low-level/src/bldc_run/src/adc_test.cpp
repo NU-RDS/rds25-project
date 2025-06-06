@@ -1,0 +1,143 @@
+#include <Arduino.h>
+#include <SPI.h>
+
+#define NOP 0x0000
+#define ERRFL 0x0001
+#define PROG 0x0003
+#define DIAAGC 0x3FFC
+#define MAG 0X3FFD
+#define ANGLEUNC 0x3FFE
+#define ANGLECOM 0x3FFF
+#define SPI_MODE SPI_MODE1
+#define SPIx SPI1
+
+const int cs = 26;
+const int pin1 = 2;
+const int pin2 = 3;
+const int pin3 = 4;
+SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
+uint16_t nop, pos_temp, error, cmd, pos, diag;
+float offset = 0.0f; // offset for current sensing
+float gain = 50.0f; // gain for current sensing
+
+
+float readADC(const int cs_pin){
+  uint16_t raw16;
+  //Serial.println("Reading ADC");
+  SPIx.beginTransaction(settings);
+  //Serial.println("SPI transaction started");
+  digitalWrite(cs_pin, LOW);
+  raw16 = SPIx.transfer16(0x0000);
+  //Serial.println("SPI transfer finished");
+  digitalWrite(cs_pin, HIGH);
+  //Serial.println("CS high");
+  SPIx.endTransaction();
+  uint16_t raw12 = static_cast<int16_t>(raw16) >> 2; // 12 bits
+  //int16_t signed_val = (raw12 >= 0x800) ? (static_cast<int16_t>(raw12)) - 0x1000 : static_cast<int16_t>(raw12);
+  //if (raw12 & 0x0800) {
+  //  raw12 |= 0xF000;
+  //}
+  uint16_t signed_val = raw12;
+
+  //Serial.print("raw16: ");
+  //Serial.println(raw16, BIN);
+  //Serial.print("raw12: ");
+  //Serial.println(raw12, BIN);
+  //Serial.print("signed_val: ");
+  //Serial.println(signed_val);
+  
+  float voltage = static_cast<float>(signed_val) * 2.5f/2047;
+  return raw12;
+  
+}
+
+float getCurrent(){
+  float current = (readADC(cs) - offset) * gain;
+  return current;
+}
+
+void calibrateOffsets(){
+  // calibrate offsets
+  Serial.println("Calibrating offsets...");
+  const int calibration_rounds = 1000;
+  for (int i = 0; i < calibration_rounds; i++){
+    offset += readADC(cs);
+    Serial.println("Reading: ");
+  }
+  offset /= calibration_rounds;
+  Serial.print("Offset: ");
+  Serial.println(offset);
+}
+
+void setup() {
+  while(!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+  Serial.println("Ready");
+  pinMode (pin1, OUTPUT);
+  pinMode (pin2, OUTPUT);
+  pinMode (pin3, OUTPUT);
+  pinMode (cs, OUTPUT);
+  digitalWrite(cs, HIGH); // set CS high
+  SPIx.begin();
+  // initialize SPI:
+  //Serial.println("Initializing SPI");
+  //SPI.begin(); 
+  Serial.println("SPI initialized");
+  //calibrateOffsets();
+  Serial.println("Offsets calibrated");
+}
+
+void loop(){
+  digitalWrite(pin1, LOW);
+  digitalWrite(pin2, LOW);
+  digitalWrite(pin3, LOW);
+  float voltage = readADC(cs);
+  //float current = getCurrent();
+  //Serial.print("Voltage: ");
+  Serial.println(voltage);
+  //Serial.print(",");
+  delay(100);
+}
+//
+//void loop() {
+//  // put your main code here, to run repeatedly:
+//  SPI.beginTransaction(settings);
+//  //Serial.println("SPI transaction started");
+//  //Serial.println("Reading encoder");
+//  cmd = (0b11<<14) | ANGLECOM;
+//  //Serial.println(cmd);
+//  digitalWrite (cs, LOW);
+//  //Serial.println("PS0.1");
+//  nop = SPI.transfer16(cmd);
+//  //Serial.println("PS1");
+//  digitalWrite(cs, HIGH);
+//  delayNanoseconds(400);
+//  cmd = (0b01<<14) | ERRFL;
+//  //Serial.println("PS2");
+//  digitalWrite(cs, LOW);
+//  pos_temp = SPI.transfer16(cmd);
+//  //Serial.println("PS3");
+//  digitalWrite(cs, HIGH);
+//  delayNanoseconds(400);
+//  cmd = (0b11<<14) | DIAAGC;
+//  //Serial.println("PS4");
+//  digitalWrite(cs, LOW);
+//  error = SPI.transfer16(cmd);
+//  //Serial.println("PS5");
+//  digitalWrite(cs, HIGH);
+//  delayNanoseconds(400);
+//  cmd = (0b11<<14) | NOP;
+//  //Serial.println("PS6");
+//  digitalWrite(cs, LOW);
+//  diag = SPI.transfer16(cmd);
+//  //Serial.println("PS7");
+//  digitalWrite(cs, HIGH);
+//  //Serial.println("SPI transaction finished");
+//  SPI.endTransaction();
+//  //Serial.print("Reading: ");
+//  Serial.println(pos_temp&0b11111111111111);
+//  delay(100);
+//}
+
+
