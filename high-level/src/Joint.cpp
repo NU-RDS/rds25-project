@@ -7,6 +7,7 @@ Joint::Joint(const std::string& name, const double kp, const double ki, const do
     this->commandTorque = 0.0;
     this->maxLimit = M_PI;
     this->minLimit = 0.0;
+    this->encoderOffset = 0.0;
 
     controller = std::make_unique<PositionControl>(kp, ki, kd, 1.0);
 }
@@ -35,6 +36,10 @@ double Joint::getMotorValue() {
     return this->motorValue;
 }
 
+double Joint::getEncoderOffset() {
+    return this->encoderOffset;
+}
+
 // Likely from encoder
 void Joint::setCurrentPosition(double current_pos) {
     this->currentPosition = current_pos;
@@ -54,6 +59,10 @@ void Joint::setControlSignal(double control_signal) {
 
 void Joint::setMotorValue(double motor_value) {
     this->motorValue = motor_value;
+}
+
+void Joint::setEncoderOffset(double encoder_offset) {
+    this->encoderOffset = encoder_offset;
 }
 
 double Joint:: calculateControlSignal() {

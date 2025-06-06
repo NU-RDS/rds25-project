@@ -17,6 +17,7 @@ class Joint {
         double controlSignal;
         double encoderValue;
         double motorValue;
+        double encoderOffset;
 
         // Joint limits
         double maxLimit;
@@ -36,12 +37,14 @@ class Joint {
         double getCommandTorque();
         double getControlSignal();
         double getMotorValue();
+        double getEncoderOffset();
     
         void setCurrentPosition(double current_pos);
         void setDesiredPosition(double desired_pos);
         void setCommandTorque(double command_torque);
         void setControlSignal(double control_signal);
         void setMotorValue(double motor_value);
+        void setEncoderOffset(double encoder_offset);
         
         // Control functionality
         double calculateControlSignal();

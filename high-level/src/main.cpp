@@ -9,8 +9,6 @@
 StateManager state_manager;
 std::string serialCommand = "";
 
-FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
-
 static bool __canInfSendMessage(void* intf, uint32_t id, uint8_t length, const uint8_t* data);
 static void __canInfPumpEvents(void* inft);
 
@@ -43,6 +41,7 @@ static void onHeartbeat(Heartbeat_msg_t& msg, void* user_data);
 static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data);
 static void onCanMessage(const CAN_message_t& msg);
 static void updateEncoderPositions();
+static void updateEncoderOffsets();
 
 void setup() {
     Serial.begin(9600);
@@ -71,34 +70,27 @@ void loop() {
     const unsigned long CONTROL_PERIOD_MS = 10;  // 100Hz control rate
 
     commsController.tick();
-    updateEncoderPositions();
 
     if (millis() - lastControlTime >= CONTROL_PERIOD_MS) {
         lastControlTime = millis();
 
         state_manager.updateState(serialCommand);
 
-        Get_Encoder_Estimates_msg_t encoder = odrives[1].user_data.last_feedback;
+        // Get_Encoder_Estimates_msg_t encoder = odrives[1].user_data.last_feedback;
         // motor ang is motor shaft ang
-        float motor_pitch = state_manager.getKinematics()->toShaft(state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[1].encoder_offset));
-        state_manager.getWrist()->getPitch()->setMotorValue(motor_pitch);
         // Serial.print("Motor ");
         // Serial.print(1);
         // Serial.print(" is at ");
         // Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
 
-        encoder = odrives[0].user_data.last_feedback;
+        // encoder = odrives[0].user_data.last_feedback;
         // motor ang is motor shaft ang
-        float motor_yaw = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[0].encoder_offset)));
-        state_manager.getWrist()->getYaw()->setMotorValue(motor_yaw);
         // Serial.print("Motor ");
         // Serial.print(0);
         // Serial.print(" is at ");
         // Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
 
-        std::vector<float> current_joint_angles = state_manager.getKinematics()->motorToJointAngle(motor_pitch, motor_yaw);
-        state_manager.getWrist()->getPitch()->setCurrentPosition(current_joint_angles[1]);
-        state_manager.getWrist()->getYaw()->setCurrentPosition(current_joint_angles[0]);
+        updateEncoderPositions();
 
         // Get current and desired positions
         double pitch_desired = state_manager.getWrist()->getPitch()->getDesiredPosition() * 180.0 / M_PI;  // rad to deg
@@ -128,6 +120,7 @@ void loop() {
             pitch_control = -1.0f;
         }
         // odrives[1].drive.setTorque(pitch_control);
+        Serial.println(pitch_control);
 
         odrives[0].current_torque = 0.5f;
         odrives[0].is_running = true;
@@ -138,6 +131,7 @@ void loop() {
         if (yaw_control < -1.0f) {
             yaw_control = -1.0f;
         }
+        Serial.println(yaw_control);
         // odrives[0].drive.setTorque(yaw_control);
     }
 }
@@ -150,7 +144,7 @@ static bool setupCan() {
             CAN_message_t newMsg;
             newMsg.len = msg.length;
             newMsg.id = msg.id;
-            memcpy(&newMsg.buf, &msg.payload, msg.length);
+            memcpy(newMsg.buf, &msg.payload, 8);
             onCanMessage(newMsg);
         });
 
@@ -206,29 +200,31 @@ static void captureEncoderOffsets() {
     // Wait for initial encoder readings
     unsigned long timeout = millis() + 5000;  // 5 second timeout
 
-    for (int i = 0; i < NUM_DRIVES; i++) {
-        odrives[i].offset_captured = false;
+    updateEncoderOffsets();
 
-        while (!odrives[i].user_data.received_feedback && millis() < timeout) {
-            pumpEvents(can_intf);
-            delay(10);
-        }
+    // for (int i = 0; i < NUM_DRIVES; i++) {
+    //     odrives[i].offset_captured = false;
 
-        if (odrives[i].user_data.received_feedback) {
-            // Capture the initial encoder position as offset
-            Get_Encoder_Estimates_msg_t encoder = odrives[i].user_data.last_feedback;
-            odrives[i].encoder_offset = encoder.Pos_Estimate;  // Store raw encoder value
-            odrives[i].offset_captured = true;
+    //     while (!odrives[i].user_data.received_feedback && millis() < timeout) {
+    //         pumpEvents(can_intf);
+    //         delay(10);
+    //     }
 
-            Serial.print("ODrive ");
-            Serial.print(i);
-            Serial.print(" offset captured: ");
-            Serial.println(odrives[i].encoder_offset);
-        } else {
-            Serial.print("Failed to capture offset for ODrive ");
-            Serial.println(i);
-        }
-    }
+    //     if (odrives[i].user_data.received_feedback) {
+    //         // Capture the initial encoder position as offset
+    //         Get_Encoder_Estimates_msg_t encoder = odrives[i].user_data.last_feedback;
+    //         odrives[i].encoder_offset = encoder.Pos_Estimate;  // Store raw encoder value
+    //         odrives[i].offset_captured = true;
+
+    //         Serial.print("ODrive ");
+    //         Serial.print(i);
+    //         Serial.print(" offset captured: ");
+    //         Serial.println(odrives[i].encoder_offset);
+    //     } else {
+    //         Serial.print("Failed to capture offset for ODrive ");
+    //         Serial.println(i);
+    //     }
+    // }
 }
 
 static void onHeartbeat(Heartbeat_msg_t& msg, void* user_data) {
@@ -245,7 +241,7 @@ static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data) {
 
 static void updateEncoderPositions() {
     static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
-        {6, [](double value) { state_manager.getWrist()->getYaw()->setCurrentPosition(value); }}};
+        {6, [](double value) { state_manager.getWrist()->getYaw()->setCurrentPosition(value - state_manager.getWrist()->getYaw()->getEncoderOffset()); }}};
 
     for (auto pair : palmSetterFunctions) {
         comms::Option<float> encoderValueOpt = commsController.getSensorValue(
@@ -256,6 +252,26 @@ static void updateEncoderPositions() {
         }
 
         Serial.printf("Encoder %d, value %f\n", pair.first, encoderValueOpt.value());
+        pair.second(encoderValueOpt.value());
+    }
+}
+
+static void updateEncoderOffsets() {
+    static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
+        {6, [](double value) { state_manager.getWrist()->getYaw()->setEncoderOffset(value); }}
+        // {6, [](double value) { state_manager.getWrist()->getYaw()->setEncoderOffset(value); }}
+    };
+
+    for (auto pair : palmSetterFunctions) {
+        comms::Option<float> encoderValueOpt = commsController.getSensorValue(
+            comms::MCUID::MCU_PALM, pair.first);
+
+        if (encoderValueOpt.isNone()) {
+            continue;
+        }
+
+        Serial.printf("Encoder %d : ", pair.first);
+        Serial.println(encoderValueOpt.value());
         pair.second(encoderValueOpt.value());
     }
 }
