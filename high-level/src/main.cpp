@@ -163,7 +163,7 @@ void loop() {
         state_manager.getDexFinger()->getPIP()->setMotorValue(motor_pip);
 
         encoder = odrives[3].user_data.last_feedback;
-        float motor_dip = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[0].encoder_offset)));
+        float motor_dip = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[3].encoder_offset)));
         state_manager.getDexFinger()->getDIP()->setMotorValue(motor_dip);
 
 
