@@ -1,8 +1,8 @@
 #include "Wrist.hpp"
 
 Wrist::Wrist() {
-    Pitch = std::make_unique<Joint>("Pitch", 0.5, 0.4);
-    Yaw = std::make_unique<Joint>("Yaw", 0.5, 0.4);
+    Pitch = std::make_unique<Joint>("Pitch", 0.5, 0.01, 0.4);
+    Yaw = std::make_unique<Joint>("Yaw", 0.5, 0.01, 0.4);
 }
 
 void Wrist::kinematics() {

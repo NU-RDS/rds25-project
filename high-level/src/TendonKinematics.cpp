@@ -59,6 +59,11 @@ float TendonKinematics::RevToDeg(float encoder)
     return encoder * 360.0f;
 }
 
+float TendonKinematics::RevToRad(float encoder)
+{
+    return encoder * 2 * M_PI;
+}
+
 // motor angle to shaft angle
 float TendonKinematics::toShaft(float ang)
 {

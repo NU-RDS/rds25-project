@@ -28,7 +28,7 @@ void StateManager::updateState(std::string& serialCommand) {
         if (parseSerialCommand(serialCommand, commandID, values)) {
             switch(commandID) {
                 case SET_ALL_JOINTS:
-                    this->setJointPositions(values[0], values[1], values[2], values[3], values[4], values[5], values[6]);
+                    this->setJointPositions(kinematics->DegToRad(values[0]), kinematics->DegToRad(values[1]), kinematics->DegToRad(values[2]), kinematics->DegToRad(values[3]), kinematics->DegToRad(values[4]), kinematics->DegToRad(values[5]), kinematics->DegToRad(values[6]));
                     break;
                 default:
                     break;

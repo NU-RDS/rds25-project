@@ -22,17 +22,20 @@ public:
 		MANUAL
 	};
 
-	PositionControl(double kp, double kd, double ks);
+	PositionControl(double kp, double ki, double kd, double ks);
 
 	double positionPD(double desiredPosition, double currentPosition);
 	void positionPrint();
 
 private:
 	double Kp; // proportional
+	double Ki; // integral
 	double Kd; // derivative
     double Ks;
 
 	double prevError;
+	double integralError;
+	double integralCap = 0.25;
 	std::chrono::steady_clock::time_point prevTime;
 
 	PositionType posType;

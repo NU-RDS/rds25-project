@@ -1,7 +1,7 @@
 #include "PowerFinger.hpp"
 
 PowerFinger::PowerFinger() {
-    Grasp = std::make_unique<Joint>("Grasp", 1.0, 1.0);
+    Grasp = std::make_unique<Joint>("Grasp", 1.0, 0.01, 1.0);
 }
 
 void PowerFinger::kinematics() {
