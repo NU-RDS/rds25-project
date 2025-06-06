@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple RDS Hand Control GUI
+Enhanced RDS Hand Control GUI with Pitch/Yaw Recording and Plotting
 Sends command IDs in format: "ID" or "ID:value"
 """
 
@@ -12,8 +12,12 @@ import threading
 import time
 import json
 from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 import queue
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import numpy as np
+from datetime import datetime
 
 # Command IDs (match your MCU definitions)
 
@@ -69,6 +73,150 @@ class RDSConstants:
         'wrist_pitch': JointLimits(-70.0, 60.0),
         'wrist_yaw': JointLimits(-30.0, 20.0)
     }
+
+
+class DataRecorder:
+    """Class to handle recording and plotting of pitch/yaw data"""
+
+    def __init__(self):
+        self.recording = False
+        self.timestamps = []
+        self.pitch_desired = []
+        self.pitch_actual = []
+        self.yaw_desired = []
+        self.yaw_actual = []
+        self.start_time = None
+        self.max_samples = 10000  # Limit memory usage
+        self.last_update_time = 0  # For rate limiting data collection
+
+    def start_recording(self):
+        """Start recording data"""
+        self.recording = True
+        self.start_time = time.time()
+        self.clear_data()
+        print("📊 Started recording pitch/yaw data")
+
+    def stop_recording(self):
+        """Stop recording data"""
+        self.recording = False
+        print(
+            f"⏹️ Stopped recording. Collected {len(self.timestamps)} samples")
+
+    def clear_data(self):
+        """Clear all recorded data"""
+        self.timestamps.clear()
+        self.pitch_desired.clear()
+        self.pitch_actual.clear()
+        self.yaw_desired.clear()
+        self.yaw_actual.clear()
+
+    def add_data_point(self, pitch_des, pitch_act, yaw_des, yaw_act):
+        """Add a new data point (rate limited to avoid performance issues)"""
+        if not self.recording or self.start_time is None:
+            return
+
+        current_time = time.time()
+
+        # Rate limit data collection to ~50Hz to avoid performance issues
+        if current_time - self.last_update_time < 0.02:  # 20ms = 50Hz max
+            return
+
+        self.last_update_time = current_time
+
+        # Calculate relative timestamp
+        relative_time = current_time - self.start_time
+
+        # Add data point
+        self.timestamps.append(relative_time)
+        self.pitch_desired.append(pitch_des)
+        self.pitch_actual.append(pitch_act)
+        self.yaw_desired.append(yaw_des)
+        self.yaw_actual.append(yaw_act)
+
+        # Limit memory usage
+        if len(self.timestamps) > self.max_samples:
+            self.timestamps.pop(0)
+            self.pitch_desired.pop(0)
+            self.pitch_actual.pop(0)
+            self.yaw_desired.pop(0)
+            self.yaw_actual.pop(0)
+
+    def plot_data(self):
+        """Plot the recorded data"""
+        if len(self.timestamps) < 2:
+            print("❌ Not enough data to plot")
+            return
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+
+        # Plot pitch data
+        ax1.plot(self.timestamps, self.pitch_desired,
+                 'r-', label='Desired Pitch', linewidth=2)
+        ax1.plot(self.timestamps, self.pitch_actual,
+                 'b-', label='Actual Pitch', linewidth=2)
+        ax1.set_title('Wrist Pitch Control')
+        ax1.set_xlabel('Time (seconds)')
+        ax1.set_ylabel('Pitch Angle (degrees)')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+
+        # Plot yaw data
+        ax2.plot(self.timestamps, self.yaw_desired,
+                 'r-', label='Desired Yaw', linewidth=2)
+        ax2.plot(self.timestamps, self.yaw_actual,
+                 'b-', label='Actual Yaw', linewidth=2)
+        ax2.set_title('Wrist Yaw Control')
+        ax2.set_xlabel('Time (seconds)')
+        ax2.set_ylabel('Yaw Angle (degrees)')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        plt.show()
+
+        # Print statistics
+        if len(self.timestamps) > 0:
+            pitch_error = np.array(self.pitch_desired) - \
+                np.array(self.pitch_actual)
+            yaw_error = np.array(self.yaw_desired) - np.array(self.yaw_actual)
+
+            print("\n📈 Data Statistics:")
+            print(f"Recording duration: {self.timestamps[-1]:.2f} seconds")
+            print(f"Total samples: {len(self.timestamps)}")
+            print(f"Pitch RMS Error: {np.sqrt(np.mean(pitch_error**2)):.3f}°")
+            print(f"Yaw RMS Error: {np.sqrt(np.mean(yaw_error**2)):.3f}°")
+            print(f"Pitch Max Error: {np.max(np.abs(pitch_error)):.3f}°")
+            print(f"Yaw Max Error: {np.max(np.abs(yaw_error)):.3f}°")
+
+    def save_data(self, filename=None):
+        """Save data to CSV file"""
+        if len(self.timestamps) == 0:
+            print("❌ No data to save")
+            return
+
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"pitch_yaw_data_{timestamp}.csv"
+
+        try:
+            import csv
+            with open(filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Time(s)', 'Pitch_Desired(deg)', 'Pitch_Actual(deg)',
+                                 'Yaw_Desired(deg)', 'Yaw_Actual(deg)'])
+
+                for i in range(len(self.timestamps)):
+                    writer.writerow([
+                        self.timestamps[i],
+                        self.pitch_desired[i],
+                        self.pitch_actual[i],
+                        self.yaw_desired[i],
+                        self.yaw_actual[i]
+                    ])
+
+            print(f"💾 Data saved to {filename}")
+        except Exception as e:
+            print(f"❌ Error saving data: {e}")
 
 
 class SerialCommunicator:
@@ -227,6 +375,13 @@ class JointControlFrame(ttk.Frame):
     def get_position(self) -> float:
         return self.position_var.get()
 
+    def get_current_position(self) -> float:
+        """Get the current position as a float"""
+        try:
+            return float(self.current_var.get().replace('°', ''))
+        except:
+            return 0.0
+
     def set_position_display(self, position: float):
         """Set the desired position display without sending command"""
         position = max(self.limits.min_val, min(self.limits.max_val, position))
@@ -237,11 +392,12 @@ class JointControlFrame(ttk.Frame):
 class RDSHandGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RDS Hand Control - Unified Command System (7 Joints)")
-        self.root.geometry("800x700")
+        self.root.title("RDS Hand Control - Enhanced with Pitch/Yaw Recording")
+        self.root.geometry("900x800")
 
         self.communicator = SerialCommunicator()
         self.joint_controls: Dict[str, JointControlFrame] = {}
+        self.data_recorder = DataRecorder()
 
         self.create_widgets()
         self.update_gui()
@@ -259,6 +415,9 @@ class RDSHandGUI:
 
         # System control tab
         self.create_system_control_tab()
+
+        # NEW: Data recording tab
+        self.create_recording_tab()
 
         # Monitoring tab
         self.create_monitoring_tab()
@@ -353,9 +512,6 @@ class RDSHandGUI:
                               command=self.send_all_positions)
         send_btn.pack(side='left', padx=10)
 
-        # Make the button more prominent
-        send_btn.configure(style="Accent.TButton")
-
         # Separator
         ttk.Separator(button_frame, orient='vertical').pack(
             side='left', fill='y', padx=10)
@@ -409,6 +565,67 @@ class RDSHandGUI:
         ttk.Button(status_group, text="Get Positions",
                    command=self.get_positions).pack(side='left', padx=5, pady=5)
 
+    def create_recording_tab(self):
+        """NEW: Create the data recording tab"""
+        self.recording_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.recording_frame, text="📊 Data Recording")
+
+        # Recording controls
+        record_group = ttk.LabelFrame(
+            self.recording_frame, text="Recording Controls")
+        record_group.pack(fill='x', padx=10, pady=10)
+
+        # Recording status
+        self.recording_status_var = tk.StringVar(value="⏹️ Not Recording")
+        ttk.Label(record_group, textvariable=self.recording_status_var,
+                  font=('TkDefaultFont', 12, 'bold')).pack(pady=10)
+
+        # Recording buttons
+        button_frame = ttk.Frame(record_group)
+        button_frame.pack(pady=10)
+
+        self.start_record_btn = ttk.Button(button_frame, text="🔴 Start Recording",
+                                           command=self.start_recording)
+        self.start_record_btn.pack(side='left', padx=5)
+
+        self.stop_record_btn = ttk.Button(button_frame, text="⏹️ Stop Recording",
+                                          command=self.stop_recording, state='disabled')
+        self.stop_record_btn.pack(side='left', padx=5)
+
+        # Analysis controls
+        analysis_group = ttk.LabelFrame(
+            self.recording_frame, text="Data Analysis")
+        analysis_group.pack(fill='x', padx=10, pady=10)
+
+        analysis_button_frame = ttk.Frame(analysis_group)
+        analysis_button_frame.pack(pady=10)
+
+        ttk.Button(analysis_button_frame, text="📈 Plot Data",
+                   command=self.plot_recorded_data).pack(side='left', padx=5)
+
+        ttk.Button(analysis_button_frame, text="💾 Save Data",
+                   command=self.save_recorded_data).pack(side='left', padx=5)
+
+        ttk.Button(analysis_button_frame, text="🗑️ Clear Data",
+                   command=self.clear_recorded_data).pack(side='left', padx=5)
+
+        # Data info
+        self.data_info_var = tk.StringVar(value="No data recorded")
+        ttk.Label(analysis_group, textvariable=self.data_info_var).pack(pady=5)
+
+        # Quick test controls
+        test_group = ttk.LabelFrame(self.recording_frame, text="Quick Tests")
+        test_group.pack(fill='x', padx=10, pady=10)
+
+        test_button_frame = ttk.Frame(test_group)
+        test_button_frame.pack(pady=10)
+
+        ttk.Button(test_button_frame, text="🎯 Step Response Test",
+                   command=self.run_step_test).pack(side='left', padx=5)
+
+        ttk.Button(test_button_frame, text="🌊 Sine Wave Test",
+                   command=self.run_sine_test).pack(side='left', padx=5)
+
     def create_monitoring_tab(self):
         self.monitor_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.monitor_frame, text="Monitoring")
@@ -423,6 +640,119 @@ class RDSHandGUI:
         # Clear button
         ttk.Button(self.monitor_frame, text="Clear Log",
                    command=self.clear_log).pack(pady=5)
+
+    # Recording methods
+    def start_recording(self):
+        """Start recording pitch/yaw data"""
+        if not self.communicator.is_connected:
+            messagebox.showwarning(
+                "Not Connected", "Please connect to MCU first")
+            return
+
+        self.data_recorder.start_recording()
+        self.recording_status_var.set("🔴 Recording...")
+        self.start_record_btn.config(state='disabled')
+        self.stop_record_btn.config(state='normal')
+        self.log_message("📊 Started recording pitch/yaw data")
+
+    def stop_recording(self):
+        """Stop recording pitch/yaw data"""
+        self.data_recorder.stop_recording()
+        self.recording_status_var.set("⏹️ Not Recording")
+        self.start_record_btn.config(state='normal')
+        self.stop_record_btn.config(state='disabled')
+
+        # Update data info
+        sample_count = len(self.data_recorder.timestamps)
+        if sample_count > 0:
+            duration = self.data_recorder.timestamps[-1]
+            self.data_info_var.set(
+                f"{sample_count} samples, {duration:.1f}s duration")
+
+        self.log_message(
+            f"⏹️ Stopped recording. {sample_count} samples collected")
+
+    def plot_recorded_data(self):
+        """Plot the recorded data"""
+        self.data_recorder.plot_data()
+
+    def save_recorded_data(self):
+        """Save recorded data to file"""
+        self.data_recorder.save_data()
+
+    def clear_recorded_data(self):
+        """Clear all recorded data"""
+        self.data_recorder.clear_data()
+        self.data_info_var.set("No data recorded")
+        self.log_message("🗑️ Cleared recorded data")
+
+    def run_step_test(self):
+        """Run a step response test"""
+        if not self.communicator.is_connected:
+            messagebox.showwarning(
+                "Not Connected", "Please connect to MCU first")
+            return
+
+        # Set up step response: 0 -> 30 degrees pitch
+        self.joint_controls['wrist_pitch'].set_position_display(30.0)
+        self.joint_controls['wrist_yaw'].set_position_display(15.0)
+
+        # Start recording
+        self.start_recording()
+
+        # Send command
+        self.send_all_positions()
+
+        # Schedule automatic stop after 5 seconds
+        self.root.after(5000, self.stop_recording)
+        self.log_message("🎯 Running step response test (5 seconds)")
+
+    def run_sine_test(self):
+        """Run a sine wave test"""
+        if not self.communicator.is_connected:
+            messagebox.showwarning(
+                "Not Connected", "Please connect to MCU first")
+            return
+
+        # Start recording
+        self.start_recording()
+
+        # Run sine wave for 10 seconds
+        def sine_wave_generator():
+            start_time = time.time()
+            duration = 10.0  # 10 seconds
+            frequency = 0.2  # 0.2 Hz (one cycle every 5 seconds)
+            amplitude = 20.0  # ±20 degrees
+
+            def update_sine():
+                current_time = time.time() - start_time
+                if current_time < duration:
+                    # Calculate sine wave values
+                    pitch_val = amplitude * \
+                        np.sin(2 * np.pi * frequency * current_time)
+                    yaw_val = amplitude * 0.5 * \
+                        np.sin(2 * np.pi * frequency * current_time + np.pi/4)
+
+                    # Update GUI
+                    self.joint_controls['wrist_pitch'].set_position_display(
+                        pitch_val)
+                    self.joint_controls['wrist_yaw'].set_position_display(
+                        yaw_val)
+
+                    # Send positions
+                    self.send_all_positions()
+
+                    # Schedule next update
+                    self.root.after(50, update_sine)  # Update at 20Hz
+                else:
+                    # Test complete
+                    self.stop_recording()
+                    self.log_message("🌊 Sine wave test completed")
+
+            update_sine()
+
+        sine_wave_generator()
+        self.log_message("🌊 Running sine wave test (10 seconds)")
 
     def refresh_ports(self):
         ports = self.communicator.get_available_ports()
@@ -471,6 +801,19 @@ class RDSHandGUI:
         sent_command = self.communicator.send_all_joints_optimized(values)
 
         if sent_command:
+            # Record data if recording is active
+            if self.data_recorder.recording:
+                pitch_desired = self.joint_controls['wrist_pitch'].get_position(
+                )
+                pitch_actual = self.joint_controls['wrist_pitch'].get_current_position(
+                )
+                yaw_desired = self.joint_controls['wrist_yaw'].get_position()
+                yaw_actual = self.joint_controls['wrist_yaw'].get_current_position(
+                )
+
+                self.data_recorder.add_data_point(pitch_desired, pitch_actual,
+                                                  yaw_desired, yaw_actual)
+
             # Log the successful send
             self.log_message(f"✅ ALL JOINTS SENT: {sent_command}")
 
@@ -628,8 +971,28 @@ class RDSHandGUI:
                     except:
                         pass  # Ignore parsing errors
 
+                # Parse motor angle data for pitch/yaw recording
+                # Looking for messages like "Motor 0 is at X.XXX" and "Motor 1 is at X.XXX"
+                if "Motor" in message and "is at" in message and self.data_recorder.recording:
+                    try:
+                        # Extract motor data for real-time recording
+                        # This will capture the actual motor positions from your C++ code
+                        pass  # You can enhance this to parse specific motor data
+                    except:
+                        pass
+
         except queue.Empty:
             pass
+
+        # Update recording status (but don't plot in real-time)
+        if self.data_recorder.recording:
+            sample_count = len(self.data_recorder.timestamps)
+            if sample_count > 0:
+                duration = self.data_recorder.timestamps[-1]
+                # Update status every 100 samples to avoid UI lag
+                if sample_count % 100 == 0 or duration % 1.0 < 0.1:  # Update every second or every 100 samples
+                    self.data_info_var.set(
+                        f"Recording: {sample_count} samples, {duration:.1f}s")
 
         self.root.after(50, self.update_gui)
 

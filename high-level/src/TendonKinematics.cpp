@@ -10,11 +10,11 @@ std::vector<double> TendonKinematics::getMotorTorques(std::vector<double> joint_
 
     // Print joint torques for debugging
     // Serial.print("[KINEMATICS] Joint torques: [");
-    for (size_t i = 0; i < joint_torques.size(); i++) {
-        Serial.print(joint_torques[i], 3);
-        if (i < joint_torques.size() - 1) Serial.print(", ");
-    }
-    Serial.println("]");
+    // for (size_t i = 0; i < joint_torques.size(); i++) {
+    //     Serial.print(joint_torques[i], 3);
+    //     if (i < joint_torques.size() - 1) Serial.print(", ");
+    // }
+    // Serial.println("]");
 
     // Dexterous finger torques
     for (size_t i = 0; i < 4; ++i) {

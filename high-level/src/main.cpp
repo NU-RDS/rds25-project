@@ -142,23 +142,39 @@ void loop() {
         // motor ang is motor shaft ang
         float motor_pitch = state_manager.getKinematics()->toShaft(state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[1].encoder_offset));
         state_manager.getWrist()->getPitch()->setMotorValue(motor_pitch);
-        Serial.print("Motor ");
-        Serial.print(1);
-        Serial.print(" is at ");
-        Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
+        // Serial.print("Motor ");
+        // Serial.print(1);
+        // Serial.print(" is at ");
+        // Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
 
         encoder = odrives[0].user_data.last_feedback;
         // motor ang is motor shaft ang
         float motor_yaw = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[0].encoder_offset)));
         state_manager.getWrist()->getYaw()->setMotorValue(motor_yaw);
-        Serial.print("Motor ");
-        Serial.print(0);
-        Serial.print(" is at ");
-        Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
+        // Serial.print("Motor ");
+        // Serial.print(0);
+        // Serial.print(" is at ");
+        // Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
 
         std::vector<float> current_joint_angles = state_manager.getKinematics()->motorToJointAngle(motor_pitch, motor_yaw);
         state_manager.getWrist()->getPitch()->setCurrentPosition(current_joint_angles[1]);
         state_manager.getWrist()->getYaw()->setCurrentPosition(current_joint_angles[0]);
+
+        // Get current and desired positions
+        double pitch_desired = state_manager.getWrist()->getPitch()->getDesiredPosition() * 180.0 / M_PI;  // rad to deg
+        double pitch_current = state_manager.getWrist()->getPitch()->getCurrentPosition() * 180.0 / M_PI;  // rad to deg
+        double yaw_desired = state_manager.getWrist()->getYaw()->getDesiredPosition() * 180.0 / M_PI;      // rad to deg
+        double yaw_current = state_manager.getWrist()->getYaw()->getCurrentPosition() * 180.0 / M_PI;      // rad to deg
+        
+        // Print in format that GUI can parse
+        Serial.print("JOINT_ANGLES: pitch_des=");
+        Serial.print(pitch_desired, 2);
+        Serial.print(", pitch_cur=");
+        Serial.print(pitch_current, 2);
+        Serial.print(", yaw_des=");
+        Serial.print(yaw_desired, 2);
+        Serial.print(", yaw_cur=");
+        Serial.println(yaw_current, 2);
 
         state_manager.controlLoop();
 
@@ -171,7 +187,7 @@ void loop() {
         if (pitch_control < -1.0f) {
             pitch_control = -1.0f;
         }
-        odrives[1].drive.setTorque(pitch_control);
+        // odrives[1].drive.setTorque(pitch_control);
 
         odrives[0].current_torque = 0.5f;
         odrives[0].is_running = true;
@@ -182,6 +198,6 @@ void loop() {
         if (yaw_control < -1.0f) {
             yaw_control = -1.0f;
         }
-        odrives[0].drive.setTorque(yaw_control);
+        // odrives[0].drive.setTorque(yaw_control);
     }
 }
