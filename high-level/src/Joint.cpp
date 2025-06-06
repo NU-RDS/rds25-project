@@ -57,6 +57,9 @@ void Joint::setMotorValue(double motor_value) {
 }
 
 double Joint:: calculateControlSignal() {
-    controlSignal = controller->positionPD(desiredPosition, currentPosition);
+    if (abs(currentPosition - desiredPosition) >= 0.5) {
+        controlSignal = controller->positionPD(desiredPosition, currentPosition);
+    }
+    
     return controlSignal;
 }

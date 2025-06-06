@@ -9,7 +9,7 @@ std::vector<double> TendonKinematics::getMotorTorques(std::vector<double> joint_
     std::vector<double> motor_torques(7, 0.0);
 
     // Print joint torques for debugging
-    Serial.print("[KINEMATICS] Joint torques: [");
+    // Serial.print("[KINEMATICS] Joint torques: [");
     for (size_t i = 0; i < joint_torques.size(); i++) {
         Serial.print(joint_torques[i], 3);
         if (i < joint_torques.size() - 1) Serial.print(", ");
@@ -32,12 +32,12 @@ std::vector<double> TendonKinematics::getMotorTorques(std::vector<double> joint_
                                     + R_pip * joint_torques[2] + R_extensor * joint_torques[3] + R_yaw * motor_torques[5]) + joint_torques[6];
 
     // Print calculated motor torques (unmodified)
-    Serial.print("[KINEMATICS] Calculated motor torques: [");
-    for (size_t i = 0; i < motor_torques.size(); i++) {
-        Serial.print(motor_torques[i], 3);
-        if (i < motor_torques.size() - 1) Serial.print(", ");
-    }
-    Serial.println("]");
+    // Serial.print("[KINEMATICS] Calculated motor torques: [");
+    // for (size_t i = 0; i < motor_torques.size(); i++) {
+    //     Serial.print(motor_torques[i], 3);
+    //     if (i < motor_torques.size() - 1) Serial.print(", ");
+    // }
+    // Serial.println("]");
 
     return motor_torques;
 }

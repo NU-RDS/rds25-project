@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <map>
 #include <chrono>
+#include <cmath>
 
 #include "Encoder.hpp"
 
