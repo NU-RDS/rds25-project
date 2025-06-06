@@ -228,25 +228,19 @@ static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data) {
 }
 
 static void updateEncoderPositions() {
-    static std::vector<std::function<void(double)>> setterFunctions = {
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 0
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 1
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 2
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 3
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 4
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 5
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 6
-        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); }};  // 7
+    static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
+        {1, [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); }},
+        {1, [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); }}};
 
-    for (int i = 0; i < setterFunctions.size(); i++) {
+    for (auto pair : palmSetterFunctions) {
         comms::Option<float> encoderValueOpt = commsController.getSensorValue(
-            comms::MCUID::MCU_PALM, i);
+            comms::MCUID::MCU_PALM, pair.first);
 
         if (encoderValueOpt.isNone()) {
             continue;
         }
 
-        Serial.printf("Encoder %d, value %f\n", i, encoderValueOpt.value());
-        setterFunctions[i](encoderValueOpt.value());
+        Serial.printf("Encoder %d, value %f\n", pair.first, encoderValueOpt.value());
+        pair.second(encoderValueOpt.value());
     }
 }
