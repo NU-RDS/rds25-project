@@ -29,6 +29,8 @@ struct ODriveUserData {
     bool received_current = false;
 };
 
+
+
 // Function declarations
 bool setupCan();
 void onCanMessage(const CAN_message_t& msg);
