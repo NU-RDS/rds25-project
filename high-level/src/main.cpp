@@ -258,7 +258,7 @@ static void updateEncoderPositions() {
 
 static void updateEncoderOffsets() {
     static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
-        {6, [](double value) { state_manager.getWrist()->getYaw()->setEncoderOffset(value); }}
+        {6, [](double value) { state_manager.getWrist()->getYaw()->setCurrentPosition(value * M_PI / 180); }}
         // {6, [](double value) { state_manager.getWrist()->getYaw()->setEncoderOffset(value); }}
     };
 
@@ -269,9 +269,7 @@ static void updateEncoderOffsets() {
         if (encoderValueOpt.isNone()) {
             continue;
         }
-
-        Serial.printf("Encoder %d : ", pair.first);
-        Serial.println(encoderValueOpt.value());
+        
         pair.second(encoderValueOpt.value());
     }
 }
