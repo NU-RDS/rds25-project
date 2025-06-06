@@ -57,6 +57,8 @@
   "C_Cpp_Runner.useLinkTimeOptimization": false,
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
   "files.associations": {
+    "*.dbclient-js": "javascript",
+    "*.compute": "hlsl",
     "*.cpp": "cpp",
     "array": "cpp",
     "atomic": "cpp",
@@ -107,6 +109,7 @@
     "stdexcept": "cpp",
     "streambuf": "cpp",
     "cinttypes": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "*.tpp": "cpp"
   }
 }

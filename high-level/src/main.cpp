@@ -11,6 +11,13 @@ std::string serialCommand = "";
 
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_intf;
 
+static bool __canInfSendMessage(void* intf, uint32_t id, uint8_t length, const uint8_t* data);
+static void __canInfPumpEvents(void* inft);
+
+static ODriveCanIntfWrapper canWrapper = {
+    .send_msg_ = __canInfSendMessage,
+    .pump_events_ = __canInfPumpEvents};
+
 const int NUM_DRIVES = 2;
 struct ODriveControl {
     ODriveCAN drive;
@@ -22,7 +29,9 @@ struct ODriveControl {
 };
 
 static std::vector<int> odriveIDs = {5, 6};
-static std::array<ODriveControl, NUM_DRIVES> odrives;
+static ODriveControl odrives[NUM_DRIVES] =
+    {{ODriveCAN(canWrapper, 5), ODriveUserData(), false, 0.0f, 0.0f, false},
+     {ODriveCAN(canWrapper, 6), ODriveUserData(), false, 0.0f, 0.0f, false}};
 
 comms::TeensyCANDriver<2, comms::CANBaudRate::CBR_250KBPS> canDriver;
 comms::CommsController commsController{canDriver, comms::MCUID::MCU_HIGH_LEVEL};
@@ -33,8 +42,7 @@ static void captureEncoderOffsets();
 static void onHeartbeat(Heartbeat_msg_t& msg, void* user_data);
 static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data);
 static void onCanMessage(const CAN_message_t& msg);
-static bool __canInfSendMessage(void* intf, uint32_t id, uint8_t length, const uint8_t* data);
-static void __canInfPumpEvents(void *inft);
+static void updateEncoderPositions();
 
 void setup() {
     Serial.begin(9600);
@@ -58,12 +66,12 @@ void setup() {
     state_manager.initialize();
 }
 
-
 void loop() {
     static unsigned long lastControlTime = 0;
     const unsigned long CONTROL_PERIOD_MS = 10;  // 100Hz control rate
 
-    pumpEvents(can_intf);
+    commsController.tick();
+    updateEncoderPositions();
 
     if (millis() - lastControlTime >= CONTROL_PERIOD_MS) {
         lastControlTime = millis();
@@ -103,7 +111,7 @@ void loop() {
         if (pitch_control < -2.0f) {
             pitch_control = -2.0f;
         }
-        odrives[1].drive.setTorque(pitch_control);
+        // odrives[1].drive.setTorque(pitch_control);
 
         odrives[0].current_torque = 0.5f;
         odrives[0].is_running = true;
@@ -114,7 +122,7 @@ void loop() {
         if (yaw_control < -2.0f) {
             yaw_control = -2.0f;
         }
-        odrives[0].drive.setTorque(yaw_control);
+        // odrives[0].drive.setTorque(yaw_control);
     }
 }
 
@@ -124,12 +132,11 @@ static bool setupCan() {
     commsController.setUnregisteredMessageHandler(
         [](comms::RawCommsMessage msg) {
             CAN_message_t newMsg;
-            newMsg.len =  msg.length;
+            newMsg.len = msg.length;
             newMsg.id = msg.id;
             memcpy(&newMsg.buf, &msg.payload, msg.length);
             onCanMessage(newMsg);
-        }
-    );
+        });
 
     return true;
 }
@@ -143,30 +150,11 @@ static bool __canInfSendMessage(void* intf, uint32_t id, uint8_t length, const u
     return true;
 }
 
-static void __canInfPumpEvents(void *inft) {
+static void __canInfPumpEvents(void* inft) {
     // no ops
 }
 
 static void setupODrive(int index) {
-    ODriveCAN can(
-        (ODriveCanIntfWrapper) {
-            .send_msg_ = __canInfSendMessage,
-            .pump_events_ = __canInfPumpEvents,
-        },
-        odriveIDs[index]
-    );
-
-    ODriveControl control = {
-        .drive = can,
-        .user_data = ODriveUserData(),
-        .is_running = false,
-        .current_torque = 0.0f,
-        .encoder_offset = 0.0f,
-        .offset_captured = false
-    };
-
-    odrives[index] = control;
-
     // Register callbacks
     odrives[index].drive.onFeedback(onFeedback, &odrives[index].user_data);
     odrives[index].drive.onStatus(onHeartbeat, &odrives[index].user_data);
@@ -177,17 +165,17 @@ static void setupODrive(int index) {
                                            ODriveInputMode::INPUT_MODE_PASSTHROUGH);
 
     // Enable closed loop control
-    while (odrives[index].user_data.last_heartbeat.Axis_State !=
-           ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
-        odrives[index].drive.clearErrors();
-        delay(1);
-        odrives[index].drive.setState(ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL);
+    // while (odrives[index].user_data.last_heartbeat.Axis_State !=
+    //        ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
+    //     odrives[index].drive.clearErrors();
+    //     delay(1);
+    //     odrives[index].drive.setState(ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL);
 
-        for (int i = 0; i < 15; ++i) {
-            delay(10);
-            pumpEvents(can_intf);
-        }
-    }
+    //     for (int i = 0; i < 15; ++i) {
+    //         delay(10);
+    //         pumpEvents(can_intf);
+    //     }
+    // }
 }
 
 static void onCanMessage(const CAN_message_t& msg) {
@@ -237,4 +225,28 @@ static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data) {
     ODriveUserData* odrv_user_data = static_cast<ODriveUserData*>(user_data);
     odrv_user_data->last_feedback = msg;
     odrv_user_data->received_feedback = true;
+}
+
+static void updateEncoderPositions() {
+    static std::vector<std::function<void(double)>> setterFunctions = {
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 0
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 1
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 2
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 3
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 4
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 5
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); },   // 6
+        [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); }};  // 7
+
+    for (int i = 0; i < setterFunctions.size(); i++) {
+        comms::Option<float> encoderValueOpt = commsController.getSensorValue(
+            comms::MCUID::MCU_PALM, i);
+
+        if (encoderValueOpt.isNone()) {
+            continue;
+        }
+
+        Serial.printf("Encoder %d, value %f\n", i, encoderValueOpt.value());
+        setterFunctions[i](encoderValueOpt.value());
+    }
 }

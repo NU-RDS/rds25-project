@@ -23,12 +23,14 @@ void setup() {
 
         // add pins
         controller.addSensor(
-            10, // interval in ms
+            1, // interval in ms
             i, // sensor id
             std::make_shared<Encoder>(__csPins[i], i)); // sensor
     }
+
+    controller.initialize();
 }
 
 void loop() {
     controller.tick();
-}
+}      
