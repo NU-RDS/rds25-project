@@ -245,8 +245,7 @@ static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data) {
 
 static void updateEncoderPositions() {
     static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
-        {1, [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); }},
-        {1, [](double value) { state_manager.getWrist()->getPitch()->setCurrentPosition(value); }}};
+        {6, [](double value) { state_manager.getWrist()->getYaw()->setCurrentPosition(value); }}};
 
     for (auto pair : palmSetterFunctions) {
         comms::Option<float> encoderValueOpt = commsController.getSensorValue(
