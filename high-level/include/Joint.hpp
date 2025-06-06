@@ -26,7 +26,7 @@ class Joint {
         std::unique_ptr<PositionControl> controller;
     
     public:
-        Joint(const std::string& name, const double kp, const double kd);
+        Joint(const std::string& name, const double kp, const double ki, const double kd);
         ~Joint() = default;
     
         // Getters and setters

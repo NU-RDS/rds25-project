@@ -1,6 +1,6 @@
 #include "PositionControl.hpp"
 
-PositionControl::PositionControl(double kp, double kd, double ks) : Kp(kp), Kd(kd), Ks(ks) {
+PositionControl::PositionControl(double kp, double ki, double kd, double ks) : Kp(kp), Ki(ki), Kd(kd), Ks(ks) {
     PositionControl::posType = PositionType::STEP;
     prevTime = std::chrono::steady_clock::now();
 }
@@ -27,12 +27,19 @@ double PositionControl::positionPD(double desiredPosition, double currentPositio
     // Compute error
     double error = desiredPosition - currentPosition;
 
+    if (integralError < integralCap) {
+        integralError += error * dt;
+    }
+    else {
+        integralError = integralCap;
+    }
+
     // Compute derivative term
     double derivative = dt > 0.0 ? (error - prevError) / dt : 0.0;
     prevError = error;
 
     // Compute PID output
-    double controlSignal = Kp * error + Kd * derivative;
+    double controlSignal = Kp * error + Ki * integralError + Kd * derivative;
 
     return controlSignal;
 }

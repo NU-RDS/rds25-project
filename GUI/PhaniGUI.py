@@ -416,7 +416,7 @@ class RDSHandGUI:
         # System control tab
         self.create_system_control_tab()
 
-        # Data recording tab
+        # NEW: Data recording tab
         self.create_recording_tab()
 
         # Monitoring tab
@@ -566,7 +566,7 @@ class RDSHandGUI:
                    command=self.get_positions).pack(side='left', padx=5, pady=5)
 
     def create_recording_tab(self):
-        """Enhanced recording tab with debug features"""
+        """NEW: Create the data recording tab"""
         self.recording_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.recording_frame, text="📊 Data Recording")
 
@@ -585,29 +585,12 @@ class RDSHandGUI:
         button_frame.pack(pady=10)
 
         self.start_record_btn = ttk.Button(button_frame, text="🔴 Start Recording",
-                                           command=self.start_recording_enhanced)
+                                           command=self.start_recording)
         self.start_record_btn.pack(side='left', padx=5)
 
         self.stop_record_btn = ttk.Button(button_frame, text="⏹️ Stop Recording",
                                           command=self.stop_recording, state='disabled')
         self.stop_record_btn.pack(side='left', padx=5)
-
-        # Debug controls
-        debug_group = ttk.LabelFrame(
-            self.recording_frame, text="🔍 Debug Tools")
-        debug_group.pack(fill='x', padx=10, pady=10)
-
-        debug_button_frame = ttk.Frame(debug_group)
-        debug_button_frame.pack(pady=10)
-
-        ttk.Button(debug_button_frame, text="🔍 Monitor Messages",
-                   command=self.debug_received_messages).pack(side='left', padx=5)
-
-        ttk.Button(debug_button_frame, text="🧪 Test Parsing",
-                   command=self.test_joint_angle_parsing).pack(side='left', padx=5)
-
-        ttk.Button(debug_button_frame, text="🚀 Send Test Command",
-                   command=self.send_all_positions).pack(side='left', padx=5)
 
         # Analysis controls
         analysis_group = ttk.LabelFrame(
@@ -638,7 +621,7 @@ class RDSHandGUI:
         test_button_frame.pack(pady=10)
 
         ttk.Button(test_button_frame, text="🎯 Step Response Test",
-                   command=self.enhanced_run_step_test).pack(side='left', padx=5)
+                   command=self.run_step_test).pack(side='left', padx=5)
 
         ttk.Button(test_button_frame, text="🌊 Sine Wave Test",
                    command=self.run_sine_test).pack(side='left', padx=5)
@@ -657,154 +640,6 @@ class RDSHandGUI:
         # Clear button
         ttk.Button(self.monitor_frame, text="Clear Log",
                    command=self.clear_log).pack(pady=5)
-
-    # Joint angle parsing methods
-    def parse_joint_angles_message(self, message):
-        """
-        Helper method to parse joint angles message
-        Returns tuple: (pitch_desired, pitch_actual, yaw_desired, yaw_actual) or None if parsing fails
-        """
-        try:
-            if "JOINT_ANGLES:" not in message:
-                return None
-
-            # Extract the data part after "JOINT_ANGLES:"
-            data_part = message.split("JOINT_ANGLES:")[1].strip()
-
-            # Parse the key=value pairs separated by commas
-            pairs = [pair.strip() for pair in data_part.split(',')]
-
-            data_dict = {}
-            for pair in pairs:
-                if '=' in pair:
-                    key, value = pair.split('=', 1)  # Split only on first '='
-                    try:
-                        data_dict[key.strip()] = float(value.strip())
-                    except ValueError:
-                        continue
-
-            # Check if we have all required keys
-            required_keys = ['pitch_des', 'pitch_cur', 'yaw_des', 'yaw_cur']
-            if all(key in data_dict for key in required_keys):
-                return (data_dict['pitch_des'], data_dict['pitch_cur'],
-                        data_dict['yaw_des'], data_dict['yaw_cur'])
-            else:
-                return None
-
-        except Exception as e:
-            print(f"Error in parse_joint_angles_message: {e}")
-            return None
-
-    def test_joint_angle_parsing(self):
-        """Test method to verify parsing works correctly"""
-        test_messages = [
-            "JOINT_ANGLES: pitch_des=0.00, pitch_cur=0.00, yaw_des=0.00, yaw_cur=0.00",
-            "JOINT_ANGLES: pitch_des=30.50, pitch_cur=29.80, yaw_des=15.25, yaw_cur=14.90",
-            "JOINT_ANGLES: pitch_des=-10.00, pitch_cur=-9.75, yaw_des=-5.50, yaw_cur=-5.25"
-        ]
-
-        print("Testing joint angle parsing:")
-        for i, msg in enumerate(test_messages):
-            result = self.parse_joint_angles_message(msg)
-            if result:
-                pitch_des, pitch_cur, yaw_des, yaw_cur = result
-                print(
-                    f"Test {i+1}: ✅ Parsed - Pitch: {pitch_des}→{pitch_cur}, Yaw: {yaw_des}→{yaw_cur}")
-            else:
-                print(f"Test {i+1}: ❌ Failed to parse: {msg}")
-
-    def debug_received_messages(self):
-        """Debug method to see what messages are actually being received"""
-        print("🔍 Debug mode: Monitoring all received messages for 10 seconds...")
-
-        original_log = self.log_message
-        message_count = 0
-        joint_angle_count = 0
-
-        def debug_log(message):
-            nonlocal message_count, joint_angle_count
-            message_count += 1
-
-            if "JOINT_ANGLES:" in message:
-                joint_angle_count += 1
-                print(
-                    f"🎯 JOINT_ANGLES message #{joint_angle_count}: {message}")
-
-                # Test parsing on real message
-                result = self.parse_joint_angles_message(message)
-                if result:
-                    print(f"   ✅ Parsed successfully: {result}")
-                else:
-                    print(f"   ❌ Parsing failed")
-
-            # Call original log method
-            original_log(message)
-
-        # Temporarily replace log method
-        self.log_message = debug_log
-
-        # Restore after 10 seconds
-        def restore_logging():
-            self.log_message = original_log
-            print(
-                f"🔍 Debug complete: {message_count} total messages, {joint_angle_count} JOINT_ANGLES messages")
-
-        self.root.after(10000, restore_logging)
-
-    def start_recording_enhanced(self):
-        """Enhanced start recording with better diagnostics"""
-        if not self.communicator.is_connected:
-            messagebox.showwarning(
-                "Not Connected", "Please connect to MCU first")
-            return
-
-        # Test parsing first
-        print("Testing joint angle parsing...")
-        self.test_joint_angle_parsing()
-
-        # Start recording
-        self.data_recorder.start_recording()
-        self.recording_status_var.set("🔴 Recording...")
-        self.start_record_btn.config(state='disabled')
-        self.stop_record_btn.config(state='normal')
-
-        # Send a command to ensure data is flowing
-        self.log_message("📊 Starting recording and triggering data flow...")
-        self.send_all_positions()  # This should trigger JOINT_ANGLES messages
-
-        # Start debug monitoring
-        self.debug_received_messages()
-
-    def enhanced_run_step_test(self):
-        """Enhanced step test with better data generation"""
-        if not self.communicator.is_connected:
-            messagebox.showwarning(
-                "Not Connected", "Please connect to MCU first")
-            return
-
-        # Start recording first
-        self.start_recording_enhanced()
-
-        # Initial position (should generate data)
-        self.joint_controls['wrist_pitch'].set_position_display(0.0)
-        self.joint_controls['wrist_yaw'].set_position_display(0.0)
-        self.send_all_positions()
-
-        # Wait a bit then apply step
-        def apply_step():
-            self.joint_controls['wrist_pitch'].set_position_display(30.0)
-            self.joint_controls['wrist_yaw'].set_position_display(15.0)
-            self.send_all_positions()
-            self.log_message("🎯 Step applied - monitoring response...")
-
-        # Apply step after 1 second
-        self.root.after(1000, apply_step)
-
-        # Stop recording after 8 seconds
-        self.root.after(8000, self.stop_recording)
-
-        self.log_message(
-            "🎯 Running enhanced step response test (8 seconds total)")
 
     # Recording methods
     def start_recording(self):
@@ -851,6 +686,27 @@ class RDSHandGUI:
         self.data_info_var.set("No data recorded")
         self.log_message("🗑️ Cleared recorded data")
 
+    def run_step_test(self):
+        """Run a step response test"""
+        if not self.communicator.is_connected:
+            messagebox.showwarning(
+                "Not Connected", "Please connect to MCU first")
+            return
+
+        # Set up step response: 0 -> 30 degrees pitch
+        self.joint_controls['wrist_pitch'].set_position_display(30.0)
+        self.joint_controls['wrist_yaw'].set_position_display(15.0)
+
+        # Start recording
+        self.start_recording()
+
+        # Send command
+        self.send_all_positions()
+
+        # Schedule automatic stop after 5 seconds
+        self.root.after(5000, self.stop_recording)
+        self.log_message("🎯 Running step response test (5 seconds)")
+
     def run_sine_test(self):
         """Run a sine wave test"""
         if not self.communicator.is_connected:
@@ -859,7 +715,7 @@ class RDSHandGUI:
             return
 
         # Start recording
-        self.start_recording_enhanced()
+        self.start_recording()
 
         # Run sine wave for 10 seconds
         def sine_wave_generator():
@@ -898,7 +754,6 @@ class RDSHandGUI:
         sine_wave_generator()
         self.log_message("🌊 Running sine wave test (10 seconds)")
 
-    # Connection methods
     def refresh_ports(self):
         ports = self.communicator.get_available_ports()
         self.port_combo['values'] = ports
@@ -923,7 +778,6 @@ class RDSHandGUI:
             self.status_var.set("Disconnected")
             self.log_message("Disconnected")
 
-    # Joint control methods
     def send_all_positions(self):
         """Send all current joint positions to MCU in ONE message"""
         if not self.communicator.is_connected:
@@ -947,19 +801,6 @@ class RDSHandGUI:
         sent_command = self.communicator.send_all_joints_optimized(values)
 
         if sent_command:
-            # Record data if recording is active
-            if self.data_recorder.recording:
-                pitch_desired = self.joint_controls['wrist_pitch'].get_position(
-                )
-                pitch_actual = self.joint_controls['wrist_pitch'].get_current_position(
-                )
-                yaw_desired = self.joint_controls['wrist_yaw'].get_position()
-                yaw_actual = self.joint_controls['wrist_yaw'].get_current_position(
-                )
-
-                self.data_recorder.add_data_point(pitch_desired, pitch_actual,
-                                                  yaw_desired, yaw_actual)
-
             # Log the successful send
             self.log_message(f"✅ ALL JOINTS SENT: {sent_command}")
 
@@ -973,6 +814,26 @@ class RDSHandGUI:
 
             # Update status
             self.status_var.set(f"✅ Sent {len(values)} joint positions")
+
+            # Force an immediate data recording attempt if recording is active
+            # This ensures we capture the desired values even if feedback is slow
+            if self.data_recorder.recording:
+                try:
+                    pitch_desired = self.joint_controls['wrist_pitch'].get_position(
+                    )
+                    pitch_actual = self.joint_controls['wrist_pitch'].get_current_position(
+                    )
+                    yaw_desired = self.joint_controls['wrist_yaw'].get_position(
+                    )
+                    yaw_actual = self.joint_controls['wrist_yaw'].get_current_position(
+                    )
+
+                    self.data_recorder.add_data_point(pitch_desired, pitch_actual,
+                                                      yaw_desired, yaw_actual)
+                    self.log_message(
+                        f"📊 Recorded: P_des={pitch_desired:.1f}°, P_act={pitch_actual:.1f}°, Y_des={yaw_desired:.1f}°, Y_act={yaw_actual:.1f}°")
+                except Exception as e:
+                    self.log_message(f"⚠️ Recording error: {e}")
         else:
             self.log_message("❌ Failed to send joint positions")
             self.status_var.set("❌ Send failed")
@@ -1023,7 +884,6 @@ class RDSHandGUI:
         self.log_message(
             "🔄 All joints reset to zero (click 'SEND ALL' to apply)")
 
-    # System control methods
     def emergency_stop(self):
         if self.communicator.is_connected:
             sent_command = self.communicator.send_command(
@@ -1085,7 +945,6 @@ class RDSHandGUI:
             messagebox.showwarning(
                 "Not Connected", "Please connect to MCU first")
 
-    # GUI update and logging methods
     def log_message(self, message: str):
         timestamp = time.strftime("%H:%M:%S")
         self.message_log.insert(tk.END, f"[{timestamp}] {message}\n")
@@ -1095,7 +954,6 @@ class RDSHandGUI:
         self.message_log.delete(1.0, tk.END)
 
     def update_gui(self):
-        """Updated GUI method with proper joint angle parsing"""
         try:
             while True:
                 message = self.communicator.message_queue.get_nowait()
@@ -1117,102 +975,130 @@ class RDSHandGUI:
                                 if joint_name in self.joint_controls:
                                     self.joint_controls[joint_name].update_current_position(
                                         positions[i])
-                    except Exception as e:
-                        print(f"Error parsing POSITIONS: {e}")
+                    except:
+                        pass  # Ignore parsing errors
 
                 # Parse joint angle data for pitch/yaw recording
-                # Expected format: "JOINT_ANGLES: pitch_des=X.XX, pitch_cur=Y.YY, yaw_des=Z.ZZ, yaw_cur=W.WW"
-                if "JOINT_ANGLES:" in message:
+                # Looking for messages with current and desired joint angles
+                # Expected format examples:
+                # "Pitch: desired=30.0, current=25.5"
+                # "Yaw: desired=15.0, current=12.3"
+                # "PITCH_DESIRED: 30.0, PITCH_CURRENT: 25.5"
+                # "YAW_DESIRED: 15.0, YAW_CURRENT: 12.3"
+
+                # Parse pitch data
+                if any(keyword in message.upper() for keyword in ["PITCH", "WRIST_PITCH"]):
                     try:
-                        # Extract the data part after "JOINT_ANGLES:"
-                        data_part = message.split("JOINT_ANGLES:")[1].strip()
+                        import re
+                        # Look for patterns like "desired=X.X" and "current=Y.Y"
+                        desired_match = re.search(
+                            r"desired[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+                        current_match = re.search(
+                            r"current[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
 
-                        # Parse the key=value pairs separated by commas
-                        pairs = [pair.strip() for pair in data_part.split(',')]
+                        if desired_match:
+                            pitch_desired = float(desired_match.group(1))
+                            self.joint_controls['wrist_pitch'].set_position_display(
+                                pitch_desired)
 
-                        data_dict = {}
-                        for pair in pairs:
-                            if '=' in pair:
-                                # Split only on first '='
-                                key, value = pair.split('=', 1)
-                                try:
-                                    data_dict[key.strip()] = float(
-                                        value.strip())
-                                except ValueError:
-                                    print(
-                                        f"Could not parse value '{value}' for key '{key}'")
-                                    continue
-
-                        # Check if we have all required keys
-                        required_keys = ['pitch_des',
-                                         'pitch_cur', 'yaw_des', 'yaw_cur']
-                        if all(key in data_dict for key in required_keys):
-                            pitch_desired = data_dict['pitch_des']
-                            pitch_actual = data_dict['pitch_cur']
-                            yaw_desired = data_dict['yaw_des']
-                            yaw_actual = data_dict['yaw_cur']
-
-                            # Update the current position displays in the GUI
+                        if current_match:
+                            pitch_current = float(current_match.group(1))
                             self.joint_controls['wrist_pitch'].update_current_position(
-                                pitch_actual)
-                            self.joint_controls['wrist_yaw'].update_current_position(
-                                yaw_actual)
-
-                            # Add to data recorder if recording is active
-                            if self.data_recorder.recording:
-                                self.data_recorder.add_data_point(pitch_desired, pitch_actual,
-                                                                  yaw_desired, yaw_actual)
-
-                                # Log every 100 samples to show progress without spam
-                                sample_count = len(
-                                    self.data_recorder.timestamps)
-                                if sample_count % 100 == 0 and sample_count > 0:
-                                    duration = self.data_recorder.timestamps[-1]
-                                    print(f"📊 Recording progress: {sample_count} samples, "
-                                          f"{duration:.1f}s - Latest: Pitch={pitch_actual:.2f}°, Yaw={yaw_actual:.2f}°")
-
-                            # Update status bar with latest values
-                            self.status_var.set(
-                                f"📊 Pitch: {pitch_actual:.1f}° | Yaw: {yaw_actual:.1f}°")
-
-                        else:
-                            missing_keys = [
-                                key for key in required_keys if key not in data_dict]
-                            print(
-                                f"Missing keys in JOINT_ANGLES data: {missing_keys}")
-                            print(f"Available keys: {list(data_dict.keys())}")
-                            print(f"Raw message: {message}")
+                                pitch_current)
 
                     except Exception as e:
-                        print(f"Error parsing JOINT_ANGLES: {e}")
-                        print(f"Raw message: {message}")
-                        import traceback
-                        traceback.print_exc()
+                        self.log_message(f"⚠️ Error parsing pitch data: {e}")
+
+                # Parse yaw data
+                if any(keyword in message.upper() for keyword in ["YAW", "WRIST_YAW"]):
+                    try:
+                        import re
+                        # Look for patterns like "desired=X.X" and "current=Y.Y"
+                        desired_match = re.search(
+                            r"desired[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+                        current_match = re.search(
+                            r"current[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+
+                        if desired_match:
+                            yaw_desired = float(desired_match.group(1))
+                            self.joint_controls['wrist_yaw'].set_position_display(
+                                yaw_desired)
+
+                        if current_match:
+                            yaw_current = float(current_match.group(1))
+                            self.joint_controls['wrist_yaw'].update_current_position(
+                                yaw_current)
+
+                    except Exception as e:
+                        self.log_message(f"⚠️ Error parsing yaw data: {e}")
+
+                # Alternative: Parse combined joint angle messages
+                # Format like "JOINT_ANGLES: pitch_des=30.0, pitch_cur=25.5, yaw_des=15.0, yaw_cur=12.3"
+                if "JOINT_ANGLES" in message.upper():
+                    try:
+                        import re
+                        pitch_des_match = re.search(
+                            r"pitch_des[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+                        pitch_cur_match = re.search(
+                            r"pitch_cur[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+                        yaw_des_match = re.search(
+                            r"yaw_des[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+                        yaw_cur_match = re.search(
+                            r"yaw_cur[=:\s]+([-+]?\d*\.?\d+)", message, re.IGNORECASE)
+
+                        if pitch_des_match:
+                            self.joint_controls['wrist_pitch'].set_position_display(
+                                float(pitch_des_match.group(1)))
+                        if pitch_cur_match:
+                            self.joint_controls['wrist_pitch'].update_current_position(
+                                float(pitch_cur_match.group(1)))
+                        if yaw_des_match:
+                            self.joint_controls['wrist_yaw'].set_position_display(
+                                float(yaw_des_match.group(1)))
+                        if yaw_cur_match:
+                            self.joint_controls['wrist_yaw'].update_current_position(
+                                float(yaw_cur_match.group(1)))
+
+                    except Exception as e:
+                        self.log_message(f"⚠️ Error parsing joint angles: {e}")
+
+                # Record data point if we have valid pitch/yaw data and recording is active
+                if self.data_recorder.recording:
+                    try:
+                        pitch_desired = self.joint_controls['wrist_pitch'].get_position(
+                        )
+                        pitch_actual = self.joint_controls['wrist_pitch'].get_current_position(
+                        )
+                        yaw_desired = self.joint_controls['wrist_yaw'].get_position(
+                        )
+                        yaw_actual = self.joint_controls['wrist_yaw'].get_current_position(
+                        )
+
+                        # Only record if we have meaningful data (not just zeros)
+                        if any([pitch_desired, pitch_actual, yaw_desired, yaw_actual]):
+                            self.data_recorder.add_data_point(pitch_desired, pitch_actual,
+                                                              yaw_desired, yaw_actual)
+                    except:
+                        pass
 
         except queue.Empty:
             pass
 
-        # Update recording status display
+        # Update recording status (but don't plot in real-time)
         if self.data_recorder.recording:
             sample_count = len(self.data_recorder.timestamps)
             if sample_count > 0:
                 duration = self.data_recorder.timestamps[-1]
-                # Update display every 50 samples or every second to avoid UI lag
-                if sample_count % 50 == 0 or (duration % 1.0 < 0.1):
+                # Update status every 100 samples to avoid UI lag
+                if sample_count % 100 == 0 or duration % 1.0 < 0.1:  # Update every second or every 100 samples
                     self.data_info_var.set(
                         f"Recording: {sample_count} samples, {duration:.1f}s")
-                    self.recording_status_var.set(
-                        f"🔴 Recording... ({sample_count} samples)")
             else:
-                self.data_info_var.set("Recording: 0 samples, 0.0s")
-        else:
-            if len(self.data_recorder.timestamps) > 0:
-                sample_count = len(self.data_recorder.timestamps)
-                duration = self.data_recorder.timestamps[-1] if self.data_recorder.timestamps else 0
+                # Show that recording is active but no data yet
+                elapsed = time.time() - self.data_recorder.start_time if self.data_recorder.start_time else 0
                 self.data_info_var.set(
-                    f"Last recording: {sample_count} samples, {duration:.1f}s")
+                    f"Recording: 0 samples, {elapsed:.1f}s (waiting for data...)")
 
-        # Schedule next update
         self.root.after(50, self.update_gui)
 
     def on_closing(self):
