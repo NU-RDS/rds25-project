@@ -1144,24 +1144,32 @@ class RDSHandGUI:
                                     continue
 
                         # Check if we have all required keys
-                        required_keys = ['pitch_des',
-                                         'pitch_cur', 'yaw_des', 'yaw_cur']
+                        required_keys = ['splay_des',
+                                         'splay_cur', 'dip_des', 'dip_cur', 'pip_des', 'pip_cur', 'mcp_des', 'mcp_cur']
                         if all(key in data_dict for key in required_keys):
-                            pitch_desired = data_dict['pitch_des']
-                            pitch_actual = data_dict['pitch_cur']
-                            yaw_desired = data_dict['yaw_des']
-                            yaw_actual = data_dict['yaw_cur']
+                            splay_desired = data_dict['splay_des']
+                            splay_actual = data_dict['splay_cur']
+                            dip_desired = data_dict['dip_des']
+                            dip_actual = data_dict['dip_cur']
+                            pip_desired = data_dict['pip_des']
+                            pip_actual = data_dict['pip_cur']
+                            mcp_desired = data_dict['mcp_des']
+                            mcp_actual = data_dict['mcp_cur']
 
                             # Update the current position displays in the GUI
-                            self.joint_controls['wrist_pitch'].update_current_position(
-                                pitch_actual)
-                            self.joint_controls['wrist_yaw'].update_current_position(
-                                yaw_actual)
+                            self.joint_controls['dex_pip'].update_current_position(
+                                pip_actual)
+                            self.joint_controls['dex_splay'].update_current_position(
+                                splay_actual)
+                            self.joint_controls['dex_mcp'].update_current_position(
+                                mcp_actual)
+                            self.joint_controls['dex_dip'].update_current_position(
+                                dip_actual)
 
                             # Add to data recorder if recording is active
                             if self.data_recorder.recording:
-                                self.data_recorder.add_data_point(pitch_desired, pitch_actual,
-                                                                  yaw_desired, yaw_actual)
+                                self.data_recorder.add_data_point(
+                                    splay_desired, splay_actual, dip_desired, dip_actual, pip_desired, pip_actual, mcp_desired, mcp_actual)
 
                                 # Log every 100 samples to show progress without spam
                                 sample_count = len(
@@ -1169,11 +1177,11 @@ class RDSHandGUI:
                                 if sample_count % 100 == 0 and sample_count > 0:
                                     duration = self.data_recorder.timestamps[-1]
                                     print(f"📊 Recording progress: {sample_count} samples, "
-                                          f"{duration:.1f}s - Latest: Pitch={pitch_actual:.2f}°, Yaw={yaw_actual:.2f}°")
+                                          f"{duration:.1f}s - Latest: Pitch={splay_actual:.2f}°, Yaw={pip_actual:.2f}°")
 
                             # Update status bar with latest values
                             self.status_var.set(
-                                f"📊 Pitch: {pitch_actual:.1f}° | Yaw: {yaw_actual:.1f}°")
+                                f"📊 Pitch: {splay_actual:.1f}° | Yaw: {pip_actual:.1f}°")
 
                         else:
                             missing_keys = [
