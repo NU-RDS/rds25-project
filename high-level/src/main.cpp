@@ -90,6 +90,7 @@ void captureEncoderOffsets() {
 void setup() {
     Serial.begin(9600);
     Serial.println("[HIGH]");
+    while (!Serial) delay(100);
 
     if (!setupCan()) {
         Serial.println("CAN failed to initialize: reset required");

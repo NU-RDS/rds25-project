@@ -52,20 +52,20 @@ void StateManager::controlLoop() {
     std::vector<double> wristControl = wrist->calculateControl();
     
     std::vector<double> motorTorques = kinematics->getMotorTorques({dexControl[0], dexControl[1], dexControl[2], dexControl[3], powControl, wristControl[0], wristControl[1]});
-    Serial.print("[HIGH] INFO: Motor torques: ");
-    Serial.print(motorTorques[0]);
-    Serial.print(", ");
-    Serial.print(motorTorques[1]);
-    Serial.print(", ");
-    Serial.print(motorTorques[2]);
-    Serial.print(", ");
-    Serial.print(motorTorques[3]);
-    Serial.print(", ");
-    Serial.print(motorTorques[4]);
-    Serial.print(", ");
-    Serial.print(motorTorques[5]);
-    Serial.print(", ");
-    Serial.println(motorTorques[6]);
+    // Serial.print("[HIGH] INFO: Motor torques: ");
+    // Serial.print(motorTorques[0]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[1]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[2]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[3]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[4]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[5]);
+    // Serial.print(", ");
+    // Serial.println(motorTorques[6]);
 }
 
 void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp) {
