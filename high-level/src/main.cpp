@@ -171,7 +171,7 @@ void loop() {
         if (pitch_control < -2.0f) {
             pitch_control = -2.0f;
         }
-        odrives[1].drive.setTorque(pitch_control);
+        // odrives[1].drive.setTorque(pitch_control);
 
         odrives[0].current_torque = 0.5f;
         odrives[0].is_running = true;

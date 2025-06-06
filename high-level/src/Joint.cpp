@@ -1,6 +1,6 @@
 #include "Joint.hpp"
 
-Joint::Joint(const std::string& name, const double kp, const double kd) {
+Joint::Joint(const std::string& name, const double kp, const double ki, const double kd) {
     this->name = name;
     this->currentPosition = 0.0;
     this->desiredPosition = 0.0;
@@ -8,7 +8,7 @@ Joint::Joint(const std::string& name, const double kp, const double kd) {
     this->maxLimit = M_PI;
     this->minLimit = 0.0;
 
-    controller = std::make_unique<PositionControl>(kp, kd, 1.0);
+    controller = std::make_unique<PositionControl>(kp, ki, kd, 1.0);
 }
 
 const std::string& Joint::getName() {
