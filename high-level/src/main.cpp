@@ -129,6 +129,7 @@ void onCanMessage(const CAN_message_t& msg) {
     }
 }
 
+// Key fixes for main.cpp loop() function
 void loop() {
     static unsigned long lastControlTime = 0;
     const unsigned long CONTROL_PERIOD_MS = 10; // 100Hz control rate
@@ -140,23 +141,14 @@ void loop() {
 
         state_manager.updateState(serialCommand);
 
+        // Read encoders and update motor positions
         Get_Encoder_Estimates_msg_t encoder = odrives[0].user_data.last_feedback;
-        // motor ang is motor shaft ang
         float motor_splay = state_manager.getKinematics()->toShaft(state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[0].encoder_offset));
         state_manager.getDexFinger()->getSplay()->setMotorValue(motor_splay);
-        // Serial.print("Motor ");
-        // Serial.print(1);
-        // Serial.print(" is at ");
-        // Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
 
         encoder = odrives[1].user_data.last_feedback;
-        // motor ang is motor shaft ang
         float motor_mcp = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[1].encoder_offset)));
         state_manager.getDexFinger()->getMCP()->setMotorValue(motor_mcp);
-        // Serial.print("Motor ");
-        // Serial.print(0);
-        // Serial.print(" is at ");
-        // Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
 
         encoder = odrives[2].user_data.last_feedback;
         float motor_pip = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[2].encoder_offset)));
@@ -166,86 +158,77 @@ void loop() {
         float motor_dip = state_manager.getKinematics()->toShaft((state_manager.getKinematics()->RevToRad(encoder.Pos_Estimate - odrives[3].encoder_offset)));
         state_manager.getDexFinger()->getDIP()->setMotorValue(motor_dip);
 
-
+        // Calculate joint angles from motor positions
         std::vector<float> current_joint_angles = state_manager.getKinematics()->motorToJointAngleDex(motor_splay, motor_mcp, motor_pip, motor_dip);
         state_manager.getDexFinger()->getSplay()->setCurrentPosition(current_joint_angles[0]);
         state_manager.getDexFinger()->getMCP()->setCurrentPosition(current_joint_angles[1]);
         state_manager.getDexFinger()->getPIP()->setCurrentPosition(current_joint_angles[2]);
         state_manager.getDexFinger()->getDIP()->setCurrentPosition(current_joint_angles[3]);
 
-
-        // Get current and desired positions
-        double splay_desired = state_manager.getDexFinger()->getSplay()->getDesiredPosition() * 180.0 / M_PI;  // rad to deg
-        double splay_current = state_manager.getDexFinger()->getSplay()->getCurrentPosition() * 180.0 / M_PI;  // rad to deg
-        double mcp_desired = state_manager.getDexFinger()->getMCP()->getDesiredPosition() * 180.0 / M_PI;      // rad to deg
-        double mcp_current = state_manager.getDexFinger()->getMCP()->getCurrentPosition() * 180.0 / M_PI;      // rad to deg
-        double pip_desired = state_manager.getDexFinger()->getPIP()->getDesiredPosition() * 180.0 / M_PI;  // rad to deg
-        double pip_current = state_manager.getDexFinger()->getPIP()->getCurrentPosition() * 180.0 / M_PI;  // rad to deg
-        double dip_desired = state_manager.getDexFinger()->getDIP()->getDesiredPosition() * 180.0 / M_PI;  // rad to deg
-        double dip_current = state_manager.getDexFinger()->getDIP()->getCurrentPosition() * 180.0 / M_PI;  // rad to deg
+        // Get current and desired positions for GUI feedback
+        double splay_desired = state_manager.getDexFinger()->getSplay()->getDesiredPosition() * 180.0 / M_PI;
+        double splay_current = state_manager.getDexFinger()->getSplay()->getCurrentPosition() * 180.0 / M_PI;
+        double mcp_desired = state_manager.getDexFinger()->getMCP()->getDesiredPosition() * 180.0 / M_PI;
+        double mcp_current = state_manager.getDexFinger()->getMCP()->getCurrentPosition() * 180.0 / M_PI;
+        double pip_desired = state_manager.getDexFinger()->getPIP()->getDesiredPosition() * 180.0 / M_PI;
+        double pip_current = state_manager.getDexFinger()->getPIP()->getCurrentPosition() * 180.0 / M_PI;
+        double dip_desired = state_manager.getDexFinger()->getDIP()->getDesiredPosition() * 180.0 / M_PI;
+        double dip_current = state_manager.getDexFinger()->getDIP()->getCurrentPosition() * 180.0 / M_PI;
         
-        
-        // Print in format that GUI can parse
+        // Send formatted message for GUI (consolidated format)
         Serial.print("JOINT_ANGLES: splay_des=");
         Serial.print(splay_desired, 2);
         Serial.print(", splay_cur=");
         Serial.print(splay_current, 2);
+        Serial.print(", mcp_des=");
+        Serial.print(mcp_desired, 2);
+        Serial.print(", mcp_cur=");
+        Serial.print(mcp_current, 2);
         Serial.print(", pip_des=");
         Serial.print(pip_desired, 2);
         Serial.print(", pip_cur=");
-        Serial.println(pip_current, 2);
+        Serial.print(pip_current, 2);
         Serial.print(", dip_des=");
         Serial.print(dip_desired, 2);
         Serial.print(", dip_cur=");
         Serial.println(dip_current, 2);
 
-
-
+        // Run control loop
         state_manager.controlLoop();
-
-        odrives[0].current_torque = 0.5f;
-        odrives[0].is_running = true;
-        float splay_control = state_manager.getDexFinger()->getSplay()->getControlSignal();
-        if (splay_control > 1.0f) {
-            splay_control = 1.0f;
-        }
-        if (splay_control < -1.0f) {
-            splay_control = -1.0f;
-        }
-        // odrives[1].drive.setTorque(splay_control);
-
-        odrives[1].current_torque = 0.5f;
-        odrives[1].is_running = true;
-        float mcp_control = state_manager.getDexFinger()->getMCP()->getControlSignal();
-        if (mcp_control > 1.0f) {
-            mcp_control = 1.0f;
-        }
-        if (mcp_control < -1.0f) {
-            mcp_control = -1.0f;
-        }
-        // odrives[0].drive.setTorque(pip_control);
-
-        odrives[2].current_torque = 0.5f;
-        odrives[2].is_running = true;
-        float pip_control = state_manager.getDexFinger()->getPIP()->getControlSignal();
-        if (pip_control > 1.0f) {
-            pip_control = 1.0f;
-        }
-        if (pip_control < -1.0f) {
-            pip_control = -1.0f;
-        }
-
-        odrives[3].current_torque = 0.5f;
-        odrives[3].is_running = true;
-        float dip_control = state_manager.getDexFinger()->getDIP()->getControlSignal();
-        if (dip_control > 1.0f) {
-            dip_control = 1.0f;
-        }
-        if (dip_control < -1.0f) {
-            dip_control = -1.0f;
-        }
-
-
         
+        // Apply control signals with safety limits
+        float splay_control = state_manager.getDexFinger()->getSplay()->getControlSignal();
+        splay_control = constrain(splay_control, -1.0f, 1.0f);  // Safety limit
+        odrives[0].drive.setTorque(splay_control);
+        odrives[0].current_torque = splay_control;
+        odrives[0].is_running = true;
+
+        float mcp_control = state_manager.getDexFinger()->getMCP()->getControlSignal();
+        mcp_control = constrain(mcp_control, -1.0f, 1.0f);  // Safety limit
+        odrives[1].drive.setTorque(mcp_control);
+        odrives[1].current_torque = mcp_control;
+        odrives[1].is_running = true;
+
+        float pip_control = state_manager.getDexFinger()->getPIP()->getControlSignal();
+        pip_control = constrain(pip_control, -1.0f, 1.0f);  // Safety limit
+        odrives[2].drive.setTorque(pip_control);
+        odrives[2].current_torque = pip_control;
+        odrives[2].is_running = true;
+
+        float dip_control = state_manager.getDexFinger()->getDIP()->getControlSignal();
+        dip_control = constrain(dip_control, -1.0f, 1.0f);  // Safety limit
+        odrives[3].drive.setTorque(dip_control);
+        odrives[3].current_torque = dip_control;
+        odrives[3].is_running = true;
+
+        // Optional: Log control signals for debugging
+        Serial.print("[DEBUG] Control signals - Splay: ");
+        Serial.print(splay_control, 3);
+        Serial.print(", MCP: ");
+        Serial.print(mcp_control, 3);
+        Serial.print(", PIP: ");
+        Serial.print(pip_control, 3);
+        Serial.print(", DIP: ");
+        Serial.println(dip_control, 3);
     }
 }

@@ -20,10 +20,10 @@ void DexterousFinger::kinematics() {
     double joint_dip = DIP->getControlSignal();
     double joint_mcp = MCP->getControlSignal();
 
-    double motor_splay = (J_dex[0][0] * joint_splay + J_dex[0][1] * joint_mcp + J_dex[0][2] * joint_pip + J_dex[0][3] * joint_dip + null_dex[0] * 0.1f);
-    double motor_pip = (J_dex[1][0] * joint_splay + J_dex[1][1] * joint_mcp + J_dex[1][2] * joint_pip + J_dex[1][3] * joint_dip + null_dex[1] * 0.1f);
-    double motor_mcp = (J_dex[2][0] * joint_splay + J_dex[2][1] * joint_mcp + J_dex[2][2] * joint_pip + J_dex[2][3] * joint_dip + null_dex[2] * 0.1f);
-    double motor_dip = (J_dex[3][0] * joint_splay + J_dex[3][1] * joint_mcp + J_dex[3][2] * joint_pip + J_dex[3][3] * joint_dip + null_dex[3] * 0.1f);
+    double motor_splay = (J_dex[0][0] * joint_splay + J_dex[0][1] * joint_pip + J_dex[0][2] * joint_dip + null_dex[0] * 0.1f);
+    double motor_pip = (J_dex[1][0] * joint_splay + J_dex[1][1] * joint_pip + J_dex[1][2] * joint_dip + null_dex[1] * 0.1f);
+    double motor_mcp = (J_dex[2][0] * joint_splay + J_dex[2][1] * joint_pip + J_dex[2][2] * joint_dip + null_dex[2] * 0.1f);
+    double motor_dip = (J_dex[3][0] * joint_splay + J_dex[3][1] * joint_pip + J_dex[3][2] * joint_dip + null_dex[3] * 0.1f);
 
     Splay->setCommandTorque(motor_splay);
     PIP->setCommandTorque(motor_pip);

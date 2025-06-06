@@ -1095,14 +1095,13 @@ class RDSHandGUI:
         self.message_log.delete(1.0, tk.END)
 
     def update_gui(self):
-        """Updated GUI method with proper joint angle parsing"""
+        """Fixed GUI method with proper dexterous finger joint angle parsing"""
         try:
             while True:
                 message = self.communicator.message_queue.get_nowait()
                 self.log_message(f"📨 Received: {message}")
 
                 # Parse position updates if they come from MCU
-                # Example format: "[HIGH] POSITIONS: 0.0,0.0,45.0,30.0,15.0,0.0,60.0"
                 if "POSITIONS:" in message:
                     try:
                         pos_data = message.split("POSITIONS:")[1].strip()
@@ -1120,8 +1119,8 @@ class RDSHandGUI:
                     except Exception as e:
                         print(f"Error parsing POSITIONS: {e}")
 
-                # Parse joint angle data for pitch/yaw recording
-                # Expected format: "JOINT_ANGLES: pitch_des=X.XX, pitch_cur=Y.YY, yaw_des=Z.ZZ, yaw_cur=W.WW"
+                # **FIXED: Parse dexterous finger joint angle data**
+                # Expected format: "JOINT_ANGLES: splay_des=X.XX, splay_cur=Y.YY, mcp_des=Z.ZZ, mcp_cur=W.WW, pip_des=A.AA, pip_cur=B.BB, dip_des=C.CC, dip_cur=D.DD"
                 if "JOINT_ANGLES:" in message:
                     try:
                         # Extract the data part after "JOINT_ANGLES:"
@@ -1143,53 +1142,45 @@ class RDSHandGUI:
                                         f"Could not parse value '{value}' for key '{key}'")
                                     continue
 
-                        # Check if we have all required keys
-                        required_keys = ['splay_des',
-                                         'splay_cur', 'dip_des', 'dip_cur', 'pip_des', 'pip_cur', 'mcp_des', 'mcp_cur']
-                        if all(key in data_dict for key in required_keys):
-                            splay_desired = data_dict['splay_des']
-                            splay_actual = data_dict['splay_cur']
-                            dip_desired = data_dict['dip_des']
-                            dip_actual = data_dict['dip_cur']
-                            pip_desired = data_dict['pip_des']
-                            pip_actual = data_dict['pip_cur']
-                            mcp_desired = data_dict['mcp_des']
-                            mcp_actual = data_dict['mcp_cur']
+                        # Update dexterous finger joint controls if data is available
+                        joint_mappings = {
+                            'splay_des': ('dex_splay', 'set_position_display'),
+                            'splay_cur': ('dex_splay', 'update_current_position'),
+                            'mcp_des': ('dex_mcp', 'set_position_display'),
+                            'mcp_cur': ('dex_mcp', 'update_current_position'),
+                            'pip_des': ('dex_pip', 'set_position_display'),
+                            'pip_cur': ('dex_pip', 'update_current_position'),
+                            'dip_des': ('dex_dip', 'set_position_display'),
+                            'dip_cur': ('dex_dip', 'update_current_position')
+                        }
 
-                            # Update the current position displays in the GUI
-                            self.joint_controls['dex_pip'].update_current_position(
-                                pip_actual)
-                            self.joint_controls['dex_splay'].update_current_position(
-                                splay_actual)
-                            self.joint_controls['dex_mcp'].update_current_position(
-                                mcp_actual)
-                            self.joint_controls['dex_dip'].update_current_position(
-                                dip_actual)
+                        for data_key, (joint_name, method_name) in joint_mappings.items():
+                            if data_key in data_dict and joint_name in self.joint_controls:
+                                value = data_dict[data_key]
+                                joint_control = self.joint_controls[joint_name]
 
-                            # Add to data recorder if recording is active
-                            if self.data_recorder.recording:
+                                if method_name == 'set_position_display':
+                                    joint_control.set_position_display(value)
+                                elif method_name == 'update_current_position':
+                                    joint_control.update_current_position(
+                                        value)
+
+                        # Add to data recorder if recording is active
+                        # For now, record splay and pip as "pitch" and "yaw" for compatibility
+                        if self.data_recorder.recording:
+                            if all(key in data_dict for key in ['splay_des', 'splay_cur', 'pip_des', 'pip_cur']):
                                 self.data_recorder.add_data_point(
-                                    splay_desired, splay_actual, dip_desired, dip_actual, pip_desired, pip_actual, mcp_desired, mcp_actual)
+                                    # Use splay as "pitch"
+                                    data_dict['splay_des'],
+                                    data_dict['splay_cur'],
+                                    data_dict['pip_des'],    # Use pip as "yaw"
+                                    data_dict['pip_cur']
+                                )
 
-                                # Log every 100 samples to show progress without spam
-                                sample_count = len(
-                                    self.data_recorder.timestamps)
-                                if sample_count % 100 == 0 and sample_count > 0:
-                                    duration = self.data_recorder.timestamps[-1]
-                                    print(f"📊 Recording progress: {sample_count} samples, "
-                                          f"{duration:.1f}s - Latest: Pitch={splay_actual:.2f}°, Yaw={pip_actual:.2f}°")
-
-                            # Update status bar with latest values
+                        # Update status bar with latest dex finger values
+                        if 'splay_cur' in data_dict and 'pip_cur' in data_dict:
                             self.status_var.set(
-                                f"📊 Pitch: {splay_actual:.1f}° | Yaw: {pip_actual:.1f}°")
-
-                        else:
-                            missing_keys = [
-                                key for key in required_keys if key not in data_dict]
-                            print(
-                                f"Missing keys in JOINT_ANGLES data: {missing_keys}")
-                            print(f"Available keys: {list(data_dict.keys())}")
-                            print(f"Raw message: {message}")
+                                f"📊 Splay: {data_dict['splay_cur']:.1f}° | PIP: {data_dict['pip_cur']:.1f}°")
 
                     except Exception as e:
                         print(f"Error parsing JOINT_ANGLES: {e}")
