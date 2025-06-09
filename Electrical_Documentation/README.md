@@ -191,7 +191,7 @@ What actually ended up in the final design
 
 | Board | GDrive Link | Altium Link |
 |-------|-------------|-------------|
-|Motor Driver | |
+|Motor Driver | [Gdrive](https://drive.google.com/drive/folders/1xZUM3Zf5BXCYf7R72Dv3WHtOntPb45lc?usp=drive_link) | [Altium](https://yufeng-yang.365.altium.com/designs/1C79E01F-E16E-4C25-9A8B-15B832A2B849#design) |
 |Daughter Board | |
 |PDU | |
 |Palm Board | |
