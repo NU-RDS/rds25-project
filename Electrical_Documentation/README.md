@@ -195,4 +195,6 @@ What actually ended up in the final design
 |Daughter Board | |
 |PDU | |
 |Palm Board | |
-|Encoders | |
+|Encoder 1 | |
+|Encoder 2 | |
+|Encoder 3 | |
