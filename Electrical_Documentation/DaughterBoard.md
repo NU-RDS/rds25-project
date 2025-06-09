@@ -2,12 +2,12 @@
 
 Key Features:
 
-| Spec         | Details                              |
+| Feature         | Details / Reasons                              |
 |------------------|--------------------------------------|
-| Voltage Range              |           |
-| Current Range              |           |
+| SPI busses broken out              |           |
+| CS Pins broken out            |           |
 | Control Interface(s)       |           |
-| Sensing Speed(s)           |           |
+| Misc           |           |
 
 ---
 <details>

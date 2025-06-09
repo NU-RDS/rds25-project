@@ -16,6 +16,7 @@ Welcome to the final documentation portal for RDS 2025 Electrical Team. This wik
 | [6. Issues and Painpoints](#6-issues-and-painpoints)     | Technical and procedural blockers encountered, and how we overcame them |
 | [7. Future Work](#7-future-work)                         | Suggestions for extending and improving the project         |
 | [8. Recommendations for Future Teams](#8-recommendations-for-future-teams) | Practical advice from this iteration, and how to pick up where we left off |
+| [9. Appendix 1 Link to Drive and Altium Files](#9-appendix-1-link-to-drive-and-altium-files) | Links to our other shared resources |
 
 ---
 
@@ -186,3 +187,12 @@ What actually ended up in the final design
 
 ---
 
+## 9. Appendix 1 Link to Drive and Altium Files
+
+| Board | GDrive Link | Altium Link |
+|-------|-------------|-------------|
+|Motor Driver | |
+|Daughter Board | |
+|PDU | |
+|Palm Board | |
+|Encoders | |
