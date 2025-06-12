@@ -1,4 +1,4 @@
-#include "ForceControl.hpp"
+#include "force_control.hpp"
 
 ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
     Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
