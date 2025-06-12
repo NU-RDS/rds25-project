@@ -1,0 +1,76 @@
+#ifndef STATE_MANAGER_HPP
+#define STATE_MANAGER_HPP
+
+#include <Arduino.h>
+#include <memory>
+#include <string>
+#include <chrono>
+#include <functional>
+
+#include "SerialHelpers.hpp"
+#include "TendonKinematics.hpp"
+#include "PowerFinger.hpp"
+#include "DexterousFinger.hpp"
+#include "Wrist.hpp"
+
+enum MovementPhase {
+    IDLE,
+    ERROR,
+    MOVING,
+    COMPLETE
+};
+
+class StateManager {
+    private:
+        std::unique_ptr<Wrist> wrist;
+        std::unique_ptr<DexterousFinger> dexFinger;
+        std::unique_ptr<PowerFinger> powFinger;
+        std::unique_ptr<TendonKinematics> kinematics;
+        
+        // Communication with MCU
+        bool connected;
+        std::string mcuPort;
+        
+        // Timing
+        std::chrono::time_point<std::chrono::steady_clock> lastUpdateTime;
+        double dt; // Time step in seconds
+
+        MovementPhase currentMovementPhase;
+    
+    public:
+        StateManager();
+        ~StateManager() = default;
+        
+        // Basic system functions
+        bool initialize();
+        bool connectToMCU();
+        void updateState(std::string& serialCommand);
+        void updateGUI();
+
+        void controlLoop();
+
+        // Subsystem access
+        Wrist* getWrist() { return wrist.get(); }
+        DexterousFinger* getDexFinger() { return dexFinger.get(); }
+        PowerFinger* getPowFinger() { return powFinger.get(); }
+        TendonKinematics* getKinematics() {return kinematics.get(); }
+
+        // Joint position setting
+        void setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp);
+
+        // Get current and desired joint positions
+        std::unordered_map<std::string, double> getCurrentJointPositions();
+        std::unordered_map<std::string, double> getDesiredJointPositions();
+
+        // Movement control and sequencing
+        void executeSequencedMovement();
+        void stopMovement();
+        void pauseMovement();
+        void resumeMovement();
+        void sendTorqueCommands();
+        void setMovementPhase(MovementPhase phase);
+        MovementPhase getMovementPhase() const { return currentMovementPhase; }
+        bool isMovementComplete() const { return currentMovementPhase == COMPLETE; }
+};
+
+#endif //STATE_MANAGER_HPP

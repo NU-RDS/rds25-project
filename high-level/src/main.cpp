@@ -1,145 +1,275 @@
 #include <Arduino.h>
-#include <CAN.h>
-#include <virtualTimer.h>
 
-// * CAN_SETUP
-const uint32_t CONNECTION_REQUEST_MESSAGE_ID = 0x000;
-const uint32_t CONNECTION_RESPONSE_MESSAGE_ID = 0x100;
-const uint32_t PLAYER_INPUT_MESSAGE_ID = 0x200;
+#include <string>
 
-CAN g_can {};
-VirtualTimerGroup g_timerGroup;
+#include "ODriveCan.hpp"
+#include "StateManager.hpp"
+#include "comms.hpp"
 
-MakeSignedCANSignal(int8_t, 0, 8, 1.0, 0.0) g_deviceIDSignal;
-CANTXMessage<1> g_connectionRequestMessage {
-    g_can,
-    CONNECTION_REQUEST_MESSAGE_ID,
-    1, // in bytes
-    100, // transmit every 100ms
-    g_deviceIDSignal
+StateManager state_manager;
+std::string serialCommand = "";
+
+static bool __canInfSendMessage(void* intf, uint32_t id, uint8_t length, const uint8_t* data);
+static void __canInfPumpEvents(void* inft);
+
+static ODriveCanIntfWrapper canWrapper = {
+    .send_msg_ = __canInfSendMessage,
+    .pump_events_ = __canInfPumpEvents};
+
+const int NUM_DRIVES = 2;
+struct ODriveControl {
+    ODriveCAN drive;
+    ODriveUserData user_data;
+    bool is_running;
+    float current_torque;
+    float encoder_offset;
+    bool offset_captured;
 };
 
-// Forward Declaration
-void handleConnectionResponse();
+static std::vector<int> odriveIDs = {5, 6};
+static ODriveControl odrives[NUM_DRIVES] =
+    {{ODriveCAN(canWrapper, 5), ODriveUserData(), false, 0.0f, 0.0f, false},
+     {ODriveCAN(canWrapper, 6), ODriveUserData(), false, 0.0f, 0.0f, false}};
 
-MakeUnsignedCANSignal(uint64_t, 0, 64, 1.0, 0.0) g_responseDataSignal;
-CANRXMessage<1> g_responseMessage {
-    g_can, 
-    CONNECTION_RESPONSE_MESSAGE_ID,
-    handleConnectionResponse,
-    g_responseDataSignal
-};
+comms::TeensyCANDriver<2, comms::CANBaudRate::CBR_250KBPS> canDriver;
+comms::CommsController commsController{canDriver, comms::MCUID::MCU_HIGH_LEVEL};
 
-// Input message
-MakeSignedCANSignal(int8_t, 0, 8, 1.0, 0.0) g_playerIDSignal;
-MakeSignedCANSignal(float, 8, 16, 10, 0.0) g_horizontalAxisSignal;
-MakeSignedCANSignal(float, 24, 16, 10, 0) g_verticalAxisSignal;
-MakeSignedCANSignal(float, 40, 16, 10, 0) g_rotationAxisSignal;
-MakeUnsignedCANSignal(uint8_t, 56, 8, 1, 0) g_bitmaskSignal;
+static bool setupCan();
+static void setupODrive(int index);
+static void captureEncoderOffsets();
+static void onHeartbeat(Heartbeat_msg_t& msg, void* user_data);
+static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data);
+static void onCanMessage(const CAN_message_t& msg);
+static void updateEncoderPositions();
+static void updateEncoderOffsets();
 
-CANTXMessage<5> g_playerInputMessage {
-    g_can,
-    PLAYER_INPUT_MESSAGE_ID,
-    1, 100, g_timerGroup,
-    g_playerIDSignal,
-    g_verticalAxisSignal,
-    g_horizontalAxisSignal,
-    g_rotationAxisSignal,
-    g_bitmaskSignal
-};
-
-// * END CAN_SETUP
-
-
-// * State machine setup
-enum ControllerState
-{
-    DISCONNECTED, AWAITING_CONNECTION, CONNECTED
-};
-
-ControllerState g_state = DISCONNECTED;
-
-// * END Statemachine setup
-
-void handleConnectionResponse()
-{
-    uint64_t responseData = g_responseDataSignal;
-    std::array<int8_t, 8> byteArray;
-
-    for (int i = 0; i < 8; i++)
-    {
-        byteArray[i] = (int8_t)(responseData >> (i * 8));
-    }
-
-    int8_t deviceID = byteArray[0];
-    int8_t playerNmber = byteArray[1];
-
-    // is this message for us?
-    if (g_deviceIDSignal == deviceID)
-    {
-        // we gonna do something about it
-        g_playerIDSignal = playerNmber;
-        g_state = ControllerState::CONNECTED;
-    }
-}
-
-void handleState()
-{
-    switch (g_state)
-    {
-        case DISCONNECTED:
-            Serial.println("STATE: DISCONNECTED");
-            g_state = AWAITING_CONNECTION;
-            break;
-        case AWAITING_CONNECTION:
-            Serial.println("STATE: AWAITING CONNECTION");
-            break;
-        case CONNECTED:
-            Serial.println("STATE: CONNECTED");
-            break;
-    }
-
-    g_can.Tick();
-}
-
-
-// CAN SIGNAL SETUP, For reference
-// MakeSignedCANSignal(int8_t, 0, 8, 1.0, 0.0) g_playerIDSignal;
-// MakeSignedCANSignal(float, 8, 16, 10, 0.0) g_horizontalAxisSignal;
-// MakeSignedCANSignal(float, 24, 16, 10, 0) g_verticalAxisSignal;
-// MakeSignedCANSignal(float, 40, 16, 10, 0) g_rotationAxisSignal;
-// MakeUnsignedCANSignal(uint8_t, 56, 8, 1, 0) g_bitmaskSignal;
-
-bool g_shouldShoot;
-bool g_shouldMine;
-bool g_shouldShield;
-
-#define SET_BIT(var, n, value) ((value) ? ((var) |= (1 << (n))) : ((var) &= ~(1 << (n))))
-
-void readSensors()
-{
-    // you guys would set the signals here...
-    // g_horizontalAxisSignal = readJoystickHoriztonal();
-    uint8_t bitMask = g_bitmaskSignal;
-    SET_BIT(bitMask, 0, g_shouldShoot);
-    SET_BIT(bitMask, 1, g_shouldMine);
-    SET_BIT(bitMask, 2, g_shouldShield);
-    g_bitmaskSignal = bitMask;
-}
-
-
-void setup()
-{
+void setup() {
     Serial.begin(9600);
-    g_can.Initialize(ICAN::BaudRate::kBaud1M);
-    g_timerGroup.AddTimer(10, handleState);
-    g_timerGroup.AddTimer(10, readSensors);
+    Serial.println("[HIGH]");
+    while (!Serial) delay(100);
 
-    g_playerIDSignal = -1;
-    g_deviceIDSignal = (int8_t)random(0, 255);
+    if (!setupCan()) {
+        Serial.println("CAN failed to initialize: reset required");
+        while (true);
+    }
+
+    // Initialize all ODrives
+    for (int i = 0; i < NUM_DRIVES; i++) {
+        Serial.print("Initializing ODrive ");
+        Serial.println(i);
+        setupODrive(i);
+    }
+
+    captureEncoderOffsets();
+
+    state_manager.initialize();
 }
 
-void loop()
-{
-    g_timerGroup.Tick(millis());
+void loop() {
+    static unsigned long lastControlTime = 0;
+    const unsigned long CONTROL_PERIOD_MS = 10;  // 100Hz control rate
+
+    commsController.tick();
+
+    if (millis() - lastControlTime >= CONTROL_PERIOD_MS) {
+        lastControlTime = millis();
+
+        state_manager.updateState(serialCommand);
+
+        // Get_Encoder_Estimates_msg_t encoder = odrives[1].user_data.last_feedback;
+        // motor ang is motor shaft ang
+        // Serial.print("Motor ");
+        // Serial.print(1);
+        // Serial.print(" is at ");
+        // Serial.println(state_manager.getWrist()->getPitch()->getMotorValue());
+
+        // encoder = odrives[0].user_data.last_feedback;
+        // motor ang is motor shaft ang
+        // Serial.print("Motor ");
+        // Serial.print(0);
+        // Serial.print(" is at ");
+        // Serial.println(state_manager.getWrist()->getYaw()->getMotorValue());
+
+        updateEncoderPositions();
+
+        // Get current and desired positions
+        double pitch_desired = state_manager.getWrist()->getPitch()->getDesiredPosition() * 180.0 / M_PI;  // rad to deg
+        double pitch_current = state_manager.getWrist()->getPitch()->getCurrentPosition() * 180.0 / M_PI;  // rad to deg
+        double yaw_desired = state_manager.getWrist()->getYaw()->getDesiredPosition() * 180.0 / M_PI;      // rad to deg
+        double yaw_current = state_manager.getWrist()->getYaw()->getCurrentPosition() * 180.0 / M_PI;      // rad to deg
+        
+        // Print in format that GUI can parse
+        Serial.print("JOINT_ANGLES: pitch_des=");
+        Serial.print(pitch_desired, 2);
+        Serial.print(", pitch_cur=");
+        Serial.print(pitch_current, 2);
+        Serial.print(", yaw_des=");
+        Serial.print(yaw_desired, 2);
+        Serial.print(", yaw_cur=");
+        Serial.println(yaw_current, 2);
+
+        state_manager.controlLoop();
+
+        odrives[1].current_torque = 0.5f;
+        odrives[1].is_running = true;
+        float pitch_control = state_manager.getWrist()->getPitch()->getControlSignal();
+        if (pitch_control > 1.0f) {
+            pitch_control = 1.0f;
+        }
+        if (pitch_control < -1.0f) {
+            pitch_control = -1.0f;
+        }
+        // odrives[1].drive.setTorque(pitch_control);
+        Serial.println(pitch_control);
+
+        odrives[0].current_torque = 0.5f;
+        odrives[0].is_running = true;
+        float yaw_control = state_manager.getWrist()->getYaw()->getControlSignal();
+        if (yaw_control > 1.0f) {
+            yaw_control = 1.0f;
+        }
+        if (yaw_control < -1.0f) {
+            yaw_control = -1.0f;
+        }
+        Serial.println(yaw_control);
+        // odrives[0].drive.setTorque(yaw_control);
+    }
+}
+
+static bool setupCan() {
+    commsController.initialize();
+
+    commsController.setUnregisteredMessageHandler(
+        [](comms::RawCommsMessage msg) {
+            CAN_message_t newMsg;
+            newMsg.len = msg.length;
+            newMsg.id = msg.id;
+            memcpy(newMsg.buf, &msg.payload, 8);
+            onCanMessage(newMsg);
+        });
+
+    return true;
+}
+
+static bool __canInfSendMessage(void* intf, uint32_t id, uint8_t length, const uint8_t* data) {
+    comms::RawCommsMessage msg;
+    msg.id = id;
+    msg.length = length;
+    memcpy(&msg.payload, data, length);
+    canDriver.sendMessage(msg);
+    return true;
+}
+
+static void __canInfPumpEvents(void* inft) {
+    // no ops
+}
+
+static void setupODrive(int index) {
+    // Register callbacks
+    odrives[index].drive.onFeedback(onFeedback, &odrives[index].user_data);
+    odrives[index].drive.onStatus(onHeartbeat, &odrives[index].user_data);
+    // odrives[index].drive.getCurrent(getCurrents, &odrives[index].user_data);
+
+    // Set control mode to torque control
+    odrives[index].drive.setControllerMode(ODriveControlMode::CONTROL_MODE_TORQUE_CONTROL,
+                                           ODriveInputMode::INPUT_MODE_PASSTHROUGH);
+
+    // Enable closed loop control
+    // while (odrives[index].user_data.last_heartbeat.Axis_State !=
+    //        ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL) {
+    //     odrives[index].drive.clearErrors();
+    //     delay(1);
+    //     odrives[index].drive.setState(ODriveAxisState::AXIS_STATE_CLOSED_LOOP_CONTROL);
+
+    //     for (int i = 0; i < 15; ++i) {
+    //         delay(10);
+    //         pumpEvents(can_intf);
+    //     }
+    // }
+}
+
+static void onCanMessage(const CAN_message_t& msg) {
+    for (int i = 0; i < NUM_DRIVES; i++) {
+        onReceive(msg, odrives[i].drive);
+    }
+}
+
+static void captureEncoderOffsets() {
+    Serial.println("Capturing encoder offsets...");
+
+    // Wait for initial encoder readings
+    unsigned long timeout = millis() + 5000;  // 5 second timeout
+
+    updateEncoderOffsets();
+
+    // for (int i = 0; i < NUM_DRIVES; i++) {
+    //     odrives[i].offset_captured = false;
+
+    //     while (!odrives[i].user_data.received_feedback && millis() < timeout) {
+    //         pumpEvents(can_intf);
+    //         delay(10);
+    //     }
+
+    //     if (odrives[i].user_data.received_feedback) {
+    //         // Capture the initial encoder position as offset
+    //         Get_Encoder_Estimates_msg_t encoder = odrives[i].user_data.last_feedback;
+    //         odrives[i].encoder_offset = encoder.Pos_Estimate;  // Store raw encoder value
+    //         odrives[i].offset_captured = true;
+
+    //         Serial.print("ODrive ");
+    //         Serial.print(i);
+    //         Serial.print(" offset captured: ");
+    //         Serial.println(odrives[i].encoder_offset);
+    //     } else {
+    //         Serial.print("Failed to capture offset for ODrive ");
+    //         Serial.println(i);
+    //     }
+    // }
+}
+
+static void onHeartbeat(Heartbeat_msg_t& msg, void* user_data) {
+    ODriveUserData* odrv_user_data = static_cast<ODriveUserData*>(user_data);
+    odrv_user_data->last_heartbeat = msg;
+    odrv_user_data->received_heartbeat = true;
+}
+
+static void onFeedback(Get_Encoder_Estimates_msg_t& msg, void* user_data) {
+    ODriveUserData* odrv_user_data = static_cast<ODriveUserData*>(user_data);
+    odrv_user_data->last_feedback = msg;
+    odrv_user_data->received_feedback = true;
+}
+
+static void updateEncoderPositions() {
+    static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
+        {6, [](double value) { state_manager.getWrist()->getYaw()->setCurrentPosition(value - state_manager.getWrist()->getYaw()->getEncoderOffset()); }}};
+
+    for (auto pair : palmSetterFunctions) {
+        comms::Option<float> encoderValueOpt = commsController.getSensorValue(
+            comms::MCUID::MCU_PALM, pair.first);
+
+        if (encoderValueOpt.isNone()) {
+            continue;
+        }
+
+        Serial.printf("Encoder %d, value %f\n", pair.first, encoderValueOpt.value());
+        pair.second(encoderValueOpt.value());
+    }
+}
+
+static void updateEncoderOffsets() {
+    static std::map<uint8_t, std::function<void(double)>> palmSetterFunctions = {
+        {6, [](double value) { state_manager.getWrist()->getYaw()->setCurrentPosition(value * M_PI / 180); }}
+        // {6, [](double value) { state_manager.getWrist()->getYaw()->setEncoderOffset(value); }}
+    };
+
+    for (auto pair : palmSetterFunctions) {
+        comms::Option<float> encoderValueOpt = commsController.getSensorValue(
+            comms::MCUID::MCU_PALM, pair.first);
+
+        if (encoderValueOpt.isNone()) {
+            continue;
+        }
+        
+        pair.second(encoderValueOpt.value());
+    }
 }
