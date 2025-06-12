@@ -1,9 +1,8 @@
-#include "Encoder.hpp"
+#include "encoder.hpp"
 
 
 Encoder::Encoder(int cs) :
-    _cs(cs), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE), 
-    _prevRaw(0), _rotationCount(0), _firstReading(true) {
+    _cs(cs), settings(SPI_SPEED, MSBFIRST, ENC_SPI_MODE) {
     pinMode(_cs, OUTPUT);
     digitalWrite(_cs, HIGH);
 }
@@ -15,31 +14,8 @@ void Encoder::beginSPI()
 
 float Encoder::rawToDegree(uint16_t raw)
 {
-    // Threshold for detecting wrapping (3/4 of full range)
-    const uint16_t WRAP_THRESHOLD = 12287;
-    
-    if (!_firstReading) {
-        // Calculate the difference between current and previous reading
-        int32_t diff = (int32_t)raw - (int32_t)_prevRaw;
-        
-        // Check for forward wrap
-        if (diff < -WRAP_THRESHOLD) {
-            _rotationCount++;
-        }
-        // Check for backward wrap
-        else if (diff > WRAP_THRESHOLD) {
-            _rotationCount--;
-        }
-    } else {
-        _firstReading = false;
-    }
-    
-    _prevRaw = raw;
-    
-    // Calculate unwrapped angle
-    float baseAngle = (raw * 360.0) / 16383.0;
-    float unwrappedAngle = baseAngle + (_rotationCount * 360.0);
-    return unwrappedAngle;
+    float angle = (raw * 360.0) / 16383.0;
+    return angle;
 }
 
 uint16_t Encoder::readEncoderRaw()
@@ -64,14 +40,14 @@ uint16_t Encoder::readEncoderRaw()
     // Read diagnostics
     cmd = (0b11<<14) | ENC_DIAAGC;
     digitalWrite(this->_cs, LOW);
-    // uint16_t error = SPI.transfer16(cmd);
+    uint16_t error = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // NOP command
     cmd = (0b11<<14) | ENC_NOP;
     digitalWrite(this->_cs, LOW);
-    // uint16_t diag = SPI.transfer16(cmd);
+    uint16_t diag = SPI.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
 
     // Extract the 14-bit angle value and return it
@@ -83,6 +59,6 @@ float Encoder::readEncoderDeg()
     this->beginSPI();
     uint16_t raw = this->readEncoderRaw();
     SPI.endTransaction();
-    return this->rawToDegree(raw);
-    //return 0.;
+    // return this->rawToDegree(raw);
+    return 0.;
 }

@@ -15,12 +15,17 @@
 
 // SPI mode
 #define ENC_SPI_MODE    SPI_MODE1
+#define SPI_SPEED 1000000
 
 class Encoder {
 private:
     int _cs;            // Chip select pin
-    int _id;            // Encoder ID
     SPISettings settings;
+    
+    // Variables for unwrapped angle tracking
+    uint16_t _prevRaw;
+    int32_t _rotationCount;
+    bool _firstReading;
     
     // Initialize SPI communication
     void beginSPI();
@@ -33,14 +38,13 @@ private:
     
 public:
     // Constructor
-    Encoder(int cs, int id);
+    Encoder(int cs);
     
     // Read encoder value in degrees
     float readEncoderDeg();
     
     // Getters
     int getCS() const { return _cs; }
-    int getID() const { return _id; }
 };
 
 #endif // ENCODER_HPP
