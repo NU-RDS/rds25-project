@@ -3,7 +3,8 @@
 StateManager::StateManager() 
     : wrist(std::make_unique<Wrist>()),
       dexFinger(std::make_unique<DexterousFinger>()),
-      powFinger(std::make_unique<PowerFinger>()) {
+      powFinger(std::make_unique<PowerFinger>()),
+      kinematics(std::make_unique<TendonKinematics>()) {
     
 }
 
@@ -17,8 +18,28 @@ bool StateManager::connectToMCU() {
     return true;
 }
 
-void StateManager::updateState() {
-
+void StateManager::updateState(std::string& serialCommand) {
+    if (checkSerial(serialCommand)) {
+        Serial.printf("[HIGH] Received command: '%s'\n", serialCommand.c_str());
+        
+        uint8_t commandID;
+        std::vector<float> values;
+        
+        if (parseSerialCommand(serialCommand, commandID, values)) {
+            switch(commandID) {
+                case SET_ALL_JOINTS:
+                    this->setJointPositions(kinematics->DegToRad(values[0]), kinematics->DegToRad(values[1]), kinematics->DegToRad(values[2]), kinematics->DegToRad(values[3]), kinematics->DegToRad(values[4]), kinematics->DegToRad(values[5]), kinematics->DegToRad(values[6]));
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            Serial.println("[HIGH] ERROR: Failed to parse command");
+        }
+        
+        // Clear command buffer
+        serialCommand.clear();
+    }
 }
 
 void StateManager::updateGUI() {
@@ -26,41 +47,31 @@ void StateManager::updateGUI() {
 }
 
 void StateManager::controlLoop() {
-    // Update the communication controller to process messages
+    std::vector<double> dexControl = dexFinger->calculateControl();
+    double powControl = powFinger->calculateControl();
+    std::vector<double> wristControl = wrist->calculateControl();
     
+    std::vector<double> motorTorques = kinematics->getMotorTorques({dexControl[0], dexControl[1], dexControl[2], dexControl[3], powControl, wristControl[0], wristControl[1]});
+    // Serial.print("[HIGH] INFO: Motor torques: ");
+    // Serial.print(motorTorques[0]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[1]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[2]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[3]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[4]);
+    // Serial.print(", ");
+    // Serial.print(motorTorques[5]);
+    // Serial.print(", ");
+    // Serial.println(motorTorques[6]);
 }
 
-void StateManager::processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw) {
-    if (message_info.type == comms::MessageContentType::MT_COMMAND) {
-        Serial.println("[HIGH] INFO: Command received.");
-        comms::Result<comms::CommandMessagePayload> cmdRes = comms::CommandMessagePayload::fromRaw(message_raw);
-
-        if (cmdRes.isError()) {
-            COMMS_DEBUG_PRINT_ERROR("Unable to handle command: %s\,", cmdRes.error);
-            return;
-        }
-
-        comms::CommandMessagePayload cmd = cmdRes.value();
-
-        if (cmd.commandID == comms::CommandType::CMD_SENSOR_TOGGLE) {
-            // Update encoder values
-        }
-    }
-    else if (message_info.type == comms::MessageContentType::MT_HEARTBEAT) {
-        Serial.println("[HIGH] INFO: Heartbeat received.");
-    }
-    else if (message_info.type == comms::MessageContentType::MT_ERROR) {
-        Serial.println("[HIGH] ERROR: Error received!");
-    }
-    else {
-        Serial.println("[HIGH] ERROR: Received unknown message!");
-    }
-}
-
-void StateManager::setJointPositions(double wristRoll, double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp) {
-    wrist->setWristOrientation(wristRoll, wristPitch, wristYaw);
-    dexFinger->setDexterousFingerPositions(dexPip, dexDip, dexMcp, dexSplain);
+void StateManager::setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp) {
+    dexFinger->setDexterousFingerPositions(dexPip, dexDip, dexMcp, dexSplay);
     powFinger->setJointAngles(powGrasp);
+    wrist->setWristOrientation(wristPitch, wristYaw);
 }
 
 std::unordered_map<std::string, double> StateManager::getCurrentJointPositions() {
@@ -91,4 +102,8 @@ void StateManager::pauseMovement() {
 
 void StateManager::resumeMovement() {
 
+}
+
+void StateManager::setMovementPhase(MovementPhase phase) {
+    currentMovementPhase = phase;
 }

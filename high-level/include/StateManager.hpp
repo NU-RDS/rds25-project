@@ -1,21 +1,22 @@
 #ifndef STATE_MANAGER_HPP
 #define STATE_MANAGER_HPP
 
+#include <Arduino.h>
 #include <memory>
 #include <string>
 #include <chrono>
 #include <functional>
 
+#include "SerialHelpers.hpp"
+#include "TendonKinematics.hpp"
 #include "PowerFinger.hpp"
 #include "DexterousFinger.hpp"
 #include "Wrist.hpp"
-#include "comms.hpp"
 
 enum MovementPhase {
     IDLE,
-    PAUSED,
-    WRIST_MOVEMENT,
-    FINGER_MOVEMENT,
+    ERROR,
+    MOVING,
     COMPLETE
 };
 
@@ -24,6 +25,7 @@ class StateManager {
         std::unique_ptr<Wrist> wrist;
         std::unique_ptr<DexterousFinger> dexFinger;
         std::unique_ptr<PowerFinger> powFinger;
+        std::unique_ptr<TendonKinematics> kinematics;
         
         // Communication with MCU
         bool connected;
@@ -34,8 +36,6 @@ class StateManager {
         double dt; // Time step in seconds
 
         MovementPhase currentMovementPhase;
-
-        std::function<void(comms::MCUID)> _heartbeatCallback = nullptr;
     
     public:
         StateManager();
@@ -44,19 +44,19 @@ class StateManager {
         // Basic system functions
         bool initialize();
         bool connectToMCU();
-        void updateState();
+        void updateState(std::string& serialCommand);
         void updateGUI();
 
         void controlLoop();
-        void processMessage(const comms::MessageInfo& message_info, const comms::RawCommsMessage& message_raw);
 
         // Subsystem access
         Wrist* getWrist() { return wrist.get(); }
         DexterousFinger* getDexFinger() { return dexFinger.get(); }
         PowerFinger* getPowFinger() { return powFinger.get(); }
+        TendonKinematics* getKinematics() {return kinematics.get(); }
 
         // Joint position setting
-        void setJointPositions(double wristRoll, double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplain, double powGrasp);
+        void setJointPositions(double wristPitch, double wristYaw, double dexPip, double dexDip, double dexMcp, double dexSplay, double powGrasp);
 
         // Get current and desired joint positions
         std::unordered_map<std::string, double> getCurrentJointPositions();
@@ -68,6 +68,7 @@ class StateManager {
         void pauseMovement();
         void resumeMovement();
         void sendTorqueCommands();
+        void setMovementPhase(MovementPhase phase);
         MovementPhase getMovementPhase() const { return currentMovementPhase; }
         bool isMovementComplete() const { return currentMovementPhase == COMPLETE; }
 };

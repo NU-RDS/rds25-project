@@ -1,7 +1,10 @@
 #ifndef POSITIONCONTROL_HPP
 #define POSITIONCONTROL_HPP
 
+#include <Arduino.h>
 #include <map>
+#include <chrono>
+#include <cmath>
 
 #include "Encoder.hpp"
 
@@ -15,29 +18,27 @@ public:
 	enum class PositionType
 	{
 		STEP,
-		SIN
+		SIN,
+		MANUAL
 	};
 
-	PositionControl(float ff, float kp, float ki, float kd, float ks);
+	PositionControl(double kp, double ki, double kd, double ks);
 
-	float forcePID(int encoderCS, int encoderId, PositionType forceType);
+	double positionPD(double desiredPosition, double currentPosition);
 	void positionPrint();
 
-    // Getters
-    float getJointAngle(Encoder& encoder);
-    float getReferencePosition() { return referencePosition; }
-    float getPidPosition() { return resultantPosition; }
-    float nullspaceConversion();
-
 private:
-	float Ff; // feedforwad
-	float Kp; // proportional
-	float Ki; // integral
-	float Kd; // derivative
-    float Ks;
+	double Kp; // proportional
+	double Ki; // integral
+	double Kd; // derivative
+    double Ks;
 
-	float referencePosition; // input joint angle 
-	float resultantPosition; // after PID
+	double prevError;
+	double integralError;
+	double integralCap = 0.25;
+	std::chrono::steady_clock::time_point prevTime;
+
+	PositionType posType;
 
 	void positionGeneration(PositionType positionType, int t); // t for time in sin force function
 };

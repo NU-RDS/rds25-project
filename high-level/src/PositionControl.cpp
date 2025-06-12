@@ -1,86 +1,45 @@
 #include "PositionControl.hpp"
 
-PositionControl::PositionControl(float ff, float kp, float ki, float kd, float ks) :
-    Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
-    referencePosition(0.0f), resultantPosition(0.0f) {}
-
-float PositionControl::getJointAngle(Encoder& encoder)
-{
-    return encoder.readEncoderDeg();
+PositionControl::PositionControl(double kp, double ki, double kd, double ks) : Kp(kp), Ki(ki), Kd(kd), Ks(ks) {
+    PositionControl::posType = PositionType::STEP;
+    prevTime = std::chrono::steady_clock::now();
 }
 
 // NOT IMPLEMENTED 
-void PositionControl::positionGeneration(PositionType positionType, int t) {
-    switch (positionType) {
+void PositionControl::positionGeneration(PositionType posType, int t) {
+    switch (posType) {
         case PositionType::STEP:
             break;
             
         case PositionType::SIN:
             break;
-        
+
+        case PositionType::MANUAL:
+            break;
     }
 }
 
-float PositionControl::forcePID(int encoderCS, int encoderId, PositionControl::PositionType forceType)
-{
-    // Use static maps to track PID state per encoder
-    static std::map<int, float> prevErrMap;
-    static std::map<int, float> intErrMap;
-    static std::map<int, int> timeStepMap;
-    
-    // Initialize if not already present
-    if (prevErrMap.find(encoderId) == prevErrMap.end()) {
-        prevErrMap[encoderId] = 0.0f;
-        intErrMap[encoderId] = 0.0f;
-        timeStepMap[encoderId] = 0;
-    }
-    
-    // Get references to the PID state for this encoder
-    float& prevErr = prevErrMap[encoderId];
-    float& intErr = intErrMap[encoderId];
-    int& timeStep = timeStepMap[encoderId];
+double PositionControl::positionPD(double desiredPosition, double currentPosition) {    
+    auto currentTime = std::chrono::steady_clock::now();
+    double dt = std::chrono::duration<double>(currentTime - prevTime).count();
+    prevTime = currentTime;
 
-    // Generate reference force
-    this->positionGeneration(forceType, timeStep++);
-    
-    // Current force from the encoder
-    Encoder encoder(encoderCS, encoderId);
-    float currentPosition = getJointAngle(encoder);
-    
-    // Error
-    float error = this->referencePosition - currentPosition;
-    intErr += error;
-    
-    // Anti-windup
-    if (intErr > ANTI_WINDUP_P) {
-        intErr = ANTI_WINDUP_P;
-    } else if (intErr < -ANTI_WINDUP_P) {
-        intErr = -ANTI_WINDUP_P;
-    }
-    
-    // Derivative
-    float dErr = error - prevErr;
-    prevErr = error;
-    
-    // PID
-    resultantPosition = Ff * this->referencePosition + Kp * error + Ki * intErr + Kd * dErr;
-    
-    // Saturation limits
-    if (resultantPosition > ROM_MAX) {
-        resultantPosition = ROM_MAX;
-    } else if (resultantPosition < 0.0f) {
-        resultantPosition = 0.0f; 
-    }
-    
-    // Apply null space conversion (probabaly not needed)
-    float motorTorque = this->nullspaceConversion();
-    return motorTorque;
-}
+    // Compute error
+    double error = desiredPosition - currentPosition;
 
-void PositionControl::positionPrint()
-{
-    Serial.print(referencePosition);
-    Serial.print(",");
-    Serial.println(resultantPosition);
-    delay(10);
+    if (integralError < integralCap) {
+        integralError += error * dt;
+    }
+    else {
+        integralError = integralCap;
+    }
+
+    // Compute derivative term
+    double derivative = dt > 0.0 ? (error - prevError) / dt : 0.0;
+    prevError = error;
+
+    // Compute PID output
+    double controlSignal = Kp * error + Ki * integralError + Kd * derivative;
+
+    return controlSignal;
 }

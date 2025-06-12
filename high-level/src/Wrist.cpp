@@ -1,41 +1,44 @@
 #include "Wrist.hpp"
 
 Wrist::Wrist() {
-    Roll = std::make_unique<Joint>("Roll");
-    Pitch = std::make_unique<Joint>("Pitch");
-    Yaw = std::make_unique<Joint>("Yaw");
+    Pitch = std::make_unique<Joint>("Pitch", 2.0, 0.01, 0.5);
+    Yaw = std::make_unique<Joint>("Yaw", 2.0, 0.01, 0.5);
 }
 
 void Wrist::kinematics() {
 
 }
 
-void Wrist::setWristOrientation(double roll_desired, double pitch_desired, double yaw_desired) {
-    Roll->setDesiredPosition(roll_desired);
+void Wrist::setWristOrientation(double pitch_desired, double yaw_desired) {
     Pitch->setDesiredPosition(pitch_desired);
     Yaw->setDesiredPosition(yaw_desired);
 }
 
-void Wrist::sendTorqueCommand(double T_roll, double T_pitch, double T_yaw) {
+void Wrist::sendTorqueCommand(double T_pitch, double T_yaw) {
     // Implement Evan's CAN communication??
 }
 
 const std::unordered_map<std::string, double> Wrist::getDesiredJointAngles() {
-    double roll = Roll->getDesiredPosition();
     double pitch = Pitch->getDesiredPosition();
     double yaw = Yaw->getDesiredPosition();
 
-    std::unordered_map<std::string, double> desired_joints = {{"Roll", roll}, {"Pitch", pitch}, {"Yaw", yaw}};
+    std::unordered_map<std::string, double> desired_joints = {{"Pitch", pitch}, {"Yaw", yaw}};
 
     return desired_joints;
 }
 
 const std::unordered_map<std::string, double> Wrist::getCurrentJointAngles() {
-    double roll = Roll->getCurrentPosition();
     double pitch = Pitch->getCurrentPosition();
     double yaw = Yaw->getCurrentPosition();
 
-    std::unordered_map<std::string, double> current_joints = {{"Roll", roll}, {"Pitch", pitch}, {"Yaw", yaw}};
+    std::unordered_map<std::string, double> current_joints = {{"Pitch", pitch}, {"Yaw", yaw}};
 
     return current_joints;
+}
+
+std::vector<double> Wrist::calculateControl() {
+    double pitch = Pitch->calculateControlSignal();
+    double yaw = Yaw->calculateControlSignal();
+
+    return {yaw, pitch};
 }
