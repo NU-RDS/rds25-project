@@ -8,7 +8,7 @@ Encoder::Encoder(int cs, int id) :
 
 void Encoder::beginSPI()
 {
-    SPI.beginTransaction(settings);
+    SPIx.beginTransaction(settings);
 }
 
 float Encoder::rawToDegree(uint16_t raw)
@@ -25,28 +25,28 @@ uint16_t Encoder::readEncoderRaw()
     // Read angle command
     cmd = (0b11<<14) | ENC_ANGLECOM;
     digitalWrite(this->_cs, LOW);
-    SPI.transfer16(cmd);
+    SPIx.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // Read error flags
     cmd = (0b01<<14) | ENC_ERRFL;
     digitalWrite(this->_cs, LOW);
-    pos_temp = SPI.transfer16(cmd);
+    pos_temp = SPIx.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // Read diagnostics
     cmd = (0b11<<14) | ENC_DIAAGC;
     digitalWrite(this->_cs, LOW);
-    uint16_t error = SPI.transfer16(cmd);
+    uint16_t error = SPIx.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
     delayNanoseconds(400);
 
     // NOP command
     cmd = (0b11<<14) | ENC_NOP;
     digitalWrite(this->_cs, LOW);
-    uint16_t diag = SPI.transfer16(cmd);
+    uint16_t diag = SPIx.transfer16(cmd);
     digitalWrite(this->_cs, HIGH);
 
     // Extract the 14-bit angle value and return it
@@ -57,7 +57,7 @@ float Encoder::readEncoderDeg()
 {
     this->beginSPI();
     uint16_t raw = this->readEncoderRaw();
-    SPI.endTransaction();
+    SPIx.endTransaction();
     return this->rawToDegree(raw);
 }
 

@@ -26,10 +26,10 @@ std::vector<double> TendonKinematics::getMotorTorques(std::vector<double> joint_
     motor_torques[4] = 1/MOTOR_RADIUS * (J_pow * joint_torques[4]);
 
     // Wrist torques
-    motor_torques[5] = 1/R_motor * (R_pow * joint_torques[4] + R_splay * joint_torques[0] + R_mcp * joint_torques[1]
-                                    + R_pip * joint_torques[2] + R_extensor * joint_torques[3]) + joint_torques[5];
-    motor_torques[6] = 1/R_motor * (R_pow * joint_torques[4] + R_splay * joint_torques[0] + R_mcp * joint_torques[1]
-                                    + R_pip * joint_torques[2] + R_extensor * joint_torques[3] + R_yaw * motor_torques[5]) + joint_torques[6];
+    motor_torques[5] = 1/R_motor * (R_pow * motor_torques[4] + R_splay * motor_torques[0] + R_mcp * motor_torques[1]
+                                    + R_pip * motor_torques[2] + R_extensor * motor_torques[3]) + joint_torques[5];
+    motor_torques[6] = 1/R_motor * (R_pow * motor_torques[4] + R_splay * motor_torques[0] + R_mcp * motor_torques[1]
+                                    + R_pip * motor_torques[2] + R_extensor * motor_torques[3] + R_yaw * motor_torques[5]) + joint_torques[6];
 
     // Print calculated motor torques (unmodified)
     // Serial.print("[KINEMATICS] Calculated motor torques: [");
