@@ -20,6 +20,22 @@
 struct ODriveStatus;
 
 // User data structure
+/**
+ * @brief Stores user-related data for an ODrive device.
+ *
+ * This structure maintains the latest received messages and their status flags
+ * for an ODrive device on the CAN bus. It tracks heartbeat, encoder feedback,
+ * and current feedback messages, along with flags indicating whether each type
+ * of message has been received.
+ *
+ * Members:
+ * - last_heartbeat: The most recent heartbeat message received from the ODrive.
+ * - received_heartbeat: True if a heartbeat message has been received.
+ * - last_feedback: The most recent encoder estimates message received.
+ * - received_feedback: True if an encoder feedback message has been received.
+ * - last_current: The most recent current (Iq) message received.
+ * - received_current: True if a current feedback message has been received.
+ */
 struct ODriveUserData {
     Heartbeat_msg_t last_heartbeat;
     bool received_heartbeat = false;

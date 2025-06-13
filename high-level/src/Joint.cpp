@@ -1,5 +1,16 @@
 #include "Joint.hpp"
 
+/**
+ * @brief Constructs a Joint object with the specified name and PID controller gains.
+ *
+ * Initializes the joint's name, sets default values for position, torque, limits, and encoder offset.
+ * Also creates a PositionControl controller with the provided PID gains and a default control period of 1.0.
+ *
+ * @param name The name of the joint.
+ * @param kp Proportional gain for the position controller.
+ * @param ki Integral gain for the position controller.
+ * @param kd Derivative gain for the position controller.
+ */
 Joint::Joint(const std::string& name, const double kp, const double ki, const double kd) {
     this->name = name;
     this->currentPosition = 0.0;
@@ -65,6 +76,15 @@ void Joint::setEncoderOffset(double encoder_offset) {
     this->encoderOffset = encoder_offset;
 }
 
+/**
+ * @brief Calculates the control signal for the joint using a position PD controller.
+ *
+ * This function computes the control signal by invoking the positionPD method
+ * of the associated controller, using the desired and current positions of the joint.
+ * The computed control signal is stored and also returned.
+ *
+ * @return The calculated control signal as a double.
+ */
 double Joint:: calculateControlSignal() {
     controlSignal = controller->positionPD(desiredPosition, currentPosition);
     return controlSignal;

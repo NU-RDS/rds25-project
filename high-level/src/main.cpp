@@ -65,6 +65,22 @@ void setup() {
     state_manager.initialize();
 }
 
+/**
+ * @brief Main control loop for the system, intended to be called repeatedly.
+ *
+ * This function manages periodic control tasks at a fixed rate (100Hz).
+ * It performs the following operations:
+ *   - Handles communication controller tick.
+ *   - Updates the system state based on serial commands.
+ *   - Updates encoder positions.
+ *   - Retrieves and prints current and desired joint angles (pitch and yaw) in a GUI-parsable format.
+ *   - Executes the main control loop for the state manager.
+ *   - Computes and clamps control signals for pitch and yaw motors.
+ *   - Sets motor torque and running status (actual torque commands are commented out).
+ *   - Prints control signals for debugging.
+ *
+ * Timing is managed using a static variable to ensure actions occur at the specified control period.
+ */
 void loop() {
     static unsigned long lastControlTime = 0;
     const unsigned long CONTROL_PERIOD_MS = 10;  // 100Hz control rate

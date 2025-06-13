@@ -1,3 +1,19 @@
+/**
+ * @class Wrist
+ * @brief Represents the wrist mechanism, encapsulating pitch and yaw joints.
+ *
+ * The Wrist class manages two joints (Pitch and Yaw) using unique pointers.
+ * It provides interfaces for kinematics, setting desired orientation, sending torque commands,
+ * and retrieving joint angles.
+ *
+ * Dependencies:
+ * - Arduino.h
+ * - memory
+ * - string
+ * - unordered_map
+ * - Joint.hpp
+ * - RDS_constants.hpp
+ */
 #ifndef WRIST_HPP
 #define WRIST_HPP
 

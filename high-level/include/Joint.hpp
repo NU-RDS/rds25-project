@@ -8,6 +8,41 @@
 
 #include "PositionControl.hpp"
 
+/**
+ * @class Joint
+ * @brief Represents a robotic joint with position control capabilities.
+ *
+ * The Joint class encapsulates the state and control logic for a single robotic joint,
+ * including its name, position, torque command, and associated controller. It provides
+ * methods to get and set joint parameters, as well as to calculate the control signal
+ * required to achieve a desired position.
+ *
+ * @note This class assumes the use of a PositionControl controller for closed-loop control.
+ *
+ * @param std::string name
+ *      The name identifier for the joint.
+ * @param double currentPosition
+ *      The current position of the joint in radians.
+ * @param double desiredPosition
+ *      The target position for the joint in radians.
+ * @param double commandTorque
+ *      The torque command (in Nm) to be sent to the motor control unit (MCU).
+ * @param double controlSignal
+ *      The computed control signal for the joint.
+ * @param double encoderValue
+ *      The raw value from the joint's encoder.
+ * @param double motorValue
+ *      The value representing the motor's state.
+ * @param double encoderOffset
+ *      The offset applied to the encoder value for calibration.
+ * @param double maxLimit
+ *      The maximum allowable position for the joint.
+ * @param double minLimit
+ *      The minimum allowable position for the joint.
+ * @param std::unique_ptr<PositionControl> controller
+ *      The position controller used for closed-loop control of the joint.
+ *
+ */
 class Joint {
     protected:
         std::string name;
