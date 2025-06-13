@@ -50,6 +50,8 @@ J_dex = [ 1.0  -2.0  -1.2  -1.2]
         [ 1.0   2.52  1.2   1.2]
 ```
 
+More information on wrist coupling and power finger can be found in the Mechanical documentation linked below. 
+
 **Motor Torque Calculation:**
 ```
 τ_motor = (1/R_motor) * (J * τ_joint + τ_null)
@@ -178,8 +180,8 @@ Load cell feedback demonstrates:
 - **GUI Applications**: `/GUI/` - Python control interfaces
 
 ### Hardware Documentation
-- **Mechanical Design**: CAD files and assembly drawings
-- **Electrical Schematics**: PCB designs and wiring diagrams
+- **Mechanical Design**: CAD files and assembly drawings [https://docs.google.com/document/d/17M-Oa2aqqSKGwONml3L1aWp2K_8TE4KUtSQWIA2iMCw/edit?tab=t.yf60ihlam0il#heading=h.n3ni8fpki7n9]
+- **Electrical Schematics**: PCB designs and wiring diagrams (found in Electrical Documentation folder in repo)
 - **Calibration Data**: SEA force curves and sensor offsets
 
 ## Getting Started
