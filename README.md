@@ -11,9 +11,9 @@ The RDS 2025 project is a sophisticated robotic hand control system featuring th
 - **Force Control**: Series Elastic Actuators with real-time force feedback
 - **Distributed Architecture**: Multi-MCU system with CAN bus communication
 
-## System Architecture\
+## System Architecture
 
-## Workflow 
+### Workflow 
 
 **[INSERT IMAGE]**
 
@@ -92,7 +92,7 @@ class PositionControl {
     }
 };
 ```
-**INSERT IMAGE INSTEAD OF CODE**
+**[INSERT IMAGE INSTEAD OF CODE]**
 
 
 ### Force Control
@@ -108,7 +108,7 @@ class ForceControl {
 };
 ```
 
-**INSERT IMAGE INSTEAD OF CODE**
+**[INSERT IMAGE INSTEAD OF CODE]**
 
 ## Communication Protocol
 
