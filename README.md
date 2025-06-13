@@ -189,10 +189,12 @@ Load cell feedback demonstrates:
 
 ### Future Enhancements
 1. **Feedforward Control**: Using feedforward + PD control to enhance control of large subsystems
-2. **Motor Drivers with SimpleFOC**: Using custom motor drivers with Arduino-SimpleFOC library
-3. **Integration of Control Loops**: All control loops working in their layer of abstraction together
-4. **Kinematic Integration**: Control of integrated mechanical system with kinematic integration
-5.  **Incremental Testing**: For each hardware design iteration, there should be some testing done on the software side on a small unit/moddule of the hardware before we build the entire thing
+2.  **Gravity Compensation**: Working with mechanical to get a model of the gravity distribution and integrate it into the control loop to improve system stability
+3.  **Zero Impedence Control**: Consider adding zero impedance control mode, which makes it easier to set up based on certain configuration
+4. **Motor Drivers with SimpleFOC**: Using custom motor drivers with Arduino-SimpleFOC library
+5. **Integration of Control Loops**: All control loops working in their layer of abstraction together
+6. **Kinematic Integration**: Control of integrated mechanical system with kinematic integration
+7.  **Incremental Testing**: For each hardware design iteration, there should be some testing done on the software side on a small unit/moddule of the hardware before we build the entire thing
 
 ## Project Documentation
 
