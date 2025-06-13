@@ -5,15 +5,19 @@
 The RDS 2025 project is a sophisticated robotic hand control system featuring three integrated subsystems: a 2-DOF wrist, a 4-DOF dexterous finger, and a 1-DOF power finger. The system employs Series Elastic Actuators (SEAs) for compliant control, tendon-driven mechanisms for compact design, and distributed control architecture across multiple microcontrollers.
 
 ### Key Features
-- **Wrist Control**: 2-DOF (pitch and yaw) with ±70°/±30° range of motion
-- **Dexterous Finger**: 4-DOF (PIP, DIP, MCP, Splay) with coupled tendon actuation
+- **Wrist Control**: 2-DOF (pitch and yaw) 
+- **Dexterous Finger**: 4-DOF (PIP, DIP, MCP, Splay) with coupled tendon actuation between PIP and MCP
 - **Power Finger**: 1-DOF grasp mechanism with high force capability
 - **Force Control**: Series Elastic Actuators with real-time force feedback
 - **Distributed Architecture**: Multi-MCU system with CAN bus communication
 
-## System Architecture
+## System Architecture\
 
-### Control Hierarchy
+## Workflow 
+
+**[INSERT IMAGE]**
+
+### Repo Structure
 ```
 High-Level Controller (Teensy 4.1)
 ├── State Management & Coordination
@@ -36,7 +40,7 @@ Palm Controller (Teensy 4.0)
 ### Mathematical Foundation
 
 #### Tendon Kinematics
-The system uses a Jacobian-based approach for tendon-to-joint mapping:
+The system uses a Jacobian-based approach for tendon-to-joint mapping, with each motor's velocity mapped to its respective actuating joint's velocity through a tendon routing matrix, an example for which is shown in dex finger below:
 
 **Dexterous Finger Jacobian:**
 ```
@@ -65,35 +69,12 @@ SEA_3: F = 0.972 * θ - 0.00432 * θ²     (Quadratic)
 SEA_4: F = 0.829 * θ - 0.00714 * θ²     (Quadratic)
 ```
 
-#### Wrist Coupling Mechanism
-The wrist employs a differential mechanism where:
-```
-θ_pitch = (R_motor / R_pitch) * θ_motor_pitch
-θ_yaw = (R_motor * θ_motor_yaw - R_pitch * θ_pitch) / R_yaw
-```
-
 ## Hardware Integration
 
 ### Sensor Systems
 - **Encoders**: AS5047P magnetic encoders (14-bit resolution)
-- **Force Feedback**: NAU7802 load cells with custom calibration
+- **Force Feedback**: SEA measurements taken through encoder ans spring calibrated through NAU7802 load cells
 - **Motor Control**: ODrive motor controllers via CAN bus
-
-### Range of Motion Specifications
-```cpp
-// Dexterous Finger
-DIP:   0° to 90°
-PIP:   0° to 110°
-MCP:   -15° to 90°
-Splay: -15° to 15°
-
-// Power Finger
-Grasp: 0° to 120°
-
-// Wrist
-Pitch: -70° to 60°
-Yaw:   -30° to 20°
-```
 
 ## Control Implementation
 
@@ -111,6 +92,8 @@ class PositionControl {
     }
 };
 ```
+**INSERT IMAGE INSTEAD OF CODE**
+
 
 ### Force Control
 SEA-based force control with feedforward compensation:
@@ -124,6 +107,8 @@ class ForceControl {
     }
 };
 ```
+
+**INSERT IMAGE INSTEAD OF CODE**
 
 ## Communication Protocol
 
@@ -176,6 +161,9 @@ Each SEA was individually calibrated to determine force-deflection relationships
 - **Control frequency**: 100Hz update rate
 
 ### Force Control Validation
+
+**INSERT GRAPHS**
+
 Load cell feedback demonstrates:
 - **Force accuracy**: ±0.1N at 5N maximum
 - **Response time**: <100ms for force steps
