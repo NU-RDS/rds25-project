@@ -100,15 +100,3 @@ float Encoder::readEncoderDeg()
     SPIx.endTransaction();
     return this->rawToDegree(raw);
 }
-
-bool Encoder::initialize() {
-    return true;
-}
-
-float Encoder::read() {
-    return this->readEncoderDeg();
-}
-
-void Encoder::cleanup() {
-    // nothing
-}
