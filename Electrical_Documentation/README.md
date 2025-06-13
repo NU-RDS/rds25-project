@@ -142,7 +142,7 @@ What we made!
 | Component                  | Status / Result                                              |
 |---------------------------|--------------------------------------------------------------|
 | [Motor Driver & Logic/Control](MotorDriver.md) | Charlie's custom GaNFET motor driver, with 2x 3 phases |
-| [Power Distribution](PD.md)        | Han's custom PCB for power distribution               |
+| Power Distribution        | Han's custom PCB for power distribution               |
 | [Palm Board ](PalmBoard.md)     | Han's custom PCB with joint encoders                   |
 | [Logic / Control](DaughterBoard.md)              | Caroline's custom PCB with motor encoders              |
 | Motor Sensing                   | Jack's custom encoder boards (2 designs)               |
