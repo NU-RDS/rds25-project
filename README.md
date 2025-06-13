@@ -37,6 +37,14 @@ Palm Controller (Teensy 4.0)
 └── Joint Angle Feedback
 ```
 
+### System Overview
+-  **User Interface**: handling user input (PID gains, reference type, plotter & logger) for control and testing 
+-  **High-level MCU**: responsible for parsing commands, kinematics calculation, and position PID control; will send joint torque commands to **low-level MCU**
+-  **Low-level MCU**: responsible for inner force control loop with PID and tendon force calculation with SEA modules; will drive the motor with the motor driver board (in this case ODrive Pro) by sending current/torque command
+-  **Sensor Board**: gathering joint sensor information to give it to **high-level MCU** for kinematics calculation
+  
+![alt text](figures-videos/image8.png)
+
 ### Mathematical Foundation
 
 #### Tendon Kinematics
@@ -82,12 +90,6 @@ Where:
 The spring characterization for all the SEAs can be found in the references below.
 
 ## Hardware Integration
-
-### System Architechture 
--  **User Interface**: handling user input (PID gains, reference type, plotter & logger) for control and testing 
--  **High-level MCU**: responsible for parsing commands, kinematics calculation, and position PID control; will send joint torque commands to **low-level MCU**
--  **Low-level MCU**: responsible for inner force control loop with PID and tendon force calculation with SEA modules; will drive the motor with the motor driver board (in this case ODrive Pro) by sending current/torque command
--  **Sensor Board**: gathering joint sensor information to give it to **high-level MCU** for kinematics calculation
 
 ### Sensor Systems
 - **Encoders**: AS5047P magnetic encoders (14-bit resolution)
