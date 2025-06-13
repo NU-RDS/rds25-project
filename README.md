@@ -15,7 +15,7 @@ The RDS 2025 project is a sophisticated robotic hand control system featuring th
 
 ### Workflow 
 
-![alt text](figures/image.png)
+![alt text](figures-videos/image.png)
 
 ### Repo Structure
 ```
@@ -81,12 +81,12 @@ SEA_4: F = 0.829 * θ - 0.00714 * θ²     (Quadratic)
 ### Position Control
 The system implements cascaded PD control with anti-windup:
 
-![alt text](figures/image1.png)
+![alt text](figures-videos/image1.png)
 
 ### Force Control
 SEA-based force control with PD gains:
 
-![alt text](figures/image2.png)
+![alt text](figures-videos/image2.png)
 
 ## Communication Protocol
 
@@ -132,15 +132,15 @@ def plot_recorded_data(self):
 Each SEA was individually calibrated to determine force-deflection relationships:
 - **Linear SEAs**: Simple proportional relationship (SEA_2, SEA_5, SEA_6)
 
-![alt text](figures/image3.png)
+![alt text](figures-videos/image3.png)
 
 - **Nonlinear SEAs**: Quadratic compensation required (SEA_3, SEA_4, SEA_7, SEA_8)
 
-![alt text](figures/image4.png)
+![alt text](figures-videos/image4.png)
 
 ### Force Control Validation
 
-![alt text](figures/image5.png)
+![alt text](figures-videos/image5.png)
 
 Load cell feedback demonstrates:
 - **Force accuracy**: ±0.1N at 5N maximum
