@@ -58,8 +58,8 @@ More information on wrist coupling and power finger can be found in the Mechanic
 ```
 
 Where:
-- R_motor = 5.0 mm (motor pulley radius)
-- τ_null provides null-space control for tendon pretension
+- `R_motor = 5.0 mm` (motor pulley radius)
+- `τ_null` provides null-space control for tendon pretension
 
 #### Series Elastic Actuator (SEA) Calibration
 Force-deflection relationships were experimentally determined for each SEA:
@@ -78,6 +78,8 @@ F_SEA4 = 0.829 × θ - 0.00714 × θ²
 Where:
 - F is the force in Newtons (N)
 - θ is the angular deflection in degree (deg)
+
+The spring characterization for all the SEAs can be found in the references below.
 
 ## Hardware Integration
 
@@ -124,6 +126,8 @@ A comprehensive Tkinter-based GUI provides:
 - Force/position data recording
 - System monitoring and diagnostics
 - Preset hand configurations
+
+![](figures-videos/image7.png)
 
 ### Data Visualization
 ```python
@@ -191,8 +195,8 @@ Load cell feedback demonstrates:
 
 ### Reference Documentation
 - **[Mechanical Documentation](https://docs.google.com/document/d/17M-Oa2aqqSKGwONml3L1aWp2K_8TE4KUtSQWIA2iMCw/edit?tab=t.yf60ihlam0il#heading=h.n3ni8fpki7n9)**: Specifications, CAD files, assembly drawings, kinematics
-- **Electrical Schematics**: PCB designs and wiring diagrams (found in Electrical Documentation folder in repo)
-- **Calibration Data**: SEA force curves and sensor offsets
+- **[Electrical Schematics](https://github.com/NU-RDS/rds25-project/blob/d32c9dea3d71abec86d8118c2d73201e1b604199/Electrical_Documentation/README.md)**: PCB designs and wiring diagrams (found in Electrical Documentation folder in repo)
+- **[Calibration Data](https://docs.google.com/spreadsheets/d/170EN8GTMZlCyYZjw70axoC4KJDlu1CnwCoCHKkFP4lc/edit?usp=sharing)**: SEA force curves and sensor offsets
 
 ## Getting Started
 
