@@ -42,7 +42,8 @@ Palm Controller (Teensy 4.0)
 -  **High-level MCU**: responsible for parsing commands, kinematics calculation, and position PID control; will send joint torque commands to **low-level MCU**
 -  **Low-level MCU**: responsible for inner force control loop with PID and tendon force calculation with SEA modules; will drive the motor with the motor driver board (in this case ODrive Pro) by sending current/torque command
 -  **Palm Board/Sensor Board**: gathering joint sensor information to give it to **high-level MCU** for kinematics calculation
-  
+-  **Communication Library**: handling CAN bus communication between all the MCUs, designed for our original architecture with high-level and low-level controllers, but can be used for any other architecture as well. Stored in separate repository: [rds25-comms](https://github.com/NU-RDS/rds25-comms) to use across the `High-Level`, `Low-Level`, and `Palm` controllers
+
 ![alt text](figures-videos/image8.png)
 
 ### Mathematical Foundation
@@ -120,11 +121,20 @@ Command Examples:
 30                                      // Get system status
 ```
 
-### CAN Bus Architecture
+### CAN Bus Communication
+The system uses CAN bus for inter-controller communication:
 - **Baud Rate**: 250 kbps
 - **High-Level**: Joint coordination and state management
 - **Low-Level**: Motor control and sensor feedback
 - **Palm**: Multi-encoder data acquisition
+
+To manage this communication, we use a combination of the `ODrive` library for Teensy and our custom `rds25-comms` library, which provides a simple interface for sending and receiving commands across the CAN bus.
+
+For speaking to motor controllers, we use the `ODrive` library, which provides a high-level interface for controlling motors via CAN bus. The library allows us to set motor parameters, read encoder values, and control motor currents.
+
+For communication between the various other controllers, we use our custom `rds25-comms` library. This library provides a simple interface for sending and receiving commands across the CAN bus, managing heartbeats, and handling errors. It allows us to easily send commands to the high-level controller, low-level controllers, and palm controller, ensuring that all components of the system can communicate effectively.
+
+`rds25-comms` documentation and reflections can be found in the [rds25-comms repository](https://github.com/NU-RDS/rds25-comms).
 
 ## GUI and Monitoring
 
@@ -203,12 +213,14 @@ Load cell feedback demonstrates:
 - **Low-Level Control**: `/low-level/src/` - Force control and motor interfaces  
 - **Palm Interface**: `/palm/src/` - Multi-encoder sensor reading
 - **GUI Applications**: `/GUI/` - Python control interfaces
+- **Communication Library**: [rds25-comms](https://github.com/NU-RDS/rds25-comms) - For CAN bus communication and command parsing
 
 ### Reference Documentation
 - **[Mechanical Documentation](https://docs.google.com/document/d/17M-Oa2aqqSKGwONml3L1aWp2K_8TE4KUtSQWIA2iMCw/edit?tab=t.yf60ihlam0il#heading=h.n3ni8fpki7n9)**: Specifications, CAD files, assembly drawings, kinematics
 - **[Electrical Schematics](https://github.com/NU-RDS/rds25-project/blob/d32c9dea3d71abec86d8118c2d73201e1b604199/Electrical_Documentation/README.md)**: PCB designs and wiring diagrams (found in Electrical Documentation folder in repo)
 - **[Calibration Data](https://docs.google.com/spreadsheets/d/170EN8GTMZlCyYZjw70axoC4KJDlu1CnwCoCHKkFP4lc/edit?usp=sharing)**: SEA force curves and sensor offsets
 - **[Demos](https://drive.google.com/drive/folders/15svgBUCpVMmK7HvqHArqw5j0bLyojhVw?usp=drive_link)**: all the photos and videos taken during testing
+- **[rds25-comms Documentation](https://github.com/NU-RDS/rds25-comms)**: Documentation for the CAN bus communication library, found in the readme.
 
 ## Getting Started
 
