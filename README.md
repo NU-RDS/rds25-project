@@ -43,33 +43,35 @@ Palm Controller (Teensy 4.0)
 The system uses a Jacobian-based approach for tendon-to-joint mapping, with each motor's velocity mapped to its respective actuating joint's velocity through a tendon routing matrix, an example for which is shown in dex finger below:
 
 **Dexterous Finger Jacobian:**
-```
-J_dex = [ 1.0  -2.0  -1.2  -1.2]
-        [-1.0   0.0   0.0   0.0]
-        [-1.0   2.0   1.2   1.2]
-        [ 1.0   2.52  1.2   1.2]
-```
+$$J_{dex} = \begin{bmatrix}
+1.0 & -2.0 & -1.2 & -1.2 \\
+-1.0 & 0.0 & 0.0 & 0.0 \\
+-1.0 & 2.0 & 1.2 & 1.2 \\
+1.0 & 2.52 & 1.2 & 1.2
+\end{bmatrix}$$
 
 More information on wrist coupling and power finger can be found in the Mechanical documentation linked below. 
 
 **Motor Torque Calculation:**
-```
-τ_motor = (1/R_motor) * (J * τ_joint + τ_null)
-```
+$$\tau_{motor} = \frac{1}{R_{motor}} \cdot (J \cdot \tau_{joint} + \tau_{null})$$
 
 Where:
-- `R_motor = 5.0mm` (motor pulley radius)
-- `τ_null` provides null-space control for tendon pretension
+- $R_{motor} = 5.0$ mm (motor pulley radius)
+- $\tau_{null}$ provides null-space control for tendon pretension
 
 #### Series Elastic Actuator (SEA) Calibration
 Force-deflection relationships were experimentally determined for each SEA:
 
-```cpp
-// Example SEA characteristics
-SEA_2: F = 0.206 * θ                    (Linear)
-SEA_3: F = 0.972 * θ - 0.00432 * θ²     (Quadratic)
-SEA_4: F = 0.829 * θ - 0.00714 * θ²     (Quadratic)
-```
+**Linear SEAs:**
+$$F_{SEA2} = 0.206\theta$$
+
+**Nonlinear SEAs:**
+$$F_{SEA3} = 0.972\theta - 0.00432\theta^2$$
+$$F_{SEA4} = 0.829\theta - 0.00714\theta^2$$
+
+Where:
+- $F$ is the force in Newtons (N)
+- $\theta$ is the angular deflection in degree (deg)
 
 ## Hardware Integration
 
@@ -140,7 +142,7 @@ Each SEA was individually calibrated to determine force-deflection relationships
 
 ![alt text](figures-videos/image4.png)
 
-Indexing of SEAs in comparison to mechanical convention can be found here: [https://docs.google.com/spreadsheets/d/170EN8GTMZlCyYZjw70axoC4KJDlu1CnwCoCHKkFP4lc/edit?gid=0#gid=0]
+Indexing of SEAs in comparison to mechanical convention can be found here: [SEA Indexing](https://docs.google.com/spreadsheets/d/170EN8GTMZlCyYZjw70axoC4KJDlu1CnwCoCHKkFP4lc/edit?gid=0#gid=0)
 
 ### Force Control Validation
 
@@ -181,8 +183,8 @@ Load cell feedback demonstrates:
 - **Palm Interface**: `/palm/src/` - Multi-encoder sensor reading
 - **GUI Applications**: `/GUI/` - Python control interfaces
 
-### Hardware Documentation
-- **Mechanical Design**: CAD files and assembly drawings [https://docs.google.com/document/d/17M-Oa2aqqSKGwONml3L1aWp2K_8TE4KUtSQWIA2iMCw/edit?tab=t.yf60ihlam0il#heading=h.n3ni8fpki7n9]
+### Reference Documentation
+- **[Mechanical Documentation](https://docs.google.com/document/d/17M-Oa2aqqSKGwONml3L1aWp2K_8TE4KUtSQWIA2iMCw/edit?tab=t.yf60ihlam0il#heading=h.n3ni8fpki7n9)**: Specifications, CAD files, assembly drawings, kinematics
 - **Electrical Schematics**: PCB designs and wiring diagrams (found in Electrical Documentation folder in repo)
 - **Calibration Data**: SEA force curves and sensor offsets
 
