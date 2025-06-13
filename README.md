@@ -15,7 +15,7 @@ The RDS 2025 project is a sophisticated robotic hand control system featuring th
 
 ### Workflow 
 
-**[INSERT IMAGE]**
+![alt text](figures/image.png)
 
 ### Repo Structure
 ```
@@ -79,36 +79,14 @@ SEA_4: F = 0.829 * θ - 0.00714 * θ²     (Quadratic)
 ## Control Implementation
 
 ### Position Control
-The system implements cascaded PID control with anti-windup:
+The system implements cascaded PD control with anti-windup:
 
-```cpp
-class PositionControl {
-    double positionPD(double desired, double current) {
-        double error = desired - current;
-        double integral = (integralError < integralCap) ? 
-                         integralError + error * dt : integralCap;
-        double derivative = (error - prevError) / dt;
-        return Kp * error + Ki * integral + Kd * derivative;
-    }
-};
-```
-**[INSERT IMAGE INSTEAD OF CODE]**
-
+![alt text](figures/image1.png)
 
 ### Force Control
-SEA-based force control with feedforward compensation:
+SEA-based force control with PD gains:
 
-```cpp
-class ForceControl {
-    float forcePID(float motor_angle, float sea_angle) {
-        float force_actual = encoderToForce(motor_angle, sea_angle);
-        float error = reference_force - force_actual;
-        return Ff * reference_force + Kp * error + Ki * integral + Kd * derivative;
-    }
-};
-```
-
-**[INSERT IMAGE INSTEAD OF CODE]**
+![alt text](figures/image2.png)
 
 ## Communication Protocol
 
@@ -153,16 +131,16 @@ def plot_recorded_data(self):
 ### SEA Force Characterization
 Each SEA was individually calibrated to determine force-deflection relationships:
 - **Linear SEAs**: Simple proportional relationship (SEA_2, SEA_5, SEA_6)
+
+![alt text](figures/image3.png)
+
 - **Nonlinear SEAs**: Quadratic compensation required (SEA_3, SEA_4, SEA_7, SEA_8)
 
-### Position Control Performance
-- **Steady-state accuracy**: ±0.5° typical
-- **Settling time**: <200ms for 30° step input
-- **Control frequency**: 100Hz update rate
+![alt text](figures/image4.png)
 
 ### Force Control Validation
 
-**INSERT GRAPHS**
+![alt text](figures/image5.png)
 
 Load cell feedback demonstrates:
 - **Force accuracy**: ±0.1N at 5N maximum
@@ -183,12 +161,13 @@ Load cell feedback demonstrates:
 2. **Calibration Complexity**: Each SEA requires individual characterization
 3. **Range Limitations**: Some joints have restricted ROM due to mechanical constraints
 4. **Force Limits**: Current SEA design limits maximum force output
+5. **Hardware Configuration**: Better architecture design to account for changes in hardware
 
 ### Future Enhancements
-1. **Adaptive Control**: Implement learning algorithms for improved performance
-2. **Vision Integration**: Add camera feedback for closed-loop manipulation
-3. **Tactile Sensing**: Integrate fingertip force/tactile sensors
-4. **Machine Learning**: Use neural networks for complex manipulation tasks
+1. **Feedforward Control**: Using feedforward + PD control to enhance control of large subsystems
+2. **Motor Drivers with SimpleFOC**: Using custom motor drivers with Arduino-SimpleFOC library
+3. **Integration of Control Loops**: All control loops working in their layer of abstraction together
+4. **Kinematic Integration**: Control of integrated mechanical system with kinematic integration
 
 ## Project Documentation
 
@@ -203,11 +182,6 @@ Load cell feedback demonstrates:
 - **Electrical Schematics**: PCB designs and wiring diagrams
 - **Calibration Data**: SEA force curves and sensor offsets
 
-### Test Results
-- **Control Performance**: Step response and frequency analysis
-- **Force Validation**: Load cell calibration and accuracy testing
-- **System Integration**: End-to-end manipulation demonstrations
-
 ## Getting Started
 
 ### Prerequisites
@@ -216,7 +190,7 @@ Load cell feedback demonstrates:
 - CAN bus hardware (ODrive controllers)
 
 ### Quick Start
-1. **Hardware Setup**: Connect encoders, load cells, and CAN devices
+1. **Hardware Setup**: Connect encoders, load cells, and CAN devices according to electrical architecture
 2. **Firmware Upload**: Flash appropriate code to each Teensy controller
 3. **Calibration**: Run encoder offset and SEA force calibration procedures
 4. **GUI Launch**: Execute `python GUI/PhaniGUI.py` for system control
