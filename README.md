@@ -41,7 +41,7 @@ Palm Controller (Teensy 4.0)
 -  **User Interface**: handling user input (PID gains, reference type, plotter & logger) for control and testing 
 -  **High-level MCU**: responsible for parsing commands, kinematics calculation, and position PID control; will send joint torque commands to **low-level MCU**
 -  **Low-level MCU**: responsible for inner force control loop with PID and tendon force calculation with SEA modules; will drive the motor with the motor driver board (in this case ODrive Pro) by sending current/torque command
--  **Sensor Board**: gathering joint sensor information to give it to **high-level MCU** for kinematics calculation
+-  **Palm Board/Sensor Board**: gathering joint sensor information to give it to **high-level MCU** for kinematics calculation
   
 ![alt text](figures-videos/image8.png)
 
@@ -205,6 +205,7 @@ Load cell feedback demonstrates:
 - **[Mechanical Documentation](https://docs.google.com/document/d/17M-Oa2aqqSKGwONml3L1aWp2K_8TE4KUtSQWIA2iMCw/edit?tab=t.yf60ihlam0il#heading=h.n3ni8fpki7n9)**: Specifications, CAD files, assembly drawings, kinematics
 - **[Electrical Schematics](https://github.com/NU-RDS/rds25-project/blob/d32c9dea3d71abec86d8118c2d73201e1b604199/Electrical_Documentation/README.md)**: PCB designs and wiring diagrams (found in Electrical Documentation folder in repo)
 - **[Calibration Data](https://docs.google.com/spreadsheets/d/170EN8GTMZlCyYZjw70axoC4KJDlu1CnwCoCHKkFP4lc/edit?usp=sharing)**: SEA force curves and sensor offsets
+- **[Demos](https://drive.google.com/drive/folders/15svgBUCpVMmK7HvqHArqw5j0bLyojhVw?usp=drive_link)**: all the photos and videos taken during testing
 
 ## Getting Started
 
