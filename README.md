@@ -43,35 +43,41 @@ Palm Controller (Teensy 4.0)
 The system uses a Jacobian-based approach for tendon-to-joint mapping, with each motor's velocity mapped to its respective actuating joint's velocity through a tendon routing matrix, an example for which is shown in dex finger below:
 
 **Dexterous Finger Jacobian:**
-$$J_{dex} = \begin{bmatrix}
-1.0 & -2.0 & -1.2 & -1.2 \\
--1.0 & 0.0 & 0.0 & 0.0 \\
--1.0 & 2.0 & 1.2 & 1.2 \\
-1.0 & 2.52 & 1.2 & 1.2
-\end{bmatrix}$$
+```
+J_dex = [ 1.0  -2.0  -1.2  -1.2]
+        [-1.0   0.0   0.0   0.0]
+        [-1.0   2.0   1.2   1.2]
+        [ 1.0   2.52  1.2   1.2]
+```
 
 More information on wrist coupling and power finger can be found in the Mechanical documentation linked below. 
 
 **Motor Torque Calculation:**
-$$\tau_{motor} = \frac{1}{R_{motor}} \cdot (J \cdot \tau_{joint} + \tau_{null})$$
+```
+τ_motor = (1/R_motor) × (J × τ_joint + τ_null)
+```
 
 Where:
-- $R_{motor} = 5.0$ mm (motor pulley radius)
-- $\tau_{null}$ provides null-space control for tendon pretension
+- R_motor = 5.0 mm (motor pulley radius)
+- τ_null provides null-space control for tendon pretension
 
 #### Series Elastic Actuator (SEA) Calibration
 Force-deflection relationships were experimentally determined for each SEA:
 
 **Linear SEAs:**
-$$F_{SEA2} = 0.206\theta$$
+```
+F_SEA2 = 0.206 × θ
+```
 
 **Nonlinear SEAs:**
-$$F_{SEA3} = 0.972\theta - 0.00432\theta^2$$
-$$F_{SEA4} = 0.829\theta - 0.00714\theta^2$$
+```
+F_SEA3 = 0.972 × θ - 0.00432 × θ²
+F_SEA4 = 0.829 × θ - 0.00714 × θ²
+```
 
 Where:
-- $F$ is the force in Newtons (N)
-- $\theta$ is the angular deflection in degree (deg)
+- F is the force in Newtons (N)
+- θ is the angular deflection in degree (deg)
 
 ## Hardware Integration
 
