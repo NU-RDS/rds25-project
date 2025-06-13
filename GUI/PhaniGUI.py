@@ -390,6 +390,33 @@ class JointControlFrame(ttk.Frame):
 
 
 class RDSHandGUI:
+    """
+    @brief Graphical User Interface (GUI) for controlling the RDS Hand and recording pitch/yaw data.
+    This class implements a comprehensive Tkinter-based GUI for the RDS Hand system, providing features for serial communication, joint control, system commands, data recording, and monitoring. It supports real-time control and feedback for multiple joints, emergency operations, hand presets, and data analysis tools for pitch/yaw recording.
+    @details
+    The RDSHandGUI class organizes the interface into multiple tabs:
+    - Connection: Serial port selection and connection management.
+    - Joint Control: Interactive controls for all hand joints, including wrist, dexterous, and power fingers.
+    - System Control: Emergency stop/clear, hand presets, and status queries.
+    - Data Recording: Tools for recording, plotting, saving, and clearing pitch/yaw data, as well as running step and sine wave tests.
+    - Monitoring: Real-time message log from the MCU and system.
+    The GUI supports:
+    - Sending all joint positions in a single optimized command.
+    - Recording and analyzing pitch/yaw data with plotting and saving capabilities.
+    - Parsing and displaying feedback from the MCU, including joint positions and angles.
+    - Emergency stop and recovery.
+    - Preset loading and direct preset commands.
+    @note
+    - Requires the SerialCommunicator, JointControlFrame, DataRecorder, RDSConstants, and CommandID classes/modules.
+    - Designed for extensibility and real-time operation.
+    - Data recording is focused on wrist pitch and yaw joints.
+    @see SerialCommunicator
+    @see JointControlFrame
+    @see DataRecorder
+    @see RDSConstants
+    @see CommandID
+
+    """
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("RDS Hand Control - Enhanced with Pitch/Yaw Recording")
