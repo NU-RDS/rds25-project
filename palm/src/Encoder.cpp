@@ -1,5 +1,14 @@
 #include "Encoder.hpp"
 
+/**
+ * @brief Constructs an Encoder object with specified chip select pin and identifier.
+ *
+ * Initializes the SPI settings for the encoder, sets the chip select (CS) pin as output,
+ * and sets it to HIGH (inactive state).
+ *
+ * @param cs The chip select (CS) pin number used to communicate with the encoder via SPI.
+ * @param id The unique identifier for this encoder instance.
+ */
 Encoder::Encoder(int cs, int id) : 
     _cs(cs), _id(id), settings(500000, MSBFIRST, ENC_SPI_MODE) {
     pinMode(_cs, OUTPUT);
@@ -11,12 +20,35 @@ void Encoder::beginSPI()
     SPIx.beginTransaction(settings);
 }
 
+/**
+ * @brief Converts a raw encoder value to degrees.
+ *
+ * This function takes a 14-bit raw value from an encoder (range: 0 to 16383)
+ * and converts it to an angle in degrees (range: 0.0 to 360.0).
+ *
+ * @param raw The raw 14-bit encoder value.
+ * @return The corresponding angle in degrees.
+ */
 float Encoder::rawToDegree(uint16_t raw)
 {
     float angle = (raw * 360.0) / 16383.0;
     return angle;
 }
 
+/**
+ * @brief Reads the raw 14-bit angle value from the encoder via SPI.
+ *
+ * This function communicates with the encoder using SPI to retrieve the current angle,
+ * error flags, and diagnostic information. It sends specific commands to the encoder,
+ * waits for the required timing between transactions, and extracts the 14-bit angle value
+ * from the received data.
+ *
+ * @note The function assumes that the SPI interface and chip select pin have been properly
+ *       initialized. Timing requirements between SPI transactions are handled with
+ *       delayNanoseconds.
+ *
+ * @return uint16_t The raw 14-bit angle value read from the encoder.
+ */
 uint16_t Encoder::readEncoderRaw()
 {
     uint16_t pos_temp;
@@ -53,6 +85,14 @@ uint16_t Encoder::readEncoderRaw()
     return pos_temp & 0b11111111111111;
 }
 
+/**
+ * @brief Reads the current encoder position in degrees.
+ *
+ * Initiates an SPI transaction to read the raw encoder value,
+ * ends the SPI transaction, and converts the raw value to degrees.
+ *
+ * @return The current encoder position in degrees as a float.
+ */
 float Encoder::readEncoderDeg()
 {
     this->beginSPI();

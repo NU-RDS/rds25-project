@@ -21,6 +21,14 @@
  #define ENC_SPI_MODE SPI_MODE1
  #define SPI_CLOCK_SPEED 1000000
  
+/**
+ * @class Encoder
+ * @brief Handles SPI communication with a rotary encoder and provides methods to read its value.
+ *
+ * This class manages the SPI interface to communicate with a rotary encoder device.
+ * It allows initialization of the SPI bus, reading raw encoder values, and converting
+ * those values to degrees.
+ */
  class Encoder
  {
  private:
