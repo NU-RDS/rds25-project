@@ -140,6 +140,8 @@ Each SEA was individually calibrated to determine force-deflection relationships
 
 ![alt text](figures-videos/image4.png)
 
+Indexing of SEAs in comparison to mechanical convention can be found here: [https://docs.google.com/spreadsheets/d/170EN8GTMZlCyYZjw70axoC4KJDlu1CnwCoCHKkFP4lc/edit?gid=0#gid=0]
+
 ### Force Control Validation
 
 ![alt text](figures-videos/image5.png)
