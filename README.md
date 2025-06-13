@@ -192,6 +192,7 @@ Load cell feedback demonstrates:
 2. **Motor Drivers with SimpleFOC**: Using custom motor drivers with Arduino-SimpleFOC library
 3. **Integration of Control Loops**: All control loops working in their layer of abstraction together
 4. **Kinematic Integration**: Control of integrated mechanical system with kinematic integration
+5.  **Incremental Testing**: For each hardware design iteration, there should be some testing done on the software side on a small unit/moddule of the hardware before we build the entire thing
 
 ## Project Documentation
 
