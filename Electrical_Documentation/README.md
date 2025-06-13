@@ -10,8 +10,8 @@ Welcome to the final documentation portal for RDS 2025 Electrical Team. This wik
 |-------------------------------------|-------------------------------------------------------------|
 | [1. Original Architecture](#1-original-architecture)     | Initial ebedded system design, the primary driver of electrical hardware decisions |
 | [2. Existing Tooling](#2-existing-tooling)               | The motor drivers, position sensors, MCU, and power domain tools alreafy in place as of 1 April 2025 |
-| [3. Project Goals](#3-project-goals)                     | The Design Parameters, goals, plans, and backup plans we agreed upon for Spring quarter '25    |
-| [4. Project Plans and Backup Plans](#4-project-plans-and-backup-plans) 
+| [3. Project Goals](#3-project-goals)                     | The Design Parameters and goals we agreed upon for Spring quarter '25    |
+| [4. Project Plans and Backup Plans](#4-project-plans-and-backup-plans)  | The  plans and backup plans we agreed upon for Spring quarter '25    |
 | [5. Project Outcome](#5-project-outcome)                 | Summary of results, deliverables, and performance           |
 | [6. Issues and Painpoints](#6-issues-and-painpoints)     | Technical and procedural blockers encountered, and how we overcame them |
 | [7. Future Work](#7-future-work)                         | Suggestions for extending and improving the project         |
@@ -96,7 +96,7 @@ The existing tooling had several known drawbacks.
 |----------------|----------------------------|
 |ODrive |Finicky SPI connectors, Exclusive support list for peripherals, Wasted Z space, Limited power output, Only drives one motor |
 |Ivor's Boards | No Logic domain |
-|Teensy 4.1 |Large Footprint, finnicky readily accept wire harnesses |
+|Teensy 4.1 |Large Footprint, finnicky connectora for wire harnesses |
 |RDS '24 PDU |Separate from other boards, does not readily accept wire harnesses |
 |Prefabbed encoders|Large footprint, does not readily accept wire harnesses |
 
@@ -142,10 +142,11 @@ What we made!
 | Component                  | Status / Result                                              |
 |---------------------------|--------------------------------------------------------------|
 | [Motor Driver & Logic/Control](MotorDriver.md) | Charlie's custom GaNFET motor driver, with 2x 3 phases |
-| [Power Distribution](PowerDistBoard.md)        | Han's custom PCB with joint encoders                   |
-| [Logic / Control](PalmBoard.md)                | Caroline's custom PCB with motor encoders              |
-| [Motor Sensing](Encoders.md)                   | Jack's custom encoder boards (2 designs)               |
-| [Joint Position Sensing](DaughterBoard.md)     | A third, custom 12mm wide encoder                      |
+| Power Distribution        | Han's custom PCB for power distribution               |
+| [Palm Board ](PalmBoard.md)     | Han's custom PCB with joint encoders                   |
+| Logic / Control              | Caroline's custom PCB with motor encoders              |
+| Motor Sensing                   | Jack's custom encoder boards (2 designs)               |
+| Joint Position Sensing   | A third, custom 12mm wide encoder                      |
 
 
 ---
@@ -162,20 +163,27 @@ What actually ended up in the final design
 
 | Category          | Problem                              | Resolution / Notes                          |
 |------------------|--------------------------------------|---------------------------------------------|
-| Encoder sizing and wiring   | abcd         |                  |
-| SPI Communication           | abcd         |                  |
-| CAN power                   | abcd         |                  |
-| Custom Motor Driver         | abcd         |                  |
-| Teensy 4.0 Daughter Board   | abcd         |                  |
+| Encoder sizing and wiring   | 10mm form factor requested by the mechanical team was exceedingly difficult. The encoder is 7mm wide, and locking molex connectors are larger than 10mm      |   12mm Circular encoders were soldered directly to vias. 10mm rectangular boards required the 5-pin SPI alternative approach               |
+| Encoder wiring| 5-pin SPI was done incorrectly, with MOSI bridged to GND instead of 5V| 5 pin SPI being a risky hardware decision, double the 12mm circular encoders were ordered. Bridging pins on the rctangular form factors did work, but they were so fragile we abandoned it. Hot glue could have been explored, but enougn 12mm encoders existed to bypass the issue |
+| SPI Communication           | After 4 encoders were connected to a single teensy, SPI would become unresponsive. While MUXing the SPI lines with separate CS pins, we added additional capacitance to the MISO line with each additional encoder.        |  4 Teensy boards were required to achieve 16 joint and SEA encoders. In future iterations, it is recommended to use a MUX IC which physically disconnects MISO lines, bypassing the issue of additional parasitic capacitance.                |
+| CAN power                   | Our daughter board was designed to use 5V for CAN, while the ODrive uses 12V.        |  We pivoted to Han's boad and disconnected the power domain and reconnected a 12V domain.                |
+| Custom Motor Driver         | There was an issue in which the CS pin was preventing normal control of the motors        | Fixed the CS pin                 |
+| Custom Motor Driver         |After fixing the CS pin, the board caught fire due to overheating or a short      | Ongoing, we are next looking at scheduling a customer service call with TI             |
+| Teensy 4.0 Daughter Board   | Incorrect CS pins and CAN power wiring        |   Cut traces and jumper wire               |
+| PDU board  | Flipped CAN connector    |   Flip wires around             |
 
+[Additional List (Unorganized) of Integration Issues](IntegrationIssues.md)
 ---
 
 ## 7. Future Work
 
 | Area              | Next Steps                           |
 |------------------|--------------------------------------|
-| Motor Driver         | abcd |
-| Encoders             |abcd  |
+| Motor Driver         | Schedule call with TI to debug GaNFET overheating issue and our setup|
+| Encoders             |Fix the wiring issues |
+| Daughter board       |Fix the wiring issues |
+| Daughter board       |Get rid of teensy header pins for fully integrated logic. Note:only when we stop breaking teensys |
+| PDU board            |Fix the wiring issues |
 
 ---
 
@@ -183,7 +191,14 @@ What actually ended up in the final design
 
 | Tip                                      | Why It Matters                               |
 |------------------------------------------|-----------------------------------------------|
-| abcd            | abcd      |
+| Order extremely early          | Hardware never works 100% the first time. Plan to order twice     |
+| Do not plan to make your own wire harnesses. Try and make QWIIC or something COTS work     | Not a good time. Eats up many many hours you did not account for    |
+| Add test points and jumpers for current readings          | Hardware never works 100% the first time. Plan to  debug    |
+| Order 2x what you think you may need         |You will have to pivot and you will also break things. Have room to bend not break  |
+| Pursue 2 options at once       | Our team was big enough for someone to freelance and build their own version. This saved us because it was compatible with ODrive.  |
+|Be backward compatible | Plan to resort to the previous generation. Whether that is ODRive or something else, make sure what already works will continue to work before getting fancy and adding stuff |
+|Materials you didnt think about | Wiring harnesses, shrink wrap, braided wire, crimping tools|
+|Equipment you didnt think about | The 3 separate benchtop power supplies is gross. Getting an all-in-one with current limits would be nice. Think about power distribution too. Look at how many wires are on our device- it gets out of control fast and can be minimized. Even with our original plan, wire routing would have been somewhat messy. I recommend making the power domain much prettier and more professional|
 
 ---
 
@@ -191,10 +206,9 @@ What actually ended up in the final design
 
 | Board | GDrive Link | Altium Link |
 |-------|-------------|-------------|
-|Motor Driver | [Gdrive](https://drive.google.com/drive/folders/1xZUM3Zf5BXCYf7R72Dv3WHtOntPb45lc?usp=drive_link) | [Altium](https://yufeng-yang.365.altium.com/designs/1C79E01F-E16E-4C25-9A8B-15B832A2B849#design) |
-|Daughter Board | |
-|PDU | |
-|Palm Board | |
-|Encoder 1 | |
-|Encoder 2 | |
-|Encoder 3 | |
+|Motor Driver |[Gdrive](https://drive.google.com/drive/folders/1xZUM3Zf5BXCYf7R72Dv3WHtOntPb45lc?usp=drive_link) | [Altium](https://yufeng-yang.365.altium.com/designs/1C79E01F-E16E-4C25-9A8B-15B832A2B849#design) |
+|Daughter Board |n/a |https://yufeng-yang.365.altium.com/designs/9186B018-A3EC-4A0F-9E85-4ADB772EB47A?activeDocumentId=Sheet1.SchDoc&variant=[No+Variations]&activeView=SCH&location=[1,95.65,25.44,33.63]#design|
+|PDU | n/a|n/a|
+|Palm Board |n/a|https://yufeng-yang.365.altium.com/designs/514BBF15-76C4-44B1-B00E-D776AEB88471?activeDocumentId=Sheet1.SchDoc&variant=[No+Variations]&activeView=SCH&location=[1,99.77,-0.01,27.05]#design |
+|Encoder  |n/a |https://yufeng-yang.365.altium.com/designs/3C7BD1D0-1197-4904-B1E8-0A32D0BF4D44?activeDocumentId=encoder.SchDoc&variant=[No+Variations]&activeView=SCH&location=[1,100.58,0,22.35]#design|
+

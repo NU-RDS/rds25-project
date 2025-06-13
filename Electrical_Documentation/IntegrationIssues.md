@@ -21,6 +21,7 @@ CAN needs to be 5V and 12V optional
 
 
 Future work on SPI bus impedance issue
+
     Option 1: Use SPI Buffer/Multiplexer Chips
     Use an analog multiplexer (like 74HC4067, 16:1 mux) or a digital buffer like 74LVC125 or TXB0108 on MISO, and directly control which MISO line is routed to the Teensy based on CS lines. Only one encoder's MISO is connected at a time, reducing bus loading. Requires control logic, or a simple GPIO latch to select the MISO path.
 
