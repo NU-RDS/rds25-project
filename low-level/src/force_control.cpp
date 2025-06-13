@@ -1,11 +1,33 @@
 #include "force_control.hpp"
 
+/**
+ * @brief Constructs a ForceControl object with specified control parameters.
+ * 
+ * Initializes the feedforward gain, PID gains, static friction compensation, and sets
+ * default values for reference force, current PID output, force type, and encoder pointer.
+ * 
+ * @param ff Feedforward gain for force control.
+ * @param kp Proportional gain for the PID controller.
+ * @param ki Integral gain for the PID controller.
+ * @param kd Derivative gain for the PID controller.
+ * @param ks Static friction compensation gain.
+ */
 ForceControl::ForceControl(float ff, float kp, float ki, float kd, float ks) :
     Ff(ff), Kp(kp), Ki(ki), Kd(kd), Ks(ks), 
     referenceForce(0.0f), pidCurrent(0.0f), 
     forceType(ForceType::STEP), seaEncoder(nullptr) {  // Initialize encoder pointer to nullptr
 }
 
+/**
+ * @brief Converts the difference between motor and SEA (Series Elastic Actuator) encoder angles to an estimated force.
+ *
+ * This function calculates the force based on the difference between the motor angle and the SEA angle,
+ * using a linear and quadratic relationship. The coefficients are likely determined by system calibration.
+ *
+ * @param motor_angle The current angle of the motor encoder (in radians or degrees, depending on system convention).
+ * @param sea_angle The current angle of the SEA encoder (in the same units as motor_angle).
+ * @return Estimated force corresponding to the encoder angle difference.
+ */
 float ForceControl::encoderToForce(float motor_angle, float sea_angle)  // Changed parameter to reference
 {
     float diff = motor_angle - sea_angle;
@@ -14,6 +36,23 @@ float ForceControl::encoderToForce(float motor_angle, float sea_angle)  // Chang
     return force;
 }
 
+/**
+ * @brief Generates a reference force based on the specified force type and time step.
+ *
+ * This function sets the `referenceForce` member variable according to the selected
+ * force generation mode. The force profile can be a step, sinusoidal, maximum, or
+ * tendon-specific force, depending on the application requirements.
+ *
+ * @param forceType The type of force profile to generate. Supported types:
+ *   - ForceType::STEP: Generates a step force pattern alternating between 1.0N, 0.0N, 3.0N, and 0.0N every 250 timesteps.
+ *   - ForceType::SIN: Generates a sinusoidal force of the form 2 + 1*sin(2πft) N, with f = 1 Hz.
+ *   - ForceType::MAX: Sets the force to the maximum continuous tendon force.
+ *   - ForceType::TENDON_MAX: Sets the force to 50% of the maximum continuous tendon force.
+ *   - ForceType::TENDON_SIN: Generates a sinusoidal force between 10% and 50% of the maximum continuous tendon force at 1 Hz.
+ * @param t The current time step (integer), typically incremented every control loop iteration.
+ *
+ * @note Assumes a control loop period of 10 ms (i.e., t*0.01f gives time in seconds).
+ */
 void ForceControl::forceGeneration(ForceType forceType, int t) {
     switch (forceType) {
         case ForceType::STEP:
@@ -54,6 +93,18 @@ void ForceControl::forceGeneration(ForceType forceType, int t) {
 }
 
 // Implementation now matches declaration in header
+/**
+ * @brief Computes the PID control current for force control using SEA (Series Elastic Actuator) feedback.
+ *
+ * This function calculates the control current required to achieve a desired force output
+ * by comparing the reference force (generated internally) with the measured force from the encoders.
+ * It implements a PID controller with anti-windup and output saturation.
+ *
+ * @param motor_angle The current angle of the motor encoder (in radians or degrees, depending on implementation).
+ * @param sea_angle The current angle of the SEA encoder (in radians or degrees, depending on implementation).
+ * @param forceType The type of force profile to generate (used by forceGeneration).
+ * @return The computed control current (float) to be applied to the actuator.
+ */
 float ForceControl::forcePID(float motor_angle, float sea_angle, ForceType forceType)
 {
     static float prevErr = 0.0f;
@@ -97,6 +148,14 @@ float ForceControl::forcePID(float motor_angle, float sea_angle, ForceType force
     return pidCurrent;
 }
 
+/**
+ * @brief Sets the type of force to be applied based on the provided index.
+ *
+ * @param typeIndex An integer representing the desired force type:
+ *                  - 0: STEP force
+ *                  - 1: SIN force
+ *                  - Any other value defaults to STEP force
+ */
 void ForceControl::setForceType(int typeIndex)
 {
     if (typeIndex == 0)
@@ -113,6 +172,14 @@ void ForceControl::setForceType(int typeIndex)
     }
 } 
 
+/**
+ * @brief Retrieves the current angle from the SEA (Series Elastic Actuator) encoder in degrees.
+ *
+ * This function checks if the SEA encoder is initialized. If not, it prints an error message
+ * and returns 0.0f. Otherwise, it reads and returns the encoder angle in degrees.
+ *
+ * @return The current SEA encoder angle in degrees as a float. Returns 0.0f if the encoder is not initialized.
+ */
 float ForceControl::getSeaEncoderAngle(){
     if (this->seaEncoder == nullptr) {
         Serial.println("Error: Sea encoder not initialized");
@@ -121,6 +188,14 @@ float ForceControl::getSeaEncoderAngle(){
     return this->seaEncoder->readEncoderDeg();
 }
 
+/**
+ * @brief Sets the SEA (Series Elastic Actuator) encoder for the ForceControl object.
+ *
+ * This method deletes any existing encoder instance associated with the object,
+ * and creates a new Encoder using the provided chip select (CS) pin.
+ *
+ * @param encoderCS The chip select pin number for the new SEA encoder.
+ */
 void ForceControl::setSeaEncoder(int encoderCS)
 {
     if (this->seaEncoder != nullptr) {

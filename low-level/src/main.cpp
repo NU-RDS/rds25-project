@@ -1,3 +1,58 @@
+/**
+ * @file main.cpp
+ * @brief Main control loop for force-controlled actuator system using ODrive, encoder, and load cell.
+ *
+ * This program implements a force control system for a Series Elastic Actuator (SEA) using an ODrive motor controller,
+ * encoder feedback, and a load cell for force measurement. The system communicates over CAN bus and provides a serial
+ * interface for tuning control parameters and monitoring system state.
+ *
+ * Features:
+ * - CAN bus initialization and ODrive setup with torque control mode.
+ * - Encoder and load cell initialization and configuration.
+ * - Force control using a PID controller with tunable parameters (feedforward, Kp, Ki, Kd).
+ * - Serial command interface for runtime parameter adjustment and data streaming.
+ * - Real-time control loop with periodic CAN event pumping and error checking.
+ * - Data streaming for reference and measured force values for plotting and analysis.
+ *
+ * Serial Commands:
+ *   0: Set feedforward term (float)
+ *   1: Set Kp (float)
+ *   2: Set Ki (float)
+ *   3: Set Kd (float)
+ *   4: Select reference force type (int)
+ *   5: Start PID control and data streaming
+ *   6: Show current PID parameters and reference type
+ *   7: Read and print 100 load cell values
+ *   8: Stop PID control and data streaming
+ *   default: Stop PID and set torque to zero
+ *
+ * Global Variables:
+ * - odrives[]: Array of ODriveControl structs for managing ODrive state and communication.
+ * - forceController: ForceControl object for PID-based force regulation.
+ * - loadcell: Loadcell object for force measurement.
+ * - runningPID: Flag indicating if PID control is active.
+ * - motor_offset, sea_offset: Offsets for encoder calibration.
+ *
+ * Main Functions:
+ * - setup(): Initializes hardware, CAN bus, ODrive, encoders, and load cell.
+ * - loop(): Main control loop handling CAN events, serial commands, PID control, and data streaming.
+ * - setupCan(): Configures CAN interface and registers message callbacks.
+ * - setupODrive(): Initializes ODrive, sets control mode, and enters closed loop control.
+ * - checkErrors(): Monitors ODrive for errors and attempts recovery.
+ * - onHeartbeat(), onFeedback(), onCanMessage(): CAN message callbacks for ODrive communication.
+ *
+ * Dependencies:
+ * - ODrive CAN library
+ * - Arduino core
+ * - SPI library
+ * - Encoder, ForceControl, and Loadcell custom libraries
+ *
+ * Hardware:
+ * - ODrive motor controller (CAN bus)
+ * - Magnetic encoder (SPI)
+ * - Load cell (I2C)
+ *
+ */
 #include "odrive_can.hpp"
 #include <Arduino.h>
 #include <SPI.h>

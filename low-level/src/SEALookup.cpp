@@ -1,6 +1,24 @@
 #include "SEALookup.hpp"
 
 // Relating tendon force to spring deflection, constants are N/deg
+/**
+ * @brief Calculates the torque for a specified joint based on the given angle difference.
+ *
+ * This function selects the appropriate torque calculation method for the specified joint index.
+ * The angle difference (`diff`) should be provided in degrees.
+ *
+ * @param diff The difference in angle (in degrees) for which the torque is to be calculated.
+ * @param jointIndex The index of the joint (0-6) for which the torque is to be calculated.
+ *                   Each index corresponds to a specific joint:
+ *                   0 - Joint 1
+ *                   1 - Joint 2
+ *                   2 - Joint 3
+ *                   3 - Joint 4
+ *                   4 - Joint 5
+ *                   5 - Joint 6
+ *                   6 - Joint 7
+ * @return The calculated torque for the specified joint. Returns 0.0f if the joint index is invalid.
+ */
 float SEALookup::calculateTorque(float diff, int jointIndex) {
     // diff needs to be in degrees
     switch (jointIndex) {

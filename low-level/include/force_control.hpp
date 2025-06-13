@@ -1,3 +1,37 @@
+/**
+ * @file force_control.hpp
+ * @brief Defines the ForceControl class for force-based control using PID and feedforward strategies.
+ *
+ * This header provides the ForceControl class, which implements force control logic for a system
+ * using a Series Elastic Actuator (SEA) and an encoder. The class supports various force generation
+ * patterns (step, sinusoidal, max, tendon-specific) and provides methods for converting encoder
+ * readings to force, generating reference forces, and running a PID controller to compute the
+ * required current for force tracking.
+ *
+ * Constants:
+ *   - _PI: Value of pi.
+ *   - MAX_TENDON_FORCE: Maximum allowable tendon force (N).
+ *   - ANTI_WINDUP_F: Anti-windup factor for PID integrator.
+ *   - R_ENCODER_PULLEY: Radius of the encoder pulley (meters).
+ *   - MAX_CURRENT: Maximum allowable current (A).
+ *
+ * Enumerations:
+ *   - ForceType: Types of force patterns supported (STEP, SIN, MAX, TENDON_MAX, TENDON_SIN).
+ *
+ * Class ForceControl:
+ *   - Implements force control using PID and feedforward.
+ *   - Provides methods for:
+ *       - Converting encoder readings to force.
+ *       - Generating reference force patterns.
+ *       - Running a PID controller for force tracking.
+ *       - Getting and setting control parameters and force types.
+ *       - Associating an encoder for SEA angle measurement.
+ *
+ * Usage:
+ *   - Instantiate with desired PID and feedforward gains.
+ *   - Set the force pattern and encoder as needed.
+ *   - Use forcePID() to compute control output based on current state.
+ */
 #ifndef FORCE_CONTROL_HPP
 #define FORCE_CONTROL_HPP
 
